@@ -17,9 +17,8 @@
 package loadbalance
 
 import (
-	"time"
-
 	"github.com/sujit-baniya/frame/pkg/app/client/discovery"
+	"time"
 )
 
 // Loadbalancer picks instance for the given service discovery result.

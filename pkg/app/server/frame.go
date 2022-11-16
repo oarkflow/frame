@@ -19,12 +19,12 @@ package server
 import (
 	"context"
 	"errors"
+	"github.com/sujit-baniya/frame/pkg/app/middlewares/server/recovery"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/sujit-baniya/frame/pkg/app/middlewares/server/recovery"
 	"github.com/sujit-baniya/frame/pkg/common/config"
 	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/route"

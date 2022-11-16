@@ -18,9 +18,9 @@ package discovery
 
 import (
 	"context"
+	"github.com/sujit-baniya/frame/pkg/app/server/registry"
 	"net"
 
-	"github.com/sujit-baniya/frame/pkg/app/server/registry"
 	"github.com/sujit-baniya/frame/pkg/common/utils"
 )
 

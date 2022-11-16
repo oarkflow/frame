@@ -18,10 +18,9 @@ package config
 
 import (
 	"crypto/tls"
+	"github.com/sujit-baniya/frame/pkg/app/server/registry"
 	"net"
 	"time"
-
-	"github.com/sujit-baniya/frame/pkg/app/server/registry"
 )
 
 // Option is the only struct that can be used to set Options.

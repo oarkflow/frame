@@ -18,9 +18,9 @@ package stats
 
 import (
 	"context"
+	"github.com/sujit-baniya/frame/pkg/app"
 	"runtime/debug"
 
-	"github.com/sujit-baniya/frame/pkg/app"
 	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/common/tracer"
 	"github.com/sujit-baniya/frame/pkg/common/tracer/stats"

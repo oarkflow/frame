@@ -19,12 +19,11 @@ package sd
 import (
 	"context"
 	"fmt"
-	"net"
-	"strings"
-
 	"github.com/sujit-baniya/frame/pkg/app/client/discovery"
 	"github.com/sujit-baniya/frame/pkg/app/client/loadbalance"
 	"github.com/sujit-baniya/frame/pkg/app/server/registry"
+	"net"
+	"strings"
 )
 
 // ServiceDiscoveryOptions service discovery option for client

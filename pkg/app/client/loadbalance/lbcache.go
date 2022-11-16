@@ -19,11 +19,11 @@ package loadbalance
 import (
 	"context"
 	"fmt"
+	"github.com/sujit-baniya/frame/pkg/app/client/discovery"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/sujit-baniya/frame/pkg/app/client/discovery"
 	"github.com/sujit-baniya/frame/pkg/common/errors"
 	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/protocol"

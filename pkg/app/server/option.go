@@ -18,10 +18,10 @@ package server
 
 import (
 	"crypto/tls"
+	"github.com/sujit-baniya/frame/pkg/app/server/registry"
 	"net"
 	"time"
 
-	"github.com/sujit-baniya/frame/pkg/app/server/registry"
 	"github.com/sujit-baniya/frame/pkg/common/config"
 	"github.com/sujit-baniya/frame/pkg/common/tracer"
 	"github.com/sujit-baniya/frame/pkg/common/tracer/stats"

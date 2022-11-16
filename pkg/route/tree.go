@@ -44,13 +44,13 @@ package route
 import (
 	"bytes"
 	"fmt"
+	"github.com/sujit-baniya/frame/pkg/app"
 	"net/url"
 	"strings"
 	"unicode"
 
 	"github.com/sujit-baniya/frame/internal/bytesconv"
 	"github.com/sujit-baniya/frame/internal/bytestr"
-	"github.com/sujit-baniya/frame/pkg/app"
 	"github.com/sujit-baniya/frame/pkg/route/param"
 )
 

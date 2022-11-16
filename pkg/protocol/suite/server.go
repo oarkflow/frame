@@ -18,9 +18,9 @@ package suite
 
 import (
 	"context"
+	"github.com/sujit-baniya/frame/pkg/app"
 	"sync"
 
-	"github.com/sujit-baniya/frame/pkg/app"
 	"github.com/sujit-baniya/frame/pkg/common/errors"
 	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/common/tracer"

@@ -43,11 +43,11 @@ package basic_auth
 import (
 	"context"
 	"encoding/base64"
+	"github.com/sujit-baniya/frame/pkg/app"
 	"net/http"
 	"strconv"
 
 	"github.com/sujit-baniya/frame/internal/bytesconv"
-	"github.com/sujit-baniya/frame/pkg/app"
 )
 
 // Accounts is an alias to map[string]string, construct with {"username":"password"}

@@ -18,9 +18,9 @@ package config
 
 import (
 	"crypto/tls"
+	"github.com/sujit-baniya/frame/pkg/app/client/retry"
 	"time"
 
-	"github.com/sujit-baniya/frame/pkg/app/client/retry"
 	"github.com/sujit-baniya/frame/pkg/network"
 	"github.com/sujit-baniya/frame/pkg/protocol/consts"
 )

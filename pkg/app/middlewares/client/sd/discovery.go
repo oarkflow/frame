@@ -18,10 +18,10 @@ package sd
 
 import (
 	"context"
-
 	"github.com/sujit-baniya/frame/pkg/app/client"
 	"github.com/sujit-baniya/frame/pkg/app/client/discovery"
 	"github.com/sujit-baniya/frame/pkg/app/client/loadbalance"
+
 	"github.com/sujit-baniya/frame/pkg/protocol"
 )
 

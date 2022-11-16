@@ -17,10 +17,10 @@
 package loadbalance
 
 import (
+	"github.com/sujit-baniya/frame/pkg/app/client/discovery"
 	"sync"
 
 	"github.com/bytedance/gopkg/lang/fastrand"
-	"github.com/sujit-baniya/frame/pkg/app/client/discovery"
 	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"golang.org/x/sync/singleflight"
 )
