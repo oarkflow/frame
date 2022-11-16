@@ -9,6 +9,7 @@ require (
 	github.com/c9s/goprocinfo v0.0.0-20210130143923-c95fcf8c64a8
 	github.com/cloudwego/netpoll v0.2.6
 	github.com/fsnotify/fsnotify v1.5.4
+	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/sessions v1.2.1
