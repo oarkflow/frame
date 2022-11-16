@@ -47,7 +47,7 @@ const (
 	// *** Server default value ***
 
 	// DefaultMaxInMemoryFileSize defines the in memory file size when parse
-	// multipart_form. If the size exceeds, then hertz will write to disk.
+	// multipart_form. If the size exceeds, then frame will write to disk.
 	DefaultMaxInMemoryFileSize = 16 * 1024 * 1024
 
 	// *** Client default value start from here ***

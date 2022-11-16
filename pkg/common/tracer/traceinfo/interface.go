@@ -48,7 +48,7 @@ type Event interface {
 	IsNil() bool
 }
 
-// TraceInfo contains the trace message in Hertz.
+// TraceInfo contains the trace message in Frame.
 type TraceInfo interface {
 	Stats() HTTPStats
 	Reset()

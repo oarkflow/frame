@@ -22,8 +22,8 @@ import (
 )
 
 var (
-	DefaultServerName  = []byte("hertz")
-	DefaultUserAgent   = []byte("hertz")
+	DefaultServerName  = []byte("frame")
+	DefaultUserAgent   = []byte("frame")
 	DefaultContentType = []byte("text/plain; charset=utf-8")
 )
 

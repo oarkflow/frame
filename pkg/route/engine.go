@@ -138,8 +138,8 @@ type Engine struct {
 	NoHijackConnPool bool
 	hijackConnPool   sync.Pool
 	// KeepHijackedConns is an opt-in disable of connection
-	// close by hertz after connections' HijackHandler returns.
-	// This allows to save goroutines, e.g. when hertz used to upgrade
+	// close by frame after connections' HijackHandler returns.
+	// This allows to save goroutines, e.g. when frame used to upgrade
 	// http connections to WS and connection goes to another handler,
 	// which will close it when needed.
 	KeepHijackedConns bool

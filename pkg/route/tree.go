@@ -196,7 +196,7 @@ func (r *router) addRoute(path string, h app.HandlersChain) {
 func (r *router) insert(path string, h app.HandlersChain, t kind, ppath string, pnames []string) {
 	currentNode := r.root
 	if currentNode == nil {
-		panic("hertz: invalid node")
+		panic("frame: invalid node")
 	}
 	search := path
 

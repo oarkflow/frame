@@ -986,7 +986,7 @@ func (w *wantConn) tryDeliver(conn *clientConn, err error) bool {
 	w.conn = conn
 	w.err = err
 	if w.conn == nil && w.err == nil {
-		panic("hertz: internal error: misuse of tryDeliver")
+		panic("frame: internal error: misuse of tryDeliver")
 	}
 	close(w.ready)
 	return true

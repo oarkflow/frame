@@ -24,14 +24,14 @@ import "encoding/json"
 const Name = "encoding/json"
 
 var (
-	// Marshal is standard implementation exported by hertz which is used by rendering.
+	// Marshal is standard implementation exported by frame which is used by rendering.
 	Marshal = json.Marshal
-	// Unmarshal is standard implementation exported by hertz which is used by binding.
+	// Unmarshal is standard implementation exported by frame which is used by binding.
 	Unmarshal = json.Unmarshal
-	// MarshalIndent is standard implementation exported by hertz.
+	// MarshalIndent is standard implementation exported by frame.
 	MarshalIndent = json.MarshalIndent
-	// NewDecoder is standard implementation exported by hertz.
+	// NewDecoder is standard implementation exported by frame.
 	NewDecoder = json.NewDecoder
-	// NewEncoder is standard implementation exported by hertz.
+	// NewEncoder is standard implementation exported by frame.
 	NewEncoder = json.NewEncoder
 )

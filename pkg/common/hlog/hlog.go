@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	systemLogPrefix = "HERTZ: "
+	systemLogPrefix = "FRAME: "
 )
 
 var (
@@ -57,12 +57,12 @@ func SetLevel(lv Level) {
 	sysLogger.SetLevel(lv)
 }
 
-// DefaultLogger return the default logger for hertz.
+// DefaultLogger return the default logger for frame.
 func DefaultLogger() FullLogger {
 	return logger
 }
 
-// SystemLogger return the system logger for hertz to print system log.
+// SystemLogger return the system logger for frame to print system log.
 // This function is not recommended for users to use.
 func SystemLogger() FullLogger {
 	return sysLogger

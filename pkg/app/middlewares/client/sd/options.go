@@ -87,7 +87,7 @@ func WithCustomizedAddrs(addrs ...string) ServiceDiscoveryOption {
 	}
 }
 
-// WithLoadBalanceOptions  sets Loadbalancer and loadbalance options for hertz client
+// WithLoadBalanceOptions  sets Loadbalancer and loadbalance options for frame client
 func WithLoadBalanceOptions(lb loadbalance.Loadbalancer, options loadbalance.Options) ServiceDiscoveryOption {
 	return ServiceDiscoveryOption{F: func(o *ServiceDiscoveryOptions) {
 		o.LbOpts = options

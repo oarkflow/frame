@@ -74,7 +74,7 @@ func (c *Config) Delete(protocol string) {
 
 func (c *Config) Load(core Core, protocol string) (server protocol.Server, err error) {
 	if c.configMap[protocol] == nil {
-		return nil, errors.NewPrivate("HERTZ: Load server error, not support protocol: " + protocol)
+		return nil, errors.NewPrivate("FRAME: Load server error, not support protocol: " + protocol)
 	}
 	return c.configMap[protocol].New(core)
 }

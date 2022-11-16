@@ -243,49 +243,49 @@ func (group *RouterGroup) returnObj() IRoutes {
 }
 
 // GETEX adds a handlerName param. When handler is decorated or handler is an anonymous function,
-// Hertz cannot get handler name directly. In this case, pass handlerName explicitly.
+// Frame cannot get handler name directly. In this case, pass handlerName explicitly.
 func (group *RouterGroup) GETEX(relativePath string, handler app.HandlerFunc, handlerName string) IRoutes {
 	app.SetHandlerName(handler, handlerName)
 	return group.GET(relativePath, handler)
 }
 
 // POSTEX adds a handlerName param. When handler is decorated or handler is an anonymous function,
-// Hertz cannot get handler name directly. In this case, pass handlerName explicitly.
+// Frame cannot get handler name directly. In this case, pass handlerName explicitly.
 func (group *RouterGroup) POSTEX(relativePath string, handler app.HandlerFunc, handlerName string) IRoutes {
 	app.SetHandlerName(handler, handlerName)
 	return group.POST(relativePath, handler)
 }
 
 // PUTEX adds a handlerName param. When handler is decorated or handler is an anonymous function,
-// Hertz cannot get handler name directly. In this case, pass handlerName explicitly.
+// Frame cannot get handler name directly. In this case, pass handlerName explicitly.
 func (group *RouterGroup) PUTEX(relativePath string, handler app.HandlerFunc, handlerName string) IRoutes {
 	app.SetHandlerName(handler, handlerName)
 	return group.PUT(relativePath, handler)
 }
 
 // DELETEEX adds a handlerName param. When handler is decorated or handler is an anonymous function,
-// Hertz cannot get handler name directly. In this case, pass handlerName explicitly.
+// Frame cannot get handler name directly. In this case, pass handlerName explicitly.
 func (group *RouterGroup) DELETEEX(relativePath string, handler app.HandlerFunc, handlerName string) IRoutes {
 	app.SetHandlerName(handler, handlerName)
 	return group.DELETE(relativePath, handler)
 }
 
 // HEADEX adds a handlerName param. When handler is decorated or handler is an anonymous function,
-// Hertz cannot get handler name directly. In this case, pass handlerName explicitly.
+// Frame cannot get handler name directly. In this case, pass handlerName explicitly.
 func (group *RouterGroup) HEADEX(relativePath string, handler app.HandlerFunc, handlerName string) IRoutes {
 	app.SetHandlerName(handler, handlerName)
 	return group.HEAD(relativePath, handler)
 }
 
 // AnyEX adds a handlerName param. When handler is decorated or handler is an anonymous function,
-// Hertz cannot get handler name directly. In this case, pass handlerName explicitly.
+// Frame cannot get handler name directly. In this case, pass handlerName explicitly.
 func (group *RouterGroup) AnyEX(relativePath string, handler app.HandlerFunc, handlerName string) IRoutes {
 	app.SetHandlerName(handler, handlerName)
 	return group.Any(relativePath, handler)
 }
 
 // HandleEX adds a handlerName param. When handler is decorated or handler is an anonymous function,
-// Hertz cannot get handler name directly. In this case, pass handlerName explicitly.
+// Frame cannot get handler name directly. In this case, pass handlerName explicitly.
 func (group *RouterGroup) HandleEX(httpMethod, relativePath string, handler app.HandlerFunc, handlerName string) IRoutes {
 	app.SetHandlerName(handler, handlerName)
 	return group.Handle(httpMethod, relativePath, handler)

@@ -59,7 +59,7 @@ var (
 	ErrShortConnection = errors.New("short connection")
 )
 
-// ErrorType is an unsigned 64-bit error code as defined in the hertz spec.
+// ErrorType is an unsigned 64-bit error code as defined in the frame spec.
 type ErrorType uint64
 
 type Error struct {
@@ -149,10 +149,11 @@ func (msg *Error) JSON() interface{} {
 
 // Errors returns an array will all the error messages.
 // Example:
-// 		c.Error(errors.New("first"))
-// 		c.Error(errors.New("second"))
-// 		c.Error(errors.New("third"))
-// 		c.Errors.Errors() // == []string{"first", "second", "third"}
+//
+//	c.Error(errors.New("first"))
+//	c.Error(errors.New("second"))
+//	c.Error(errors.New("third"))
+//	c.Errors.Errors() // == []string{"first", "second", "third"}
 func (a ErrorChain) Errors() []string {
 	if len(a) == 0 {
 		return nil
@@ -165,7 +166,7 @@ func (a ErrorChain) Errors() []string {
 }
 
 // ByType returns a readonly copy filtered the byte.
-// ie ByType(hertz.ErrorTypePublic) returns a slice of errors with type=ErrorTypePublic.
+// ie ByType(frame.ErrorTypePublic) returns a slice of errors with type=ErrorTypePublic.
 func (a ErrorChain) ByType(typ ErrorType) ErrorChain {
 	if len(a) == 0 {
 		return nil

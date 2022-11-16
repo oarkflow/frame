@@ -26,14 +26,14 @@ const Name = "sonic"
 
 var (
 	json = sonic.ConfigStd
-	// Marshal is sonic implementation exported by hertz which is used by rendering.
+	// Marshal is sonic implementation exported by frame which is used by rendering.
 	Marshal = json.Marshal
-	// Unmarshal is sonic implementation exported by hertz which is used by binding.
+	// Unmarshal is sonic implementation exported by frame which is used by binding.
 	Unmarshal = json.Unmarshal
-	// MarshalIndent is sonic implementation exported by hertz.
+	// MarshalIndent is sonic implementation exported by frame.
 	MarshalIndent = json.MarshalIndent
-	// NewDecoder is sonic implementation exported by hertz.
+	// NewDecoder is sonic implementation exported by frame.
 	NewDecoder = json.NewDecoder
-	// NewEncoder is sonic implementation exported by hertz.
+	// NewEncoder is sonic implementation exported by frame.
 	NewEncoder = json.NewEncoder
 )

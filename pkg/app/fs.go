@@ -843,7 +843,7 @@ func (h *fsHandler) handleRequest(c context.Context, ctx *RequestContext) {
 
 		if mustCompress && err == errNoCreatePermission {
 			hlog.SystemLogger().Errorf("Insufficient permissions for saving compressed file for path=%q. Serving uncompressed file. "+
-				"Allow write access to the directory with this file in order to improve hertz performance", filePath)
+				"Allow write access to the directory with this file in order to improve frame performance", filePath)
 			mustCompress = false
 			ff, err = h.openFSFile(filePath, mustCompress)
 		}

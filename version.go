@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package hertz
+package frame
 
 // Name and Version info of this framework, used for statistics and debug
 const (
-	Name    = "Hertz"
+	Name    = "Frame"
 	Version = "v0.4.0"
 )

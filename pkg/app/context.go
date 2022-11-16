@@ -201,7 +201,7 @@ func getFuncAddr(v interface{}) uintptr {
 //
 // The connection c must not be used after returning from the handler, if KeepHijackedConns is disabled.
 //
-// When KeepHijackedConns enabled, hertz will not Close() the connection,
+// When KeepHijackedConns enabled, frame will not Close() the connection,
 // you must do it when you need it. You must not use c in any way after calling Close().
 //
 // network.Connection provide two options of io: net.Conn and zero-copy read/write
@@ -382,7 +382,7 @@ func (ctx *RequestContext) String(code int, format string, values ...interface{}
 // FullPath returns a matched route full path. For not found routes
 // returns an empty string.
 //
-//	router.GET("/user/:id", func(c *hertz.RequestContext) {
+//	router.GET("/user/:id", func(c *frame.RequestContext) {
 //	    c.FullPath() == "/user/:id" // true
 //	})
 func (ctx *RequestContext) FullPath() string {
@@ -802,7 +802,7 @@ func (ctx *RequestContext) GetStringMapStringSlice(key string) (smss map[string]
 // Param returns the value of the URL param.
 // It is a shortcut for c.Params.ByName(key)
 //
-//	router.GET("/user/:id", func(c *hertz.RequestContext) {
+//	router.GET("/user/:id", func(c *frame.RequestContext) {
 //	    // a GET request to /user/john
 //	    id := c.Param("id") // id == "john"
 //	})
@@ -969,12 +969,12 @@ func (ctx *RequestContext) Cookie(key string) []byte {
 //	sameSite let servers specify whether/when cookies are sent with cross-site requests; eg. Set-Cookie: name=value;HttpOnly; secure; SameSite=Lax;
 //
 //	For example:
-//	1. ctx.SetCookie("user", "hertz", 1, "/", "localhost",protocol.CookieSameSiteLaxMode, true, true)
-//	add response header --->  Set-Cookie: user=hertz; max-age=1; domain=localhost; path=/; HttpOnly; secure; SameSite=Lax;
-//	2. ctx.SetCookie("user", "hertz", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
-//	add response header --->  Set-Cookie: user=hertz; max-age=10; domain=localhost; path=/; SameSite=Lax;
-//	3. ctx.SetCookie("", "hertz", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
-//	add response header --->  Set-Cookie: hertz; max-age=10; domain=localhost; path=/; SameSite=Lax;
+//	1. ctx.SetCookie("user", "frame", 1, "/", "localhost",protocol.CookieSameSiteLaxMode, true, true)
+//	add response header --->  Set-Cookie: user=frame; max-age=1; domain=localhost; path=/; HttpOnly; secure; SameSite=Lax;
+//	2. ctx.SetCookie("user", "frame", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
+//	add response header --->  Set-Cookie: user=frame; max-age=10; domain=localhost; path=/; SameSite=Lax;
+//	3. ctx.SetCookie("", "frame", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
+//	add response header --->  Set-Cookie: frame; max-age=10; domain=localhost; path=/; SameSite=Lax;
 //	4. ctx.SetCookie("user", "", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
 //	add response header --->  Set-Cookie: user=; max-age=10; domain=localhost; path=/; SameSite=Lax;
 func (ctx *RequestContext) SetCookie(name, value string, maxAge int, path, domain string, sameSite protocol.CookieSameSite, secure, httpOnly bool) {

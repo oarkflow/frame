@@ -30,23 +30,23 @@ import (
 	"github.com/sujit-baniya/frame/pkg/route"
 )
 
-// Hertz is the core struct of hertz.
-type Hertz struct {
+// Frame is the core struct of frame.
+type Frame struct {
 	*route.Engine
 	signalWaiter func(err chan error) error
 }
 
-// New creates a hertz instance without any default config.
-func New(opts ...config.Option) *Hertz {
+// New creates a frame instance without any default config.
+func New(opts ...config.Option) *Frame {
 	options := config.NewOptions(opts)
-	h := &Hertz{
+	h := &Frame{
 		Engine: route.NewEngine(options),
 	}
 	return h
 }
 
-// Default creates a hertz instance with default middlewares.
-func Default(opts ...config.Option) *Hertz {
+// Default creates a frame instance with default middlewares.
+func Default(opts ...config.Option) *Frame {
 	h := New(opts...)
 	h.Use(recovery.Recovery())
 
@@ -54,7 +54,7 @@ func Default(opts ...config.Option) *Hertz {
 }
 
 // Spin runs the server until catching os.Signal or error returned by h.Run().
-func (h *Hertz) Spin() {
+func (h *Frame) Spin() {
 	errCh := make(chan error)
 	h.initOnRunHooks(errCh)
 	go func() {
@@ -86,8 +86,8 @@ func (h *Hertz) Spin() {
 
 // SetCustomSignalWaiter sets the signal waiter function.
 // If Default one is not met the requirement, set this function to customize.
-// Hertz will exit immediately if f returns an error, otherwise it will exit gracefully.
-func (h *Hertz) SetCustomSignalWaiter(f func(err chan error) error) {
+// Frame will exit immediately if f returns an error, otherwise it will exit gracefully.
+func (h *Frame) SetCustomSignalWaiter(f func(err chan error) error) {
 	h.signalWaiter = f
 }
 
@@ -116,7 +116,7 @@ func waitSignal(errCh chan error) error {
 	return nil
 }
 
-func (h *Hertz) initOnRunHooks(errChan chan error) {
+func (h *Frame) initOnRunHooks(errChan chan error) {
 	// add register func to runHooks
 	opt := h.GetOptions()
 	h.OnRun = append(h.OnRun, func(ctx context.Context) error {

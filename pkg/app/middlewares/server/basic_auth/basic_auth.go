@@ -93,7 +93,7 @@ func BasicAuthForRealm(accounts Accounts, realm, userKey string) app.HandlerFunc
 	}
 }
 
-// BasicAuth is a constructor of BasicAuth verifier to hertz middleware
+// BasicAuth is a constructor of BasicAuth verifier to frame middleware
 // It returns a Basic HTTP Authorization middleware. It takes as argument a map[string]string where
 // the key is the username and the value is the password.
 func BasicAuth(accounts Accounts) app.HandlerFunc {

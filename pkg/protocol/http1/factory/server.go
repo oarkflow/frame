@@ -28,7 +28,7 @@ type serverFactory struct {
 	option *http1.Option
 }
 
-// New is called by Hertz during engine.Run()
+// New is called by Frame during engine.Run()
 func (s *serverFactory) New(core suite.Core) (server protocol.Server, err error) {
 	return &http1.Server{
 		Option: *s.option,
