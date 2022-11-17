@@ -22,6 +22,7 @@ import (
 	"github.com/sujit-baniya/frame"
 	"github.com/sujit-baniya/frame/pkg/common/config"
 	"github.com/sujit-baniya/frame/pkg/network/standard"
+	"github.com/sujit-baniya/frame/server"
 	"log"
 	"net/http"
 	"os"
@@ -53,10 +54,10 @@ func NewTlsConfig(domains ...string) *tls.Config {
 	return m.TLSConfig()
 }
 
-func run(ctx context.Context, tlsServer *frame.Frame) error {
+func run(ctx context.Context, tlsServer *server.Frame) error {
 	var g errgroup.Group
 
-	redirectServer := frame.New(frame.WithHostPorts(":http"))
+	redirectServer := server.New(server.WithHostPorts(":http"))
 	redirectServer.NoRoute(func(c context.Context, ctx *frame.Context) {
 		target := "https://" + string(ctx.Request.URI().Host()) + string(ctx.Request.URI().RequestURI())
 
@@ -93,17 +94,17 @@ func run(ctx context.Context, tlsServer *frame.Frame) error {
 }
 
 // RunWithContext support 1-line LetsEncrypt HTTPS servers with graceful shutdown
-func RunWithContext(ctx context.Context, h *frame.Frame) error {
+func RunWithContext(ctx context.Context, h *server.Frame) error {
 	return run(ctx, h)
 }
 
 // Run support 1-line LetsEncrypt HTTPS servers
-func Run(h *frame.Frame) error {
+func Run(h *server.Frame) error {
 	return run(todoCtx, h)
 }
 
 // NewServerWithManagerAndTlsConfig creates Frame server with autocert manager and TLS config
-func NewServerWithManagerAndTlsConfig(m *autocert.Manager, tlsc *tls.Config, opts ...config.Option) *frame.Frame {
+func NewServerWithManagerAndTlsConfig(m *autocert.Manager, tlsc *tls.Config, opts ...config.Option) *server.Frame {
 	if m.Cache == nil {
 		var e error
 		m.Cache, e = getCacheDir()
@@ -121,9 +122,9 @@ func NewServerWithManagerAndTlsConfig(m *autocert.Manager, tlsc *tls.Config, opt
 	tlsc.NextProtos = defaultTLSConfig.NextProtos
 
 	opts = append(opts,
-		frame.WithHostPorts(":https"),
-		frame.WithTransport(standard.NewTransporter),
-		frame.WithTLS(tlsc),
+		server.WithHostPorts(":https"),
+		server.WithTransport(standard.NewTransporter),
+		server.WithTLS(tlsc),
 	)
-	return frame.New(opts...)
+	return server.New(opts...)
 }

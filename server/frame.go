@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package frame
+package server
 
 import (
 	"context"
 	"errors"
+	"github.com/sujit-baniya/frame/middlewares/server/recovery"
 	"os"
 	"os/signal"
 	"syscall"
@@ -41,6 +42,14 @@ func New(opts ...config.Option) *Frame {
 	h := &Frame{
 		Engine: route.NewEngine(options),
 	}
+	return h
+}
+
+// Default creates a frame instance with default middlewares.
+func Default(opts ...config.Option) *Frame {
+	h := New(opts...)
+	h.Use(recovery.New())
+
 	return h
 }
 

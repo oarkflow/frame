@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package frame
+package server
 
 import (
 	"crypto/tls"

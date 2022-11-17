@@ -26,9 +26,9 @@
 package pprof
 
 import (
-	"github.com/sujit-baniya/frame"
 	"github.com/sujit-baniya/frame/middlewares/server/pprof/adaptor"
 	"github.com/sujit-baniya/frame/pkg/route"
+	"github.com/sujit-baniya/frame/server"
 	"net/http/pprof"
 )
 
@@ -48,7 +48,7 @@ func getPrefix(prefixOptions ...string) string {
 // Register the standard HandlerFuncs from the net/http/pprof package with
 // the provided hertz.Hertz. prefixOptions is a optional. If not prefixOptions,
 // the default path prefix is used, otherwise first prefixOptions will be path prefix.
-func Register(r *frame.Frame, prefixOptions ...string) {
+func Register(r *server.Frame, prefixOptions ...string) {
 	RouteRegister(&(r.RouterGroup), prefixOptions...)
 }
 
