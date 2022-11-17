@@ -18,7 +18,7 @@ package config
 
 import (
 	"crypto/tls"
-	"github.com/sujit-baniya/frame/pkg/app/server/registry"
+	"github.com/sujit-baniya/frame/server/registry"
 	"net"
 	"time"
 )

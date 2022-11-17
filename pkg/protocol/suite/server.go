@@ -18,7 +18,7 @@ package suite
 
 import (
 	"context"
-	"github.com/sujit-baniya/frame/pkg/app"
+	"github.com/sujit-baniya/frame"
 	"sync"
 
 	"github.com/sujit-baniya/frame/pkg/common/errors"
@@ -37,12 +37,12 @@ const (
 type Core interface {
 	// IsRunning Check whether engine is running or not
 	IsRunning() bool
-	// A RequestContext pool ready for protocol server impl
+	// A Context pool ready for protocol server impl
 	GetCtxPool() *sync.Pool
 	// Business logic entrance
 	// After pre-read works, protocol server may call this method
 	// to introduce the middlewares and handlers
-	ServeHTTP(c context.Context, ctx *app.RequestContext)
+	ServeHTTP(c context.Context, ctx *frame.Context)
 	// GetTracer for tracing requirement
 	GetTracer() tracer.Controller
 }

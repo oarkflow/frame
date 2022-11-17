@@ -20,8 +20,8 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"github.com/sujit-baniya/frame/pkg/app"
-	"github.com/sujit-baniya/frame/pkg/app/server/render"
+	"github.com/sujit-baniya/frame"
+	"github.com/sujit-baniya/frame/server/render"
 	"io"
 	"net"
 	"time"
@@ -65,7 +65,7 @@ type Option struct {
 	HTMLRender                   *render.HtmlEngine
 	EnableTrace                  bool
 	ContinueHandler              func(header *protocol.RequestHeader) bool
-	HijackConnHandle             func(c network.Conn, h app.HijackHandler)
+	HijackConnHandle             func(c network.Conn, h frame.HijackHandler)
 }
 
 type Server struct {
@@ -84,16 +84,20 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 
 		continueReadingRequest = true
 
-		hijackHandler app.HijackHandler
+		hijackHandler frame.HijackHandler
 
 		// HTTP1 path
 		// 1. Get a request context
 		// 2. Prepare it
 		// 3. Process it
 		// 4. Reset and recycle
-		ctx = s.Core.GetCtxPool().Get().(*app.RequestContext)
+		ctx = s.Core.GetCtxPool().Get().(*frame.Context)
 
 		traceCtl = s.Core.GetTracer()
+
+		// Use a new variable to hold the standard context to avoid modify the initial
+		// context.
+		cc = c
 	)
 
 	defer func() {
@@ -102,7 +106,7 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 			if !errors.Is(err, errs.ErrIdleTimeout) && !errors.Is(err, errs.ErrHijacked) {
 				ctx.GetTraceInfo().Stats().SetError(err)
 			}
-			traceCtl.DoFinish(c, ctx, err)
+			traceCtl.DoFinish(cc, ctx, err)
 		}
 
 		// Hijack may release and close the connection already
@@ -152,7 +156,7 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 			ctx.GetConn().SetReadTimeout(s.ReadTimeout) //nolint:errcheck
 		}
 		if s.EnableTrace {
-			c = traceCtl.DoStart(c, ctx)
+			cc = traceCtl.DoStart(c, ctx)
 			internalStats.Record(ctx.GetTraceInfo(), stats.ReadHeaderStart, err)
 		}
 		// Read Headers
@@ -241,7 +245,7 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 		//
 		// NOTE: All middlewares and business handler will be executed in this. And at this point, the request has been parsed
 		// and the route has been matched.
-		s.Core.ServeHTTP(c, ctx)
+		s.Core.ServeHTTP(cc, ctx)
 		if s.EnableTrace {
 			internalStats.Record(ctx.GetTraceInfo(), stats.ServerHandleFinish, err)
 		}
@@ -324,7 +328,7 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 
 		// general case
 		if s.EnableTrace {
-			traceCtl.DoFinish(c, ctx, err)
+			traceCtl.DoFinish(cc, ctx, err)
 		}
 
 		if connectionClose {
@@ -339,7 +343,7 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 	}
 }
 
-func writeErrorResponse(zw network.Writer, ctx *app.RequestContext, serverName []byte, err error) network.Writer {
+func writeErrorResponse(zw network.Writer, ctx *frame.Context, serverName []byte, err error) network.Writer {
 	errorHandler := defaultErrorHandler
 
 	errorHandler(ctx, err)
@@ -356,7 +360,7 @@ func writeErrorResponse(zw network.Writer, ctx *app.RequestContext, serverName [
 	return zw
 }
 
-func writeResponse(ctx *app.RequestContext, w network.Writer) error {
+func writeResponse(ctx *frame.Context, w network.Writer) error {
 	err := resp.Write(&ctx.Response, w)
 	if err != nil {
 		return err
@@ -365,7 +369,7 @@ func writeResponse(ctx *app.RequestContext, w network.Writer) error {
 	return err
 }
 
-func defaultErrorHandler(ctx *app.RequestContext, err error) {
+func defaultErrorHandler(ctx *frame.Context, err error) {
 	if netErr, ok := err.(*net.OpError); ok && netErr.Timeout() {
 		ctx.AbortWithMsg("Request timeout", consts.StatusRequestTimeout)
 	} else {

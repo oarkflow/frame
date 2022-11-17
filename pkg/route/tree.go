@@ -44,7 +44,7 @@ package route
 import (
 	"bytes"
 	"fmt"
-	"github.com/sujit-baniya/frame/pkg/app"
+	"github.com/sujit-baniya/frame"
 	"net/url"
 	"strings"
 	"unicode"
@@ -90,7 +90,7 @@ type (
 		ppath string
 		// param names
 		pnames     []string
-		handlers   app.HandlersChain
+		handlers   frame.HandlersChain
 		paramChild *node
 		anyChild   *node
 		// isLeaf indicates that node does not have child routes
@@ -149,7 +149,7 @@ func checkPathValid(path string) {
 }
 
 // addRoute adds a node with the given handle to the path.
-func (r *router) addRoute(path string, h app.HandlersChain) {
+func (r *router) addRoute(path string, h frame.HandlersChain) {
 	checkPathValid(path)
 
 	var (
@@ -193,7 +193,7 @@ func (r *router) addRoute(path string, h app.HandlersChain) {
 	r.insert(path, h, skind, ppath, pnames)
 }
 
-func (r *router) insert(path string, h app.HandlersChain, t kind, ppath string, pnames []string) {
+func (r *router) insert(path string, h frame.HandlersChain, t kind, ppath string, pnames []string) {
 	currentNode := r.root
 	if currentNode == nil {
 		panic("frame: invalid node")
@@ -498,7 +498,7 @@ func (n *node) findChildWithLabel(l byte) *node {
 	return nil
 }
 
-func newNode(t kind, pre string, p *node, child children, mh app.HandlersChain, ppath string, pnames []string, paramChildren, anyChildren *node) *node {
+func newNode(t kind, pre string, p *node, child children, mh frame.HandlersChain, ppath string, pnames []string, paramChildren, anyChildren *node) *node {
 	return &node{
 		kind:       t,
 		label:      pre[0],
@@ -516,7 +516,7 @@ func newNode(t kind, pre string, p *node, child children, mh app.HandlersChain, 
 
 // nodeValue holds return values of (*Node).getValue method
 type nodeValue struct {
-	handlers app.HandlersChain
+	handlers frame.HandlersChain
 	tsr      bool
 	fullPath string
 }

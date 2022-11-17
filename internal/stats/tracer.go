@@ -18,7 +18,7 @@ package stats
 
 import (
 	"context"
-	"github.com/sujit-baniya/frame/pkg/app"
+	"github.com/sujit-baniya/frame"
 	"runtime/debug"
 
 	"github.com/sujit-baniya/frame/pkg/common/hlog"
@@ -37,7 +37,7 @@ func (ctl *Controller) Append(col tracer.Tracer) {
 }
 
 // DoStart starts the tracers.
-func (ctl *Controller) DoStart(ctx context.Context, c *app.RequestContext) context.Context {
+func (ctl *Controller) DoStart(ctx context.Context, c *frame.Context) context.Context {
 	defer ctl.tryRecover()
 	Record(c.GetTraceInfo(), stats.HTTPStart, nil)
 
@@ -48,7 +48,7 @@ func (ctl *Controller) DoStart(ctx context.Context, c *app.RequestContext) conte
 }
 
 // DoFinish calls the tracers in reversed order.
-func (ctl *Controller) DoFinish(ctx context.Context, c *app.RequestContext, err error) {
+func (ctl *Controller) DoFinish(ctx context.Context, c *frame.Context, err error) {
 	defer ctl.tryRecover()
 	Record(c.GetTraceInfo(), stats.HTTPFinish, err)
 	if err != nil {

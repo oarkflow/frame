@@ -20,7 +20,10 @@ require (
 )
 
 require (
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20211019084208-fb5309c8db06 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/go-redis/redis/v9 v9.0.0-rc.1 // indirect
 	github.com/golang/protobuf v1.5.0 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/henrylee2cn/ameda v1.4.10 // indirect

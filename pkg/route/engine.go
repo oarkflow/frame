@@ -45,8 +45,8 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/sujit-baniya/frame/pkg/app"
-	"github.com/sujit-baniya/frame/pkg/app/server/render"
+	"github.com/sujit-baniya/frame"
+	"github.com/sujit-baniya/frame/server/render"
 	"html/template"
 	"io"
 	"reflect"
@@ -101,7 +101,7 @@ type RouteInfo struct {
 	Method      string
 	Path        string
 	Handler     string
-	HandlerFunc app.HandlerFunc
+	HandlerFunc frame.HandlerFunc
 }
 
 // RoutesInfo defines a RouteInfo array.
@@ -123,10 +123,10 @@ type Engine struct {
 
 	maxParams uint16
 
-	allNoMethod app.HandlersChain
-	allNoRoute  app.HandlersChain
-	noRoute     app.HandlersChain
-	noMethod    app.HandlersChain
+	allNoMethod frame.HandlersChain
+	allNoRoute  frame.HandlersChain
+	noRoute     frame.HandlersChain
+	noMethod    frame.HandlersChain
 
 	// For render HTML
 	delims     render.Delims
@@ -155,7 +155,7 @@ type Engine struct {
 	protocolSuite   *suite.Config
 	protocolServers map[string]protocol.Server
 
-	// RequestContext pool
+	// Context pool
 	ctxPool sync.Pool
 
 	// Function to handle panics recovered from http handlers.
@@ -163,7 +163,7 @@ type Engine struct {
 	// 500 (Internal Server Error).
 	// The handler can be used to keep your server from crashing because of
 	// unrecovered panics.
-	PanicHandler app.HandlerFunc
+	PanicHandler frame.HandlerFunc
 
 	// ContinueHandler is called after receiving the Expect 100 Continue Header
 	//
@@ -225,7 +225,7 @@ func (engine *Engine) IsRunning() bool {
 	return atomic.LoadUint32(&engine.status) == statusRunning
 }
 
-func (engine *Engine) HijackConnHandle(c network.Conn, h app.HijackHandler) {
+func (engine *Engine) HijackConnHandle(c network.Conn, h frame.HijackHandler) {
 	engine.hijackConnHandler(c, h)
 }
 
@@ -241,11 +241,11 @@ const (
 	statusClosed
 )
 
-// NewContext make a pure RequestContext without any http request/response information
+// NewContext make a pure Context without any http request/response information
 //
 // Set the Request filed before use it for handlers
-func (engine *Engine) NewContext() *app.RequestContext {
-	return app.NewContext(engine.maxParams)
+func (engine *Engine) NewContext() *frame.Context {
+	return frame.NewContext(engine.maxParams)
 }
 
 // Shutdown starts the server's graceful exit by next steps:
@@ -523,7 +523,7 @@ func NewEngine(opt *config.Options) *Engine {
 
 	traceLevel := initTrace(engine)
 
-	// prepare RequestContext pool
+	// prepare Context pool
 	engine.ctxPool.New = func() interface{} {
 		ctx := engine.allocateContext()
 		if engine.enableTrace {
@@ -562,16 +562,16 @@ func h2Enable(opt *config.Options) bool {
 	return opt.H2C || (opt.TLS != nil && opt.ALPN)
 }
 
-func debugPrintRoute(httpMethod, absolutePath string, handlers app.HandlersChain) {
+func debugPrintRoute(httpMethod, absolutePath string, handlers frame.HandlersChain) {
 	nuHandlers := len(handlers)
-	handlerName := app.GetHandlerName(handlers.Last())
+	handlerName := frame.GetHandlerName(handlers.Last())
 	if handlerName == "" {
 		handlerName = utils.NameOfFunction(handlers.Last())
 	}
 	hlog.SystemLogger().Debugf("Method=%-6s absolutePath=%-25s --> handlerName=%s (num=%d handlers)", httpMethod, absolutePath, handlerName, nuHandlers)
 }
 
-func (engine *Engine) addRoute(method, path string, handlers app.HandlersChain) {
+func (engine *Engine) addRoute(method, path string, handlers frame.HandlersChain) {
 	if len(path) == 0 {
 		panic("path should not be ''")
 	}
@@ -611,14 +611,14 @@ func printNode(node *node, level int) {
 	}
 }
 
-func (engine *Engine) recv(ctx *app.RequestContext) {
+func (engine *Engine) recv(ctx *frame.Context) {
 	if rcv := recover(); rcv != nil {
 		engine.PanicHandler(context.Background(), ctx)
 	}
 }
 
 // ServeHTTP makes the router implement the Handler interface.
-func (engine *Engine) ServeHTTP(c context.Context, ctx *app.RequestContext) {
+func (engine *Engine) ServeHTTP(c context.Context, ctx *frame.Context) {
 	if engine.PanicHandler != nil {
 		defer engine.recv(ctx)
 	}
@@ -685,14 +685,14 @@ func (engine *Engine) ServeHTTP(c context.Context, ctx *app.RequestContext) {
 	serveError(c, ctx, consts.StatusNotFound, default404Body)
 }
 
-func (engine *Engine) allocateContext() *app.RequestContext {
+func (engine *Engine) allocateContext() *frame.Context {
 	ctx := engine.NewContext()
 	ctx.Request.SetMaxKeepBodySize(engine.options.MaxKeepBodySize)
 	ctx.Response.SetMaxKeepBodySize(engine.options.MaxKeepBodySize)
 	return ctx
 }
 
-func serveError(c context.Context, ctx *app.RequestContext, code int, defaultMessage []byte) {
+func serveError(c context.Context, ctx *frame.Context, code int, defaultMessage []byte) {
 	ctx.SetStatusCode(code)
 	ctx.Next(c)
 	if ctx.Response.StatusCode() == code {
@@ -713,7 +713,7 @@ func trailingSlashURL(ts string) string {
 	return tmpURI
 }
 
-func redirectTrailingSlash(c *app.RequestContext) {
+func redirectTrailingSlash(c *frame.Context) {
 	p := bytesconv.B2s(c.Request.URI().Path())
 	if prefix := utils.CleanPath(bytesconv.B2s(c.Request.Header.Peek("X-Forwarded-Prefix"))); prefix != "." {
 		p = prefix + "/" + p
@@ -731,7 +731,7 @@ func redirectTrailingSlash(c *app.RequestContext) {
 	redirectRequest(c)
 }
 
-func redirectRequest(c *app.RequestContext) {
+func redirectRequest(c *frame.Context) {
 	code := consts.StatusMovedPermanently // Permanent redirect, request with GET method
 	if bytesconv.B2s(c.Request.Header.Method()) != consts.MethodGet {
 		code = consts.StatusTemporaryRedirect
@@ -740,7 +740,7 @@ func redirectRequest(c *app.RequestContext) {
 	c.Redirect(code, c.Request.URI().RequestURI())
 }
 
-func redirectFixedPath(c *app.RequestContext, root *node, trailingSlash bool) bool {
+func redirectFixedPath(c *frame.Context, root *node, trailingSlash bool) bool {
 	rPath := bytesconv.B2s(c.Request.URI().Path())
 	if fixedPath, ok := root.findCaseInsensitivePath(utils.CleanPath(rPath), trailingSlash); ok {
 		c.Request.SetRequestURI(bytesconv.B2s(fixedPath))
@@ -751,13 +751,13 @@ func redirectFixedPath(c *app.RequestContext, root *node, trailingSlash bool) bo
 }
 
 // NoRoute adds handlers for NoRoute. It returns a 404 code by default.
-func (engine *Engine) NoRoute(handlers ...app.HandlerFunc) {
+func (engine *Engine) NoRoute(handlers ...frame.HandlerFunc) {
 	engine.noRoute = handlers
 	engine.rebuild404Handlers()
 }
 
 // NoMethod sets the handlers called when the HTTP method does not match.
-func (engine *Engine) NoMethod(handlers ...app.HandlerFunc) {
+func (engine *Engine) NoMethod(handlers ...frame.HandlerFunc) {
 	engine.noMethod = handlers
 	engine.rebuild405Handlers()
 }
@@ -774,7 +774,7 @@ func (engine *Engine) rebuild405Handlers() {
 // included in the handlers chain for every single request. Even 404, 405, static files...
 //
 // For example, this is the right place for a logger or error management middleware.
-func (engine *Engine) Use(middleware ...app.HandlerFunc) IRoutes {
+func (engine *Engine) Use(middleware ...frame.HandlerFunc) IRoutes {
 	engine.RouterGroup.Use(middleware...)
 	engine.rebuild404Handlers()
 	engine.rebuild405Handlers()
@@ -827,7 +827,7 @@ func (engine *Engine) releaseHijackConn(hjc *hijackConn) {
 	engine.hijackConnPool.Put(hjc)
 }
 
-func (engine *Engine) hijackConnHandler(c network.Conn, h app.HijackHandler) {
+func (engine *Engine) hijackConnHandler(c network.Conn, h frame.HijackHandler) {
 	hjc := engine.acquireHijackConn(c)
 	h(hjc)
 

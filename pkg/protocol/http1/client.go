@@ -46,7 +46,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"github.com/sujit-baniya/frame/pkg/app/client/retry"
+	"github.com/sujit-baniya/frame/client/retry"
 	"io"
 	"net"
 	"strings"

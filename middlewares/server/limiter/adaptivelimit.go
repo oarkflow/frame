@@ -14,22 +14,25 @@
  * limitations under the License.
  */
 
-package tracer
+package limiter
 
 import (
 	"context"
 	"github.com/sujit-baniya/frame"
+	"github.com/sujit-baniya/frame/pkg/protocol/consts"
 )
 
-// Tracer is executed at the start and finish of an HTTP.
-type Tracer interface {
-	Start(ctx context.Context, c *frame.Context) context.Context
-	Finish(ctx context.Context, c *frame.Context)
-}
-
-type Controller interface {
-	Append(col Tracer)
-	DoStart(ctx context.Context, c *frame.Context) context.Context
-	DoFinish(ctx context.Context, c *frame.Context, err error)
-	HasTracer() bool
+// AdaptiveLimit CPU sampling algorithm using BBR
+func AdaptiveLimit(opts ...Option) frame.HandlerFunc {
+	limiter := NewLimiter(opts...)
+	return func(c context.Context, ctx *frame.Context) {
+		done, err := limiter.Allow()
+		if err != nil {
+			ctx.AbortWithError(consts.StatusTooManyRequests, err)
+			ctx.String(consts.StatusTooManyRequests, ctx.Errors.String())
+		} else {
+			ctx.Next(c)
+			done()
+		}
+	}
 }

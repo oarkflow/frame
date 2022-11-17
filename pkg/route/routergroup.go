@@ -42,7 +42,7 @@ package route
 
 import (
 	"context"
-	"github.com/sujit-baniya/frame/pkg/app"
+	"github.com/sujit-baniya/frame"
 	"path"
 	"regexp"
 	"strings"
@@ -54,30 +54,30 @@ import (
 // IRouter defines all router handle interface includes single and group router.
 type IRouter interface {
 	IRoutes
-	Group(string, ...app.HandlerFunc) *RouterGroup
+	Group(string, ...frame.HandlerFunc) *RouterGroup
 }
 
 // IRoutes defines all router handle interface.
 type IRoutes interface {
-	Use(...app.HandlerFunc) IRoutes
-	Handle(string, string, ...app.HandlerFunc) IRoutes
-	Any(string, ...app.HandlerFunc) IRoutes
-	GET(string, ...app.HandlerFunc) IRoutes
-	POST(string, ...app.HandlerFunc) IRoutes
-	DELETE(string, ...app.HandlerFunc) IRoutes
-	PATCH(string, ...app.HandlerFunc) IRoutes
-	PUT(string, ...app.HandlerFunc) IRoutes
-	OPTIONS(string, ...app.HandlerFunc) IRoutes
-	HEAD(string, ...app.HandlerFunc) IRoutes
+	Use(...frame.HandlerFunc) IRoutes
+	Handle(string, string, ...frame.HandlerFunc) IRoutes
+	Any(string, ...frame.HandlerFunc) IRoutes
+	GET(string, ...frame.HandlerFunc) IRoutes
+	POST(string, ...frame.HandlerFunc) IRoutes
+	DELETE(string, ...frame.HandlerFunc) IRoutes
+	PATCH(string, ...frame.HandlerFunc) IRoutes
+	PUT(string, ...frame.HandlerFunc) IRoutes
+	OPTIONS(string, ...frame.HandlerFunc) IRoutes
+	HEAD(string, ...frame.HandlerFunc) IRoutes
 	StaticFile(string, string) IRoutes
 	Static(string, string) IRoutes
-	StaticFS(string, *app.FS) IRoutes
+	StaticFS(string, *frame.FS) IRoutes
 }
 
 // RouterGroup is used internally to configure router, a RouterGroup is associated with
 // a prefix and an array of handlers (middleware).
 type RouterGroup struct {
-	Handlers app.HandlersChain
+	Handlers frame.HandlersChain
 	basePath string
 	engine   *Engine
 	root     bool
@@ -86,14 +86,14 @@ type RouterGroup struct {
 var _ IRouter = (*RouterGroup)(nil)
 
 // Use adds middleware to the group, see example code in GitHub.
-func (group *RouterGroup) Use(middleware ...app.HandlerFunc) IRoutes {
+func (group *RouterGroup) Use(middleware ...frame.HandlerFunc) IRoutes {
 	group.Handlers = append(group.Handlers, middleware...)
 	return group.returnObj()
 }
 
 // Group creates a new router group. You should add all the routes that have common middlewares or the same path prefix.
 // For example, all the routes that use a common middleware for authorization could be grouped.
-func (group *RouterGroup) Group(relativePath string, handlers ...app.HandlerFunc) *RouterGroup {
+func (group *RouterGroup) Group(relativePath string, handlers ...frame.HandlerFunc) *RouterGroup {
 	return &RouterGroup{
 		Handlers: group.combineHandlers(handlers),
 		basePath: group.calculateAbsolutePath(relativePath),
@@ -107,7 +107,7 @@ func (group *RouterGroup) BasePath() string {
 	return group.basePath
 }
 
-func (group *RouterGroup) handle(httpMethod, relativePath string, handlers app.HandlersChain) IRoutes {
+func (group *RouterGroup) handle(httpMethod, relativePath string, handlers frame.HandlersChain) IRoutes {
 	absolutePath := group.calculateAbsolutePath(relativePath)
 	handlers = group.combineHandlers(handlers)
 	group.engine.addRoute(httpMethod, absolutePath, handlers)
@@ -126,7 +126,7 @@ var upperLetterReg = regexp.MustCompile("^[A-Z]+$")
 // This function is intended for bulk loading and to allow the usage of less
 // frequently used, non-standardized or custom methods (e.g. for internal
 // communication with a proxy).
-func (group *RouterGroup) Handle(httpMethod, relativePath string, handlers ...app.HandlerFunc) IRoutes {
+func (group *RouterGroup) Handle(httpMethod, relativePath string, handlers ...frame.HandlerFunc) IRoutes {
 	if matches := upperLetterReg.MatchString(httpMethod); !matches {
 		panic("http method " + httpMethod + " is not valid")
 	}
@@ -134,43 +134,43 @@ func (group *RouterGroup) Handle(httpMethod, relativePath string, handlers ...ap
 }
 
 // POST is a shortcut for router.Handle("POST", path, handle).
-func (group *RouterGroup) POST(relativePath string, handlers ...app.HandlerFunc) IRoutes {
+func (group *RouterGroup) POST(relativePath string, handlers ...frame.HandlerFunc) IRoutes {
 	return group.handle(consts.MethodPost, relativePath, handlers)
 }
 
 // GET is a shortcut for router.Handle("GET", path, handle).
-func (group *RouterGroup) GET(relativePath string, handlers ...app.HandlerFunc) IRoutes {
+func (group *RouterGroup) GET(relativePath string, handlers ...frame.HandlerFunc) IRoutes {
 	return group.handle(consts.MethodGet, relativePath, handlers)
 }
 
 // DELETE is a shortcut for router.Handle("DELETE", path, handle).
-func (group *RouterGroup) DELETE(relativePath string, handlers ...app.HandlerFunc) IRoutes {
+func (group *RouterGroup) DELETE(relativePath string, handlers ...frame.HandlerFunc) IRoutes {
 	return group.handle(consts.MethodDelete, relativePath, handlers)
 }
 
 // PATCH is a shortcut for router.Handle("PATCH", path, handle).
-func (group *RouterGroup) PATCH(relativePath string, handlers ...app.HandlerFunc) IRoutes {
+func (group *RouterGroup) PATCH(relativePath string, handlers ...frame.HandlerFunc) IRoutes {
 	return group.handle(consts.MethodPatch, relativePath, handlers)
 }
 
 // PUT is a shortcut for router.Handle("PUT", path, handle).
-func (group *RouterGroup) PUT(relativePath string, handlers ...app.HandlerFunc) IRoutes {
+func (group *RouterGroup) PUT(relativePath string, handlers ...frame.HandlerFunc) IRoutes {
 	return group.handle(consts.MethodPut, relativePath, handlers)
 }
 
 // OPTIONS is a shortcut for router.Handle("OPTIONS", path, handle).
-func (group *RouterGroup) OPTIONS(relativePath string, handlers ...app.HandlerFunc) IRoutes {
+func (group *RouterGroup) OPTIONS(relativePath string, handlers ...frame.HandlerFunc) IRoutes {
 	return group.handle(consts.MethodOptions, relativePath, handlers)
 }
 
 // HEAD is a shortcut for router.Handle("HEAD", path, handle).
-func (group *RouterGroup) HEAD(relativePath string, handlers ...app.HandlerFunc) IRoutes {
+func (group *RouterGroup) HEAD(relativePath string, handlers ...frame.HandlerFunc) IRoutes {
 	return group.handle(consts.MethodHead, relativePath, handlers)
 }
 
 // Any registers a route that matches all the HTTP methods.
 // GET, POST, PUT, PATCH, HEAD, OPTIONS, DELETE, CONNECT, TRACE.
-func (group *RouterGroup) Any(relativePath string, handlers ...app.HandlerFunc) IRoutes {
+func (group *RouterGroup) Any(relativePath string, handlers ...frame.HandlerFunc) IRoutes {
 	group.handle(consts.MethodGet, relativePath, handlers)
 	group.handle(consts.MethodPost, relativePath, handlers)
 	group.handle(consts.MethodPut, relativePath, handlers)
@@ -189,7 +189,7 @@ func (group *RouterGroup) StaticFile(relativePath, filepath string) IRoutes {
 	if strings.Contains(relativePath, ":") || strings.Contains(relativePath, "*") {
 		panic("URL parameters can not be used when serving a static file")
 	}
-	handler := func(c context.Context, ctx *app.RequestContext) {
+	handler := func(c context.Context, ctx *frame.Context) {
 		ctx.File(filepath)
 	}
 	group.GET(relativePath, handler)
@@ -203,11 +203,11 @@ func (group *RouterGroup) StaticFile(relativePath, filepath string) IRoutes {
 //
 //	router.Static("/static", "/var/www")
 func (group *RouterGroup) Static(relativePath, root string) IRoutes {
-	return group.StaticFS(relativePath, &app.FS{Root: root})
+	return group.StaticFS(relativePath, &frame.FS{Root: root})
 }
 
 // StaticFS works just like `Static()` but a custom `FS` can be used instead.
-func (group *RouterGroup) StaticFS(relativePath string, fs *app.FS) IRoutes {
+func (group *RouterGroup) StaticFS(relativePath string, fs *frame.FS) IRoutes {
 	if strings.Contains(relativePath, ":") || strings.Contains(relativePath, "*") {
 		panic("URL parameters can not be used when serving a static folder")
 	}
@@ -220,12 +220,12 @@ func (group *RouterGroup) StaticFS(relativePath string, fs *app.FS) IRoutes {
 	return group.returnObj()
 }
 
-func (group *RouterGroup) combineHandlers(handlers app.HandlersChain) app.HandlersChain {
+func (group *RouterGroup) combineHandlers(handlers frame.HandlersChain) frame.HandlersChain {
 	finalSize := len(group.Handlers) + len(handlers)
 	if finalSize >= int(rConsts.AbortIndex) {
 		panic("too many handlers")
 	}
-	mergedHandlers := make(app.HandlersChain, finalSize)
+	mergedHandlers := make(frame.HandlersChain, finalSize)
 	copy(mergedHandlers, group.Handlers)
 	copy(mergedHandlers[len(group.Handlers):], handlers)
 	return mergedHandlers
@@ -244,50 +244,50 @@ func (group *RouterGroup) returnObj() IRoutes {
 
 // GETEX adds a handlerName param. When handler is decorated or handler is an anonymous function,
 // Frame cannot get handler name directly. In this case, pass handlerName explicitly.
-func (group *RouterGroup) GETEX(relativePath string, handler app.HandlerFunc, handlerName string) IRoutes {
-	app.SetHandlerName(handler, handlerName)
+func (group *RouterGroup) GETEX(relativePath string, handler frame.HandlerFunc, handlerName string) IRoutes {
+	frame.SetHandlerName(handler, handlerName)
 	return group.GET(relativePath, handler)
 }
 
 // POSTEX adds a handlerName param. When handler is decorated or handler is an anonymous function,
 // Frame cannot get handler name directly. In this case, pass handlerName explicitly.
-func (group *RouterGroup) POSTEX(relativePath string, handler app.HandlerFunc, handlerName string) IRoutes {
-	app.SetHandlerName(handler, handlerName)
+func (group *RouterGroup) POSTEX(relativePath string, handler frame.HandlerFunc, handlerName string) IRoutes {
+	frame.SetHandlerName(handler, handlerName)
 	return group.POST(relativePath, handler)
 }
 
 // PUTEX adds a handlerName param. When handler is decorated or handler is an anonymous function,
 // Frame cannot get handler name directly. In this case, pass handlerName explicitly.
-func (group *RouterGroup) PUTEX(relativePath string, handler app.HandlerFunc, handlerName string) IRoutes {
-	app.SetHandlerName(handler, handlerName)
+func (group *RouterGroup) PUTEX(relativePath string, handler frame.HandlerFunc, handlerName string) IRoutes {
+	frame.SetHandlerName(handler, handlerName)
 	return group.PUT(relativePath, handler)
 }
 
 // DELETEEX adds a handlerName param. When handler is decorated or handler is an anonymous function,
 // Frame cannot get handler name directly. In this case, pass handlerName explicitly.
-func (group *RouterGroup) DELETEEX(relativePath string, handler app.HandlerFunc, handlerName string) IRoutes {
-	app.SetHandlerName(handler, handlerName)
+func (group *RouterGroup) DELETEEX(relativePath string, handler frame.HandlerFunc, handlerName string) IRoutes {
+	frame.SetHandlerName(handler, handlerName)
 	return group.DELETE(relativePath, handler)
 }
 
 // HEADEX adds a handlerName param. When handler is decorated or handler is an anonymous function,
 // Frame cannot get handler name directly. In this case, pass handlerName explicitly.
-func (group *RouterGroup) HEADEX(relativePath string, handler app.HandlerFunc, handlerName string) IRoutes {
-	app.SetHandlerName(handler, handlerName)
+func (group *RouterGroup) HEADEX(relativePath string, handler frame.HandlerFunc, handlerName string) IRoutes {
+	frame.SetHandlerName(handler, handlerName)
 	return group.HEAD(relativePath, handler)
 }
 
 // AnyEX adds a handlerName param. When handler is decorated or handler is an anonymous function,
 // Frame cannot get handler name directly. In this case, pass handlerName explicitly.
-func (group *RouterGroup) AnyEX(relativePath string, handler app.HandlerFunc, handlerName string) IRoutes {
-	app.SetHandlerName(handler, handlerName)
+func (group *RouterGroup) AnyEX(relativePath string, handler frame.HandlerFunc, handlerName string) IRoutes {
+	frame.SetHandlerName(handler, handlerName)
 	return group.Any(relativePath, handler)
 }
 
 // HandleEX adds a handlerName param. When handler is decorated or handler is an anonymous function,
 // Frame cannot get handler name directly. In this case, pass handlerName explicitly.
-func (group *RouterGroup) HandleEX(httpMethod, relativePath string, handler app.HandlerFunc, handlerName string) IRoutes {
-	app.SetHandlerName(handler, handlerName)
+func (group *RouterGroup) HandleEX(httpMethod, relativePath string, handler frame.HandlerFunc, handlerName string) IRoutes {
+	frame.SetHandlerName(handler, handlerName)
 	return group.Handle(httpMethod, relativePath, handler)
 }
 
