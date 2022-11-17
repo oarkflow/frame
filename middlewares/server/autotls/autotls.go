@@ -56,7 +56,7 @@ func NewTlsConfig(domains ...string) *tls.Config {
 func run(ctx context.Context, tlsServer *frame.Frame) error {
 	var g errgroup.Group
 
-	redirectServer := frame.Default(frame.WithHostPorts(":http"))
+	redirectServer := frame.New(frame.WithHostPorts(":http"))
 	redirectServer.NoRoute(func(c context.Context, ctx *frame.Context) {
 		target := "https://" + string(ctx.Request.URI().Host()) + string(ctx.Request.URI().RequestURI())
 
@@ -125,5 +125,5 @@ func NewServerWithManagerAndTlsConfig(m *autocert.Manager, tlsc *tls.Config, opt
 		frame.WithTransport(standard.NewTransporter),
 		frame.WithTLS(tlsc),
 	)
-	return frame.Default(opts...)
+	return frame.New(opts...)
 }
