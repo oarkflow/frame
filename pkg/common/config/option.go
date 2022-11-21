@@ -35,6 +35,7 @@ const (
 	defaultReadTimeout        = 3 * time.Minute
 	defaultAddr               = ":8888"
 	defaultNetwork            = "tcp"
+	defaultBasePath           = "/"
 	defaultMaxRequestBodySize = 4 * 1024 * 1024
 	defaultWaitExitTimeout    = time.Second * 5
 	defaultReadBufferSize     = 4 * 1024
@@ -61,6 +62,7 @@ type Options struct {
 	DisablePrintRoute            bool
 	Network                      string
 	Addr                         string
+	BasePath                     string
 	Layout                       string
 	ExitWaitTimeout              time.Duration
 	TLS                          *tls.Config
@@ -168,6 +170,9 @@ func NewOptions(opts []Option) *Options {
 
 		// listen address
 		Addr: defaultAddr,
+
+		// basePath
+		BasePath: defaultBasePath,
 
 		// Define the max request body size. If the body Size exceeds this value,
 		// an error will be returned

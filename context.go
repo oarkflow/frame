@@ -728,10 +728,50 @@ func (ctx *Context) GetInt(key string) (i int) {
 	return
 }
 
+// GetInt32 returns the value associated with the key as an integer. Return int32(0) when type is error.
+func (ctx *Context) GetInt32(key string) (i32 int32) {
+	if val, ok := ctx.Get(key); ok && val != nil {
+		i32, _ = val.(int32)
+	}
+	return
+}
+
 // GetInt64 returns the value associated with the key as an integer. Return int64(0) when type is error.
 func (ctx *Context) GetInt64(key string) (i64 int64) {
 	if val, ok := ctx.Get(key); ok && val != nil {
 		i64, _ = val.(int64)
+	}
+	return
+}
+
+// GetUint returns the value associated with the key as an unsigned integer. Return uint(0) when type is error.
+func (ctx *Context) GetUint(key string) (ui uint) {
+	if val, ok := ctx.Get(key); ok && val != nil {
+		ui, _ = val.(uint)
+	}
+	return
+}
+
+// GetUint32 returns the value associated with the key as an unsigned integer. Return uint32(0) when type is error.
+func (ctx *Context) GetUint32(key string) (ui32 uint32) {
+	if val, ok := ctx.Get(key); ok && val != nil {
+		ui32, _ = val.(uint32)
+	}
+	return
+}
+
+// GetUint64 returns the value associated with the key as an unsigned integer. Return uint64(0) when type is error.
+func (ctx *Context) GetUint64(key string) (ui64 uint64) {
+	if val, ok := ctx.Get(key); ok && val != nil {
+		ui64, _ = val.(uint64)
+	}
+	return
+}
+
+// GetFloat32 returns the value associated with the key as a float32. Return float32(0.0) when type is error.
+func (ctx *Context) GetFloat32(key string) (f32 float32) {
+	if val, ok := ctx.Get(key); ok && val != nil {
+		f32, _ = val.(float32)
 	}
 	return
 }
@@ -1030,19 +1070,57 @@ func (ctx *Context) Body() ([]byte, error) {
 type ClientIP func(ctx *Context) string
 
 var defaultClientIP = func(ctx *Context) string {
-	RemoteIPHeaders := []string{"X-Real-IP", "X-Forwarded-For"}
-	for _, headerName := range RemoteIPHeaders {
-		ip := ctx.Request.Header.Get(headerName)
-		if ip != "" {
-			return ip
+	RemoteIPHeaders := []string{"X-Forwarded-For", "X-Real-IP"}
+	TrustedProxies := []string{"0.0.0.0"}
+
+	remoteIP, _, err := net.SplitHostPort(strings.TrimSpace(ctx.RemoteAddr().String()))
+	if err != nil {
+		return ""
+	}
+	trusted := isTrustedProxy(TrustedProxies, remoteIP)
+
+	if trusted {
+		for _, headerName := range RemoteIPHeaders {
+			ip, valid := validateHeader(TrustedProxies, ctx.Request.Header.Get(headerName))
+			if valid {
+				return ip
+			}
 		}
 	}
 
-	if ip, _, err := net.SplitHostPort(strings.TrimSpace(ctx.RemoteAddr().String())); err == nil {
-		return ip
-	}
+	return remoteIP
+}
 
-	return ""
+// isTrustedProxy will check whether the IP address is included in the trusted list according to TrustedProxies
+func isTrustedProxy(trustedProxies []string, remoteIP string) bool {
+	for _, proxy := range trustedProxies {
+		if proxy == remoteIP {
+			return true
+		}
+	}
+	return false
+}
+
+// validateHeader will parse X-Forwarded-For and X-Real-IP header and return the Initial client IP address or an untrusted IP address
+func validateHeader(trustedProxies []string, header string) (clientIP string, valid bool) {
+	if header == "" {
+		return "", false
+	}
+	items := strings.Split(header, ",")
+	for i := len(items) - 1; i >= 0; i-- {
+		ipStr := strings.TrimSpace(items[i])
+		ip := net.ParseIP(ipStr)
+		if ip == nil {
+			break
+		}
+
+		// X-Forwarded-For is appended by proxy
+		// Check IPs in reverse order and stop when find untrusted proxy
+		if (i == 0) || (!isTrustedProxy(trustedProxies, ipStr)) {
+			return ipStr, true
+		}
+	}
+	return "", false
 }
 
 // SetClientIPFunc sets ClientIP function implementation to get ClientIP.

@@ -157,7 +157,7 @@ type Engine struct {
 	protocolSuite   *suite.Config
 	protocolServers map[string]protocol.Server
 
-	// RequestContext pool
+	// Context pool
 	ctxPool sync.Pool
 
 	// Function to handle panics recovered from http handlers.
@@ -263,7 +263,7 @@ const (
 	statusClosed
 )
 
-// NewContext make a pure RequestContext without any http request/response information
+// NewContext make a pure Context without any http request/response information
 //
 // Set the Request filed before use it for handlers
 func (engine *Engine) NewContext() *frame.Context {
@@ -532,7 +532,7 @@ func NewEngine(opt *config.Options) *Engine {
 		trees: make(MethodTrees, 0, 9),
 		RouterGroup: RouterGroup{
 			Handlers: nil,
-			basePath: "/",
+			basePath: opt.BasePath,
 			root:     true,
 		},
 		transport:       defaultTransporter(opt),
@@ -548,7 +548,7 @@ func NewEngine(opt *config.Options) *Engine {
 
 	traceLevel := initTrace(engine)
 
-	// prepare RequestContext pool
+	// prepare Context pool
 	engine.ctxPool.New = func() interface{} {
 		ctx := engine.allocateContext()
 		if engine.enableTrace {

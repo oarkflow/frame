@@ -20,6 +20,7 @@ import (
 	"crypto/tls"
 	"github.com/sujit-baniya/frame/server/registry"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/sujit-baniya/frame/pkg/common/config"
@@ -155,6 +156,19 @@ func WithHostPorts(hp string) config.Option {
 func WithLayout(layout string) config.Option {
 	return config.Option{F: func(o *config.Options) {
 		o.Layout = layout
+	}}
+}
+
+func WithBasePath(basePath string) config.Option {
+	return config.Option{F: func(o *config.Options) {
+		//Must be "/" prefix and suffix,If not the default concatenate "/"
+		if !strings.HasPrefix(basePath, "/") {
+			basePath = "/" + basePath
+		}
+		if !strings.HasSuffix(basePath, "/") {
+			basePath = basePath + "/"
+		}
+		o.BasePath = basePath
 	}}
 }
 
