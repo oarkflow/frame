@@ -7,7 +7,6 @@ require (
 	github.com/bytedance/gopkg v0.0.0-20221028032628-1c5718bfa764
 	github.com/bytedance/sonic v1.5.0
 	github.com/c9s/goprocinfo v0.0.0-20210130143923-c95fcf8c64a8
-	github.com/cloudwego/hertz v0.4.1
 	github.com/cloudwego/netpoll v0.3.1
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/go-redis/redis/v9 v9.0.0-rc.1
