@@ -43,6 +43,7 @@ package route
 import (
 	"context"
 	"github.com/sujit-baniya/frame"
+	"github.com/sujit-baniya/frame/internal/utils"
 	"path"
 	"regexp"
 	"strings"
@@ -70,7 +71,7 @@ type IRoutes interface {
 	OPTIONS(string, ...frame.HandlerFunc) IRoutes
 	HEAD(string, ...frame.HandlerFunc) IRoutes
 	StaticFile(string, string) IRoutes
-	Static(string, string) IRoutes
+	Static(string, string, ...frame.StaticConfig) IRoutes
 	StaticFS(string, *frame.FS) IRoutes
 }
 
@@ -202,8 +203,72 @@ func (group *RouterGroup) StaticFile(relativePath, filepath string) IRoutes {
 // use :
 //
 //	router.Static("/static", "/var/www")
-func (group *RouterGroup) Static(relativePath, root string) IRoutes {
-	return group.StaticFS(relativePath, &frame.FS{Root: root})
+func (group *RouterGroup) Static(prefix, root string, cfg ...frame.StaticConfig) IRoutes {
+	var config frame.StaticConfig
+	if len(cfg) > 0 {
+		config = cfg[0]
+	}
+	// For security, we want to restrict to the current work directory.
+	if root == "" {
+		root = "."
+	}
+	// Cannot have an empty prefix
+	if prefix == "" {
+		prefix = "/"
+	}
+	// Prefix always start with a '/' or '*'
+	if prefix[0] != '/' {
+		prefix = "/" + prefix
+	}
+
+	// Strip trailing slashes from the root path
+	if len(root) > 0 && root[len(root)-1] == '/' {
+		root = root[:len(root)-1]
+	}
+	// Is prefix a direct wildcard?
+	isStar := prefix == "/*"
+	// Is prefix a partial wildcard?
+	if strings.Contains(prefix, "*") {
+		isStar = true
+		prefix = strings.Split(prefix, "*")[0]
+		// Fix this later
+	}
+	prefixLen := len(prefix)
+	if prefixLen > 1 && prefix[prefixLen-1:] == "/" {
+		// /john/ -> /john
+		prefixLen--
+		prefix = prefix[:prefixLen]
+	}
+	if config.PathRewrite == nil {
+		config.PathRewrite = func(ctx *frame.Context) []byte {
+			path := ctx.Path()
+			if len(path) >= prefixLen {
+				if isStar && utils.UnsafeString(path[0:prefixLen]) == prefix {
+					path = append(path[0:0], '/')
+				} else {
+					path = path[prefixLen:]
+					if len(path) == 0 || path[len(path)-1] != '/' {
+						path = append(path, '/')
+					}
+				}
+			}
+			if len(path) > 0 && path[0] != '/' {
+				path = append([]byte("/"), path...)
+			}
+			return path
+		}
+	}
+	return group.StaticFS(prefix, &frame.FS{
+		Root:                 root,
+		IndexNames:           config.IndexNames,
+		GenerateIndexPages:   config.GenerateIndexPages,
+		Compress:             config.Compress,
+		AcceptByteRange:      config.AcceptByteRange,
+		PathRewrite:          config.PathRewrite,
+		PathNotFound:         config.PathNotFound,
+		CacheDuration:        config.CacheDuration,
+		CompressedFileSuffix: config.CompressedFileSuffix,
+	})
 }
 
 // StaticFS works just like `Static()` but a custom `FS` can be used instead.

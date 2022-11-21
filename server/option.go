@@ -151,6 +151,13 @@ func WithHostPorts(hp string) config.Option {
 	}}
 }
 
+// WithLayout sets listening address.
+func WithLayout(layout string) config.Option {
+	return config.Option{F: func(o *config.Options) {
+		o.Layout = layout
+	}}
+}
+
 // WithMaxRequestBodySize sets the limitation of request body size. Unit: byte
 //
 // Body buffer which larger than this size will be put back into buffer poll.

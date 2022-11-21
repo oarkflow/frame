@@ -918,6 +918,7 @@ func newHttp1OptionFromEngine(engine *Engine) *http1.Option {
 		MaxRequestBodySize:           engine.options.MaxRequestBodySize,
 		IdleTimeout:                  engine.options.IdleTimeout,
 		ReadTimeout:                  engine.options.ReadTimeout,
+		Layout:                       engine.options.Layout,
 		ServerName:                   engine.GetServerName(),
 		ContinueHandler:              engine.ContinueHandler,
 		TLS:                          engine.options.TLS,

@@ -98,6 +98,17 @@ var (
 // The returned path may refer to ctx members. For example, ctx.Path().
 type PathRewriteFunc func(ctx *Context) []byte
 
+type StaticConfig struct {
+	IndexNames           []string
+	GenerateIndexPages   bool
+	Compress             bool
+	AcceptByteRange      bool
+	PathRewrite          PathRewriteFunc
+	PathNotFound         HandlerFunc
+	CacheDuration        time.Duration
+	CompressedFileSuffix string
+}
+
 // FS represents settings for request handler serving static files
 // from the local filesystem.
 //

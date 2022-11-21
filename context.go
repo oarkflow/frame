@@ -87,6 +87,7 @@ type Context struct {
 	Params     param.Params
 	handlers   HandlersChain
 	fullPath   string
+	Layout     string
 	index      int8
 	HTMLRender *render.HtmlEngine
 
@@ -892,9 +893,16 @@ func (ctx *Context) IndentedJSON(code int, obj interface{}) {
 // It also updates the HTTP code and sets the Content-Type as "text/html".
 // See http://golang.org/doc/articles/wiki/
 func (ctx *Context) HTML(code int, name string, obj any, layouts ...string) error {
+	var lays []string
+	if len(layouts) > 0 {
+		lays = append(lays, layouts[0])
+	}
+	if len(lays) == 0 && ctx.Layout != "" {
+		lays = append(lays, ctx.Layout)
+	}
 	ctx.Status(code)
 	ctx.Header("Content-Type", "text/html")
-	return ctx.HTMLRender.Render(ctx.Response.BodyWriter(), name, obj, layouts...)
+	return ctx.HTMLRender.Render(ctx.Response.BodyWriter(), name, obj, lays...)
 }
 
 // Data writes some data into the body stream and updates the HTTP code.
