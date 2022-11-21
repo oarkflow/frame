@@ -812,7 +812,7 @@ func (engine *Engine) SetHTMLTemplate(directory, extension string) {
 		Directory: directory,
 		Extension: extension,
 	})
-	engine.htmlRender.Reload(true)
+	engine.htmlRender.Reload(engine.options.AutoReloadRender)
 }
 
 // SetFuncMap sets the funcMap used for template.funcMap.
