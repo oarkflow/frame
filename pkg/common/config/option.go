@@ -61,6 +61,7 @@ type Options struct {
 	DisablePrintRoute            bool
 	Network                      string
 	Addr                         string
+	Layout                       string
 	ExitWaitTimeout              time.Duration
 	TLS                          *tls.Config
 	H2C                          bool
