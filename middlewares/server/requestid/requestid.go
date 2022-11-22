@@ -18,8 +18,8 @@ package requestid
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"github.com/sujit-baniya/frame"
+	"github.com/sujit-baniya/frame/pkg/common/xid"
 )
 
 var headerXRequestID string
@@ -36,7 +36,7 @@ type (
 func New(opts ...Option) frame.HandlerFunc {
 	cfg := &config{
 		generator: func() string {
-			return uuid.New().String()
+			return xid.New().String()
 		},
 		headerKey: "X-Request-ID",
 	}

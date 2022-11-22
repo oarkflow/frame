@@ -11,9 +11,9 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/go-redis/redis/v9 v9.0.0-rc.1
 	github.com/golang-jwt/jwt/v4 v4.4.2
-	github.com/google/uuid v1.3.0
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/sessions v1.2.1
+	github.com/phuslu/log v1.0.83
 	github.com/savsgio/gotils v0.0.0-20220530130905-52f3993e8d6d
 	golang.org/x/crypto v0.2.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
