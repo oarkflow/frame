@@ -18,8 +18,8 @@ type Config struct {
 	RequestID func() string
 }
 
-// Log Middleware request_id + logger + recover for request traceability
-func Log(config Config) frame.HandlerFunc {
+// New Middleware request_id + logger + recover for request traceability
+func New(config Config) frame.HandlerFunc {
 	return func(c context.Context, ctx *frame.Context) {
 		start := time.Now()
 		if strings.Contains(string(ctx.Path()), "favicon") {
