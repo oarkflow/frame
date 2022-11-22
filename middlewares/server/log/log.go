@@ -37,9 +37,6 @@ func New(config Config) frame.HandlerFunc {
 			ctx.Header("X-Request-ID", rid)
 		}
 		ctx.Next(c)
-		if string(ctx.Path()) == "/" {
-			return
-		}
 
 		if config.Logger == nil {
 			config.Logger = &log.Logger{
