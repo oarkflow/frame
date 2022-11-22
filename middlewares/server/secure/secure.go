@@ -53,7 +53,7 @@ func newPolicy(opts []Option) *policy {
 			frameDeny:             true,
 			contentTypeNosniff:    true,
 			browserXssFilter:      true,
-			contentSecurityPolicy: "default-src 'self'",
+			contentSecurityPolicy: "",
 			ieNoOpen:              true,
 			sslProxyHeaders:       map[string]string{"X-Forwarded-Proto": "https"},
 		},
@@ -65,6 +65,8 @@ func newPolicy(opts []Option) *policy {
 		policy.addHeader("X-Frame-Options", policy.config.customFrameOptionsValue)
 	} else if policy.config.frameDeny {
 		policy.addHeader("X-Frame-Options", "DENY")
+	} else {
+		policy.addHeader("X-Frame-Options", "SAMEORIGIN")
 	}
 
 	// Content Type Options header.
@@ -79,11 +81,19 @@ func newPolicy(opts []Option) *policy {
 
 	// Content Security Policy header.
 	if len(policy.config.contentSecurityPolicy) > 0 {
-		policy.addHeader("Content-Security-Policy", policy.config.contentSecurityPolicy)
+		if policy.config.contentSecurityPolicyReport {
+			policy.addHeader("Content-Security-Policy-Report-Only", policy.config.contentSecurityPolicy)
+		} else {
+			policy.addHeader("Content-Security-Policy", policy.config.contentSecurityPolicy)
+		}
 	}
 
 	if len(policy.config.referrerPolicy) > 0 {
 		policy.addHeader("Referrer-Policy", policy.config.referrerPolicy)
+	}
+
+	if len(policy.config.permissionPolicy) > 0 {
+		policy.addHeader("Permissions-Policy", policy.config.permissionPolicy)
 	}
 
 	// Strict Transport Security header.

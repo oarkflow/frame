@@ -67,8 +67,13 @@ type (
 		// ContentSecurityPolicy allows the Content-Security-Policy header value
 		// to be set with a custom value. Default is "".
 		contentSecurityPolicy string
+
+		contentSecurityPolicyReport bool
 		// HTTP header "Referrer-Policy" governs which referrer information, sent in the Referrer header, should be included with requests made.
 		referrerPolicy string
+
+		permissionPolicy string
+
 		// When true, the whole security policy applied by the middleware is disabled completely.
 		isDevelopment bool
 		// Handlers for when an error occurs (ie bad host).
@@ -101,6 +106,14 @@ func WithAllowedHosts(ss []string) Option {
 func WithSSLRedirect(b bool) Option {
 	return func(o *options) {
 		o.sslRedirect = b
+	}
+}
+
+// WithContentSecurityPolicyReport when SSLRedirect is set to true, then only allow https requests.
+// Default is false.
+func WithContentSecurityPolicyReport(b bool) Option {
+	return func(o *options) {
+		o.contentSecurityPolicyReport = b
 	}
 }
 
@@ -181,6 +194,14 @@ func WithContentSecurityPolicy(s string) Option {
 func WithReferrerPolicy(s string) Option {
 	return func(o *options) {
 		o.referrerPolicy = s
+	}
+}
+
+// WithPermissionPolicy use to set HTTP header "Referrer-Policy" governs which referrer information,
+// sent in the Referrer header,/should be included with requests made.
+func WithPermissionPolicy(s string) Option {
+	return func(o *options) {
+		o.permissionPolicy = s
 	}
 }
 
