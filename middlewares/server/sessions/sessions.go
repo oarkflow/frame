@@ -27,6 +27,7 @@ package sessions
 
 import (
 	gcontext "context"
+	"encoding/gob"
 	"github.com/sujit-baniya/frame"
 	"github.com/sujit-baniya/frame/pkg/common/adaptor"
 	"github.com/sujit-baniya/frame/pkg/common/hlog"
@@ -101,7 +102,10 @@ type Session interface {
 	Save() error
 }
 
-func Sessions(name string, store Store) frame.HandlerFunc {
+func Sessions(name string, store Store, registeredObject []any) frame.HandlerFunc {
+	for _, obj := range registeredObject {
+		gob.Register(obj)
+	}
 	return func(ctx gcontext.Context, c *frame.Context) {
 		req, _ := adaptor.GetCompatRequest(&c.Request)
 		resp := adaptor.GetCompatResponseWriter(&c.Response)
@@ -113,7 +117,10 @@ func Sessions(name string, store Store) frame.HandlerFunc {
 	}
 }
 
-func SessionsMany(names []string, store Store) frame.HandlerFunc {
+func SessionsMany(names []string, store Store, registeredObject []any) frame.HandlerFunc {
+	for _, obj := range registeredObject {
+		gob.Register(obj)
+	}
 	return func(ctx gcontext.Context, c *frame.Context) {
 		s := make(map[string]Session, len(names))
 		req, _ := adaptor.GetCompatRequest(&c.Request)
