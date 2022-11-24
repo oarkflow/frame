@@ -84,12 +84,13 @@ type Context struct {
 	// Errors is a list of errors attached to all the handlers/middlewares who used this context.
 	Errors errors.ErrorChain
 
-	Params     param.Params
-	handlers   HandlersChain
-	fullPath   string
-	Layout     string
-	index      int8
-	HTMLRender *render.HtmlEngine
+	Params      param.Params
+	handlers    HandlersChain
+	fullPath    string
+	Layout      string
+	AuthUserKey string
+	index       int8
+	HTMLRender  *render.HtmlEngine
 
 	// This mutex protect Keys map.
 	mu sync.RWMutex
@@ -394,6 +395,10 @@ func (ctx *Context) SetFullPath(p string) {
 	ctx.fullPath = p
 }
 
+func (ctx *Context) User() (any, bool) {
+	return ctx.Get(ctx.AuthUserKey)
+}
+
 // SetStatusCode sets response status code.
 func (ctx *Context) SetStatusCode(statusCode int) {
 	ctx.Response.SetStatusCode(statusCode)
@@ -664,6 +669,7 @@ func (ctx *Context) Reset() {
 }
 
 func (ctx *Context) Redirect(statusCode int, uri []byte) {
+	ctx.Abort()
 	ctx.redirect(uri, statusCode)
 }
 
@@ -881,13 +887,22 @@ func (ctx *Context) AbortWithMsg(msg string, statusCode int) {
 	ctx.Abort()
 }
 
-// AbortWithStatusJSON calls `Abort()` and then `JSON` internally.
+// AbortWithJSON calls `Abort()` and then `JSON` internally.
 //
 // This method stops the chain, writes the status code and return a JSON body.
 // It also sets the Content-Type as "application/json".
-func (ctx *Context) AbortWithStatusJSON(code int, jsonObj interface{}) {
+func (ctx *Context) AbortWithJSON(code int, jsonObj interface{}) {
 	ctx.Abort()
 	ctx.JSON(code, jsonObj)
+}
+
+// AbortWithHTML calls `Abort()` and then `JSON` internally.
+//
+// This method stops the chain, writes the status code and return a JSON body.
+// It also sets the Content-Type as "application/json".
+func (ctx *Context) AbortWithHTML(code int, name string, obj any, layouts ...string) {
+	ctx.Abort()
+	ctx.HTML(code, name, obj, layouts...)
 }
 
 // Render writes the response headers and calls render.Render to render data.

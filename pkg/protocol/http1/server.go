@@ -59,6 +59,7 @@ type Option struct {
 	NoDefaultServerHeader        bool
 	MaxRequestBodySize           int
 	Layout                       string
+	AuthUserKey                  string
 	IdleTimeout                  time.Duration
 	ReadTimeout                  time.Duration
 	ServerName                   []byte
@@ -121,6 +122,10 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 
 	ctx.HTMLRender = s.HTMLRender
 	ctx.Layout = s.Layout
+	ctx.AuthUserKey = s.AuthUserKey
+	if ctx.AuthUserKey == "" {
+		ctx.AuthUserKey = "auth_user"
+	}
 	ctx.SetConn(conn)
 	ctx.Request.SetIsTLS(s.TLS != nil)
 	ctx.SetEnableTrace(s.EnableTrace)

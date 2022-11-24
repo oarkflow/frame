@@ -159,6 +159,13 @@ func WithLayout(layout string) config.Option {
 	}}
 }
 
+// WithAuthUserKey sets listening address.
+func WithAuthUserKey(key string) config.Option {
+	return config.Option{F: func(o *config.Options) {
+		o.AuthUserKey = key
+	}}
+}
+
 func WithBasePath(basePath string) config.Option {
 	return config.Option{F: func(o *config.Options) {
 		//Must be "/" prefix and suffix,If not the default concatenate "/"

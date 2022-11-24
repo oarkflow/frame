@@ -64,6 +64,7 @@ type Options struct {
 	Addr                         string
 	BasePath                     string
 	Layout                       string
+	AuthUserKey                  string
 	ExitWaitTimeout              time.Duration
 	TLS                          *tls.Config
 	H2C                          bool

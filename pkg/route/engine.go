@@ -919,6 +919,7 @@ func newHttp1OptionFromEngine(engine *Engine) *http1.Option {
 		IdleTimeout:                  engine.options.IdleTimeout,
 		ReadTimeout:                  engine.options.ReadTimeout,
 		Layout:                       engine.options.Layout,
+		AuthUserKey:                  engine.options.AuthUserKey,
 		ServerName:                   engine.GetServerName(),
 		ContinueHandler:              engine.ContinueHandler,
 		TLS:                          engine.options.TLS,
