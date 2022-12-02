@@ -18,6 +18,8 @@ package standard
 
 import (
 	"crypto/tls"
+	errs "errors"
+	"golang.org/x/sys/unix"
 	"io"
 	"net"
 	"strconv"
@@ -42,6 +44,13 @@ type Conn struct {
 	outputBuffer *linkBuffer
 	caches       [][]byte // buf allocated by Next when cross-package, which should be freed when release
 	maxSize      int      // history max malloc size
+}
+
+func (c *Conn) ToFrameError(err error) error {
+	if errs.Is(err, unix.EPIPE) || errs.Is(err, unix.ENOTCONN) {
+		return errors.ErrConnectionClosed
+	}
+	return err
 }
 
 func (c *Conn) SetWriteTimeout(t time.Duration) error {

@@ -27,6 +27,7 @@ package csrf
 
 import (
 	"context"
+	"errors"
 	"github.com/sujit-baniya/frame"
 )
 
@@ -47,6 +48,15 @@ const (
 	// All 1-bits as many as letterIdBits
 	letterIdMask = 1<<letterIdBits - 1
 	letterIdMax  = 63 / letterIdBits
+)
+
+var (
+	errMissingHeader = errors.New("[CSRF] missing csrf token in header")
+	errMissingQuery  = errors.New("[CSRF] missing csrf token in query")
+	errMissingParam  = errors.New("[CSRF] missing csrf token in param")
+	errMissingForm   = errors.New("[CSRF] missing csrf token in form")
+	errMissingSalt   = errors.New("[CSRF] missing salt")
+	errInvalidToken  = errors.New("[CSRF] invalid token")
 )
 
 type CsrfNextHandler func(ctx context.Context, c *frame.Context) bool
@@ -81,9 +91,9 @@ type Options struct {
 	// Optional. Default: "header:X-CSRF-TOKEN"
 	KeyLookup string
 
-	// ErrorFunc is executed when an error is returned from app.HandlerFunc.
+	// ErrorFunc is executed when an error is returned from frame.HandlerFunc.
 	//
-	// Optional. Default: func(ctx context.Context, c *app.Context) { panic(c.Errors.Last()) }
+	// Optional. Default: func(ctx context.Context, c *frame.Context) { panic(c.Errors.Last()) }
 	ErrorFunc frame.HandlerFunc
 
 	// Extractor returns the csrf token.
@@ -122,6 +132,7 @@ func NewOptions(opts ...Option) *Options {
 	return options
 }
 
+// WithSecret sets secret.
 func WithSecret(secret string) Option {
 	return Option{
 		F: func(o *Options) {
@@ -130,6 +141,7 @@ func WithSecret(secret string) Option {
 	}
 }
 
+// WithIgnoredMethods sets methods that do not need to be protected.
 func WithIgnoredMethods(methods []string) Option {
 	return Option{
 		F: func(o *Options) {
@@ -138,6 +150,7 @@ func WithIgnoredMethods(methods []string) Option {
 	}
 }
 
+// WithNext sets whether to skip this middleware.
 func WithNext(f CsrfNextHandler) Option {
 	return Option{
 		F: func(o *Options) {
@@ -146,6 +159,8 @@ func WithNext(f CsrfNextHandler) Option {
 	}
 }
 
+// WithKeyLookUp sets a string in the form of "<source>:<key>" that is used
+// to create an Extractor that extracts the token from the request.
 func WithKeyLookUp(lookup string) Option {
 	return Option{
 		F: func(o *Options) {
@@ -154,6 +169,7 @@ func WithKeyLookUp(lookup string) Option {
 	}
 }
 
+// WithErrorFunc sets ErrorFunc.
 func WithErrorFunc(f frame.HandlerFunc) Option {
 	return Option{
 		F: func(o *Options) {
@@ -162,6 +178,7 @@ func WithErrorFunc(f frame.HandlerFunc) Option {
 	}
 }
 
+// WithExtractor sets extractor.
 func WithExtractor(f CsrfExtractorHandler) Option {
 	return Option{
 		F: func(o *Options) {

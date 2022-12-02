@@ -21,6 +21,8 @@ package netpoll
 
 import (
 	"errors"
+	errs "github.com/sujit-baniya/frame/pkg/common/errors"
+	"golang.org/x/sys/unix"
 	"io"
 	"strings"
 	"syscall"
@@ -32,6 +34,13 @@ import (
 
 type Conn struct {
 	network.Conn
+}
+
+func (c *Conn) ToFrameError(err error) error {
+	if errors.Is(err, netpoll.ErrConnClosed) || errors.Is(err, unix.EPIPE) {
+		return errs.ErrConnectionClosed
+	}
+	return err
 }
 
 func (c *Conn) Peek(n int) (b []byte, err error) {

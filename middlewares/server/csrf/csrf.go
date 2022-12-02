@@ -79,6 +79,7 @@ func New(opts ...Option) frame.HandlerFunc {
 
 		salt, ok := session.Get(csrfSalt).(string)
 		if !ok || len(salt) == 0 {
+			c.Error(errMissingSalt)
 			cfg.ErrorFunc(ctx, c)
 			return
 		}
@@ -91,6 +92,7 @@ func New(opts ...Option) frame.HandlerFunc {
 		}
 
 		if tokenize(cfg.Secret, salt) != token {
+			c.Error(errInvalidToken)
 			cfg.ErrorFunc(ctx, c)
 			return
 		}
