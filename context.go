@@ -247,6 +247,10 @@ func (c HandlersChain) Last() HandlerFunc {
 	return nil
 }
 
+func (ctx *Context) SetIndex(i int8) {
+	ctx.index = i
+}
+
 func (ctx *Context) Finished() <-chan struct{} {
 	ctx.finishedMu.Lock()
 	if ctx.finished == nil {

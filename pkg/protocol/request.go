@@ -188,6 +188,18 @@ func SwapRequestBody(a, b *Request) {
 	a.multipartFiles, b.multipartFiles = b.multipartFiles, a.multipartFiles
 }
 
+func (req *Request) ResetSkipHeaderAndBody() {
+	req.uri.Reset()
+	req.parsedURI = false
+	req.parsedPostArgs = false
+	req.postArgs.Reset()
+	req.isTLS = false
+}
+
+func (req *Request) SetURIParsed(b bool) {
+	req.parsedURI = b
+}
+
 // Reset clears request contents.
 func (req *Request) Reset() {
 	req.Header.Reset()
