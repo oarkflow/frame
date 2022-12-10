@@ -17,7 +17,7 @@ require (
 	github.com/savsgio/gotils v0.0.0-20220530130905-52f3993e8d6d
 	golang.org/x/crypto v0.2.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.2.0
+	golang.org/x/sys v0.3.0
 	google.golang.org/protobuf v1.28.1
 )
 
@@ -30,12 +30,12 @@ require (
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/henrylee2cn/ameda v1.5.1 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.1 // indirect
-	github.com/nyaruka/phonenumbers v1.1.2 // indirect
+	github.com/nyaruka/phonenumbers v1.1.4 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
-	golang.org/x/arch v0.1.0 // indirect
+	golang.org/x/arch v0.2.0 // indirect
 	golang.org/x/net v0.2.0 // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
 )
