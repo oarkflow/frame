@@ -69,6 +69,8 @@ func generatePreflightHeaders(c Config) map[string]string {
 		allowHeaders := convert(normalize(c.AllowHeaders), normalizeHeaderKey)
 		value := strings.Join(allowHeaders, ",")
 		headers["Access-Control-Allow-Headers"] = value
+	} else {
+		headers["Access-Control-Allow-Headers"] = "*"
 	}
 	if c.MaxAge > time.Duration(0) {
 		value := strconv.FormatInt(int64(c.MaxAge/time.Second), 10)
@@ -77,10 +79,6 @@ func generatePreflightHeaders(c Config) map[string]string {
 	if c.AllowAllOrigins {
 		headers["Access-Control-Allow-Origin"] = "*"
 	} else {
-		// Always set Vary headers
-		// see https://github.com/rs/cors/issues/10,
-		// https://github.com/rs/cors/commit/dbdca4d95feaa7511a46e6f1efb3b3aa505bc43f#commitcomment-12352001
-
 		headers["Vary"] = "Origin"
 	}
 	return headers

@@ -128,7 +128,9 @@ func (cors *cors) applyCors(c *frame.Context) {
 		cors.handleNormal(c)
 	}
 
-	if !cors.allowAllOrigins {
+	if cors.allowAllOrigins {
+		c.Header("Access-Control-Allow-Origin", "*")
+	} else {
 		c.Header("Access-Control-Allow-Origin", origin)
 	}
 }

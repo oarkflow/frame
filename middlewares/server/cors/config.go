@@ -97,7 +97,7 @@ func (c *Config) AddExposeHeaders(headers ...string) {
 	c.ExposeHeaders = append(c.ExposeHeaders, headers...)
 }
 
-func (c Config) getAllowedSchemas() []string {
+func (c *Config) getAllowedSchemas() []string {
 	allowedSchemas := DefaultSchemas
 	if c.AllowBrowserExtensions {
 		allowedSchemas = append(allowedSchemas, ExtensionSchemas...)
@@ -111,7 +111,7 @@ func (c Config) getAllowedSchemas() []string {
 	return allowedSchemas
 }
 
-func (c Config) validateAllowedSchemas(origin string) bool {
+func (c *Config) validateAllowedSchemas(origin string) bool {
 	allowedSchemas := c.getAllowedSchemas()
 	for _, schema := range allowedSchemas {
 		if strings.HasPrefix(origin, schema) {
@@ -122,7 +122,7 @@ func (c Config) validateAllowedSchemas(origin string) bool {
 }
 
 // Validate is check configuration of user defined.
-func (c Config) Validate() error {
+func (c *Config) Validate() error {
 	if c.AllowAllOrigins && (c.AllowOriginFunc != nil || len(c.AllowOrigins) > 0) {
 		return errors.New("conflict settings: all origins are allowed. AllowOriginFunc or AllowOrigins is not needed")
 	}
@@ -137,7 +137,7 @@ func (c Config) Validate() error {
 	return nil
 }
 
-func (c Config) parseWildcardRules() [][]string {
+func (c *Config) parseWildcardRules() [][]string {
 	var wRules [][]string
 
 	if !c.AllowWildcard {
@@ -172,8 +172,9 @@ func (c Config) parseWildcardRules() [][]string {
 // DefaultConfig returns a generic default configuration mapped to localhost.
 func DefaultConfig() Config {
 	return Config{
+		AllowAllOrigins:  true,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type"},
+		AllowHeaders:     []string{"*"},
 		AllowCredentials: false,
 		MaxAge:           12 * time.Hour,
 	}
@@ -187,7 +188,13 @@ func Default() frame.HandlerFunc {
 }
 
 // New returns the location middleware with user-defined custom configuration.
-func New(config Config) frame.HandlerFunc {
+func New(cfg ...Config) frame.HandlerFunc {
+	var config Config
+	if len(cfg) > 0 {
+		config = cfg[0]
+	} else {
+		config = DefaultConfig()
+	}
 	cors := newCors(config)
 	return func(ctx context.Context, c *frame.Context) {
 		cors.applyCors(c)
