@@ -186,6 +186,10 @@ type Engine struct {
 
 	// Hook functions get triggered simultaneously when engine shutdown
 	OnShutdown []CtxCallback
+
+	// Custom Functions
+	clientIPFunc  frame.ClientIP
+	formValueFunc frame.FormValueFunc
 }
 
 func (engine *Engine) IsTraceEnable() bool {
@@ -728,7 +732,17 @@ func (engine *Engine) allocateContext() *frame.Context {
 	ctx := engine.NewContext()
 	ctx.Request.SetMaxKeepBodySize(engine.options.MaxKeepBodySize)
 	ctx.Response.SetMaxKeepBodySize(engine.options.MaxKeepBodySize)
+	ctx.SetClientIPFunc(engine.clientIPFunc)
+	ctx.SetFormValueFunc(engine.formValueFunc)
 	return ctx
+}
+
+func (engine *Engine) SetClientIPFunc(f frame.ClientIP) {
+	engine.clientIPFunc = f
+}
+
+func (engine *Engine) SetFormValueFunc(f frame.FormValueFunc) {
+	engine.formValueFunc = f
 }
 
 func serveError(c context.Context, ctx *frame.Context, code int, defaultMessage []byte) {

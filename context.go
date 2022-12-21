@@ -76,6 +76,51 @@ type Handler interface {
 	ServeHTTP(c context.Context, ctx *Context)
 }
 
+type ClientIP func(ctx *Context) string
+
+var defaultClientIP = func(ctx *Context) string {
+	RemoteIPHeaders := []string{"X-Real-IP", "X-Forwarded-For"}
+	for _, headerName := range RemoteIPHeaders {
+		ip := ctx.Request.Header.Get(headerName)
+		if ip != "" {
+			return ip
+		}
+	}
+
+	if ip, _, err := net.SplitHostPort(strings.TrimSpace(ctx.RemoteAddr().String())); err == nil {
+		return ip
+	}
+
+	return ""
+}
+
+// SetClientIPFunc sets ClientIP function implementation to get ClientIP.
+// Deprecated: Use engine.SetClientIPFunc instead of SetClientIPFunc
+func SetClientIPFunc(fn ClientIP) {
+	defaultClientIP = fn
+}
+
+type FormValueFunc func(*Context, string) []byte
+
+var defaultFormValue = func(ctx *Context, key string) []byte {
+	v := ctx.QueryArgs().Peek(key)
+	if len(v) > 0 {
+		return v
+	}
+	v = ctx.PostArgs().Peek(key)
+	if len(v) > 0 {
+		return v
+	}
+	mf, err := ctx.MultipartForm()
+	if err == nil && mf.Value != nil {
+		vv := mf.Value[key]
+		if len(vv) > 0 {
+			return []byte(vv[0])
+		}
+	}
+	return nil
+}
+
 type Context struct {
 	conn     network.Conn
 	Request  protocol.Request
@@ -110,6 +155,20 @@ type Context struct {
 
 	// enableTrace defines whether enable trace.
 	enableTrace bool
+
+	// clientIPFunc get client ip by use custom function.
+	clientIPFunc ClientIP
+
+	// clientIPFunc get form value by use custom function.
+	formValueFunc FormValueFunc
+}
+
+func (ctx *Context) SetClientIPFunc(f ClientIP) {
+	ctx.clientIPFunc = f
+}
+
+func (ctx *Context) SetFormValueFunc(f FormValueFunc) {
+	ctx.formValueFunc = f
 }
 
 func (ctx *Context) GetTraceInfo() traceinfo.TraceInfo {
@@ -468,24 +527,12 @@ func (ctx *Context) FormFile(name string) (*multipart.FileHeader, error) {
 //   - MultipartForm for obtaining values from multipart form.
 //   - FormFile for obtaining uploaded files.
 //
-// The returned value is valid until returning from RequestHandler.
+// Use engine.SetCustomFormValueFunc to change action of FormValue.
 func (ctx *Context) FormValue(key string) []byte {
-	v := ctx.QueryArgs().Peek(key)
-	if len(v) > 0 {
-		return v
+	if ctx.formValueFunc != nil {
+		return ctx.formValueFunc(ctx, key)
 	}
-	v = ctx.PostArgs().Peek(key)
-	if len(v) > 0 {
-		return v
-	}
-	mf, err := ctx.MultipartForm()
-	if err == nil && mf.Value != nil {
-		vv := mf.Value[key]
-		if len(vv) > 0 {
-			return []byte(vv[0])
-		}
-	}
-	return nil
+	return defaultFormValue(ctx, key)
 }
 
 func (ctx *Context) multipartFormValue(key string) (string, bool) {
@@ -1086,30 +1133,6 @@ func (ctx *Context) Body() ([]byte, error) {
 	return ctx.Request.BodyE()
 }
 
-type ClientIP func(ctx *Context) string
-
-var defaultClientIP = func(ctx *Context) string {
-	RemoteIPHeaders := []string{"X-Forwarded-For", "X-Real-IP"}
-	TrustedProxies := []string{"0.0.0.0"}
-
-	remoteIP, _, err := net.SplitHostPort(strings.TrimSpace(ctx.RemoteAddr().String()))
-	if err != nil {
-		return ""
-	}
-	trusted := isTrustedProxy(TrustedProxies, remoteIP)
-
-	if trusted {
-		for _, headerName := range RemoteIPHeaders {
-			ip, valid := validateHeader(TrustedProxies, ctx.Request.Header.Get(headerName))
-			if valid {
-				return ip
-			}
-		}
-	}
-
-	return remoteIP
-}
-
 // isTrustedProxy will check whether the IP address is included in the trusted list according to TrustedProxies
 func isTrustedProxy(trustedProxies []string, remoteIP string) bool {
 	for _, proxy := range trustedProxies {
@@ -1140,11 +1163,6 @@ func validateHeader(trustedProxies []string, header string) (clientIP string, va
 		}
 	}
 	return "", false
-}
-
-// SetClientIPFunc sets ClientIP function implementation to get ClientIP.
-func SetClientIPFunc(fn ClientIP) {
-	defaultClientIP = fn
 }
 
 // ClientIP tries to parse the headers in [X-Real-Ip, X-Forwarded-For].
