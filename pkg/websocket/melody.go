@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"github.com/sujit-baniya/frame"
+	"github.com/sujit-baniya/frame/pkg/common/xid"
 )
 
 type handleMessageFunc func(*Session, []byte)
@@ -114,18 +115,19 @@ func (m *Hub) OnClose(fn func(*Session, int, string) error) {
 }
 
 // OnRequest upgrades http requests to websocket connections and dispatches them to be handled by the hub instance.
-func (m *Hub) OnRequest(ctx *frame.Context) error {
+func (m *Hub) OnRequest(ctx *frame.Context) (string, error) {
 	return m.OnRequestWithKeys(ctx, nil)
 }
 
 // OnRequestWithKeys does the same as HandleRequest but populates session.Keys with keys.
-func (m *Hub) OnRequestWithKeys(ctx *frame.Context, keys map[string]interface{}) error {
+func (m *Hub) OnRequestWithKeys(ctx *frame.Context, keys map[string]interface{}) (string, error) {
 	if m.hub.closed() {
-		return ErrClosed
+		return "", ErrClosed
 	}
 	m.Upgrader.Subprotocols = []string{string(ctx.GetHeader("Sec-WebSocket-Protocol"))}
-	return m.Upgrader.Upgrade(ctx, func(conn *Conn) {
-		session := NewSession(ctx, conn, keys, m.Config.MessageBufferSize)
+	id := xid.New().String()
+	return id, m.Upgrader.Upgrade(ctx, func(conn *Conn) {
+		session := NewSession(id, ctx, conn, keys, m.Config.MessageBufferSize)
 		session.hub = m
 		m.hub.register <- session
 		m.connectHandler(session)

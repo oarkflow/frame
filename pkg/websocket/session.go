@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/pkg/common/xid"
 	"net"
 	"sync"
 	"time"
@@ -21,9 +20,9 @@ type Session struct {
 	rwmutex    *sync.RWMutex
 }
 
-func NewSession(ctx *frame.Context, conn *Conn, keys map[string]any, messageBufferSize int) *Session {
+func NewSession(id string, ctx *frame.Context, conn *Conn, keys map[string]any, messageBufferSize int) *Session {
 	return &Session{
-		ID:         xid.New().String(),
+		ID:         id,
 		Request:    ctx,
 		Keys:       keys,
 		conn:       conn,
