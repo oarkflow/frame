@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 CloudWeGo Authors
+ * Copyright 2022 Frame Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * This file may have been modified by CloudWeGo authors. All CloudWeGo
- * Modifications are Copyright 2022 CloudWeGo Authors
+ * This file may have been modified by Frame authors. All Frame
+ * Modifications are Copyright 2022 Frame Authors
  */
 
 package utils
@@ -47,12 +47,12 @@ import "strings"
 //
 // The following rules are applied iteratively until no further processing can
 // be done:
-//	1. Replace multiple slashes with a single slash.
-//	2. Eliminate each . path name element (the current directory).
-//	3. Eliminate each inner .. path name element (the parent directory)
-//	   along with the non-.. element that precedes it.
-//	4. Eliminate .. elements that begin a rooted path:
-//	   that is, replace "/.." by "/" at the beginning of a path.
+//  1. Replace multiple slashes with a single slash.
+//  2. Eliminate each . path name element (the current directory).
+//  3. Eliminate each inner .. path name element (the parent directory)
+//     along with the non-.. element that precedes it.
+//  4. Eliminate .. elements that begin a rooted path:
+//     that is, replace "/.." by "/" at the beginning of a path.
 //
 // If the result of this process is an empty string, "/" is returned
 func CleanPath(p string) string {

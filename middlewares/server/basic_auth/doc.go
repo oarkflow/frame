@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 CloudWeGo Authors
+ * Copyright 2022 Frame Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 // The files in basic_auth package are forked from gin[github.com/gin-gonic/gin],
 // and we keep the original Copyright[Copyright 2014 gin authors] and License of gin for those files.
-// We also need to modify as we need, the modifications are Copyright of 2022 CloudWeGo Authors.
+// We also need to modify as we need, the modifications are Copyright of 2022 Frame Authors.
 // Thanks for gin authors! Below is the source code information:
 // 		Repo: github.com/gin-gonic/gin
 //		Forked Version: v1.7.7

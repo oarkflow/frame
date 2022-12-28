@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 CloudWeGo Authors
+ * Copyright 2022 Frame Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
  * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  *
- * This file may have been modified by CloudWeGo authors. All CloudWeGo
- * Modifications are Copyright 2022 CloudWeGo Authors.
+ * This file may have been modified by Frame authors. All Frame
+ * Modifications are Copyright 2022 Frame Authors.
  */
 
 package proxy

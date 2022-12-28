@@ -21,8 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
 
- * This file may have been modified by CloudWeGo authors. All CloudWeGo
- * Modifications are Copyright 2022 CloudWeGo Authors.
+ * This file may have been modified by Frame authors. All Frame
+ * Modifications are Copyright 2022 Frame Authors.
  */
 
 package cors

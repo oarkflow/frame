@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 //
-// This file may have been modified by CloudWeGo authors. All CloudWeGo
-// Modifications are Copyright 2022 CloudWeGo Authors.
+// This file may have been modified by Frame authors. All Frame
+// Modifications are Copyright 2022 Frame Authors.
 
 package websocket
 

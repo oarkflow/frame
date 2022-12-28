@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 CloudWeGo Authors
+ * Copyright 2022 Frame Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 // The files in timer package are forked from fasthttp[github.com/valyala/fasthttp],
 // and we keep the original Copyright[Copyright 2015 fasthttp authors] and License of fasthttp for those files.
-// We also need to modify as we need, the modifications are Copyright of 2022 CloudWeGo Authors.
+// We also need to modify as we need, the modifications are Copyright of 2022 Frame Authors.
 // Thanks for fasthttp authors! Below is the source code information:
 // 		Repo: github.com/valyala/fasthttp
 //		Forked Version: v1.36.0
