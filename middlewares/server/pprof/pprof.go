@@ -46,14 +46,14 @@ func getPrefix(prefixOptions ...string) string {
 }
 
 // Register the standard HandlerFuncs from the net/http/pprof package with
-// the provided hertz.Hertz. prefixOptions is a optional. If not prefixOptions,
+// the provided frame.Frame. prefixOptions is a optional. If not prefixOptions,
 // the default path prefix is used, otherwise first prefixOptions will be path prefix.
 func Register(r *server.Frame, prefixOptions ...string) {
 	RouteRegister(&(r.RouterGroup), prefixOptions...)
 }
 
 // RouteRegister the standard HandlerFuncs from the net/http/pprof package with
-// the provided hertz.RouterGroup. prefixOptions is a optional. If not prefixOptions,
+// the provided frame.RouterGroup. prefixOptions is a optional. If not prefixOptions,
 // the default path prefix is used, otherwise first prefixOptions will be path prefix.
 func RouteRegister(rg *route.RouterGroup, prefixOptions ...string) {
 	prefix := getPrefix(prefixOptions...)

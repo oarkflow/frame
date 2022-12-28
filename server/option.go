@@ -29,7 +29,6 @@ import (
 	"github.com/sujit-baniya/frame/pkg/common/tracer/stats"
 	"github.com/sujit-baniya/frame/pkg/network"
 	"github.com/sujit-baniya/frame/pkg/network/standard"
-	"github.com/sujit-baniya/frame/pkg/route"
 )
 
 // WithKeepAliveTimeout sets keep-alive timeout.
@@ -47,6 +46,15 @@ func WithKeepAliveTimeout(t time.Duration) config.Option {
 func WithReadTimeout(t time.Duration) config.Option {
 	return config.Option{F: func(o *config.Options) {
 		o.ReadTimeout = t
+	}}
+}
+
+// WithWriteTimeout sets write timeout.
+//
+// Connection will be closed when write request timeout.
+func WithWriteTimeout(t time.Duration) config.Option {
+	return config.Option{F: func(o *config.Options) {
+		o.WriteTimeout = t
 	}}
 }
 
@@ -169,7 +177,7 @@ func WithAuthUserKey(key string) config.Option {
 
 func WithBasePath(basePath string) config.Option {
 	return config.Option{F: func(o *config.Options) {
-		//Must be "/" prefix and suffix,If not the default concatenate "/"
+		// Must be "/" prefix and suffix,If not the default concatenate "/"
 		if !strings.HasPrefix(basePath, "/") {
 			basePath = "/" + basePath
 		}
@@ -245,7 +253,7 @@ func WithExitWaitTime(timeout time.Duration) config.Option {
 // NOTE: If a tls server is started, it won't accept non-tls request.
 func WithTLS(cfg *tls.Config) config.Option {
 	return config.Option{F: func(o *config.Options) {
-		route.SetTransporter(standard.NewTransporter)
+		o.TransporterNewer = standard.NewTransporter
 		o.TLS = cfg
 	}}
 }
@@ -260,7 +268,7 @@ func WithListenConfig(l *net.ListenConfig) config.Option {
 // WithTransport sets which network library to use.
 func WithTransport(transporter func(options *config.Options) network.Transporter) config.Option {
 	return config.Option{F: func(o *config.Options) {
-		route.SetTransporter(transporter)
+		o.TransporterNewer = transporter
 	}}
 }
 
@@ -326,6 +334,8 @@ func WithDisablePrintRoute(b bool) config.Option {
 	}}
 }
 
+// WithOnAccept sets the callback function when a new connection is accepted but cannot
+// receive data in netpoll. In go net, it will be called before converting tls connection
 func WithOnAccept(fn func(conn network.Conn) context.Context) config.Option {
 	return config.Option{F: func(o *config.Options) {
 		o.OnAccept = fn

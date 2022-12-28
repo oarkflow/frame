@@ -19,6 +19,7 @@ package client
 import (
 	"crypto/tls"
 	"github.com/sujit-baniya/frame/client/retry"
+	"github.com/sujit-baniya/frame/pkg/network/dialer"
 	"time"
 
 	"github.com/sujit-baniya/frame/pkg/common/config"
@@ -139,4 +140,57 @@ func WithRetryConfig(opts ...retry.Option) config.ClientOption {
 	return config.ClientOption{F: func(o *config.ClientOptions) {
 		o.RetryConfig = retryCfg
 	}}
+}
+
+// WithWriteTimeout sets write timeout.
+func WithWriteTimeout(t time.Duration) config.ClientOption {
+	return config.ClientOption{F: func(o *config.ClientOptions) {
+		o.WriteTimeout = t
+	}}
+}
+
+// WithConnStateObserve sets the connection state observation function.
+// The first param is used to set hostclient state func.
+// The second param is used to set observation interval, default value is 5 seconds.
+// Warn: Do not start go routine in HostClientStateFunc.
+func WithConnStateObserve(hs config.HostClientStateFunc, interval ...time.Duration) config.ClientOption {
+	return config.ClientOption{F: func(o *config.ClientOptions) {
+		o.HostClientStateObserve = hs
+		if len(interval) > 0 {
+			o.ObservationInterval = interval[0]
+		}
+	}}
+}
+
+// WithDialFunc is used to set dialer function.
+// Note: WithDialFunc will overwrite custom dialer.
+func WithDialFunc(f network.DialFunc, dialers ...network.Dialer) config.ClientOption {
+	return config.ClientOption{F: func(o *config.ClientOptions) {
+		d := dialer.DefaultDialer()
+		if len(dialers) != 0 {
+			d = dialers[0]
+		}
+		o.Dialer = newCustomDialerWithDialFunc(d, f)
+	}}
+}
+
+// customDialer set customDialerFunc and params to set dailFunc
+type customDialer struct {
+	network.Dialer
+	dialFunc network.DialFunc
+}
+
+func (m *customDialer) DialConnection(network, address string, timeout time.Duration,
+	tlsConfig *tls.Config) (conn network.Conn, err error) {
+	if m.dialFunc != nil {
+		return m.dialFunc(address)
+	}
+	return m.Dialer.DialConnection(network, address, timeout, tlsConfig)
+}
+
+func newCustomDialerWithDialFunc(dialer network.Dialer, dialFunc network.DialFunc) network.Dialer {
+	return &customDialer{
+		Dialer:   dialer,
+		dialFunc: dialFunc,
+	}
 }

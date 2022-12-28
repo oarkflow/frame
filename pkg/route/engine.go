@@ -356,10 +356,6 @@ func (engine *Engine) Run() (err error) {
 }
 
 func (engine *Engine) Init() error {
-	if !h2Enable(engine.options) {
-		engine.protocolSuite.Delete(suite.HTTP2)
-	}
-
 	// add built-in http1 server by default
 	if !engine.HasServer(suite.HTTP1) {
 		engine.AddProtocol(suite.HTTP1, factory.NewServerFactory(newHttp1OptionFromEngine(engine)))
@@ -374,7 +370,6 @@ func (engine *Engine) Init() error {
 
 	if engine.alpnEnable() {
 		engine.options.TLS.NextProtos = append(engine.options.TLS.NextProtos, suite.HTTP1)
-		engine.options.TLS.NextProtos = append(engine.options.TLS.NextProtos, suite.HTTP2)
 	}
 
 	if !atomic.CompareAndSwapUint32(&engine.status, 0, statusInitialized) {
@@ -587,10 +582,6 @@ func initTrace(engine *Engine) stats.Level {
 	return traceLevel
 }
 
-func h2Enable(opt *config.Options) bool {
-	return opt.H2C || (opt.TLS != nil && opt.ALPN)
-}
-
 func debugPrintRoute(httpMethod, absolutePath string, handlers frame.HandlersChain) {
 	nuHandlers := len(handlers)
 	handlerName := frame.GetHandlerName(handlers.Last())
@@ -737,14 +728,6 @@ func (engine *Engine) allocateContext() *frame.Context {
 	return ctx
 }
 
-func (engine *Engine) SetClientIPFunc(f frame.ClientIP) {
-	engine.clientIPFunc = f
-}
-
-func (engine *Engine) SetFormValueFunc(f frame.FormValueFunc) {
-	engine.formValueFunc = f
-}
-
 func serveError(c context.Context, ctx *frame.Context, code int, defaultMessage []byte) {
 	ctx.SetStatusCode(code)
 	ctx.Next(c)
@@ -846,6 +829,14 @@ func (engine *Engine) SetHTMLTemplate(directory, extension string) {
 // SetFuncMap sets the funcMap used for template.funcMap.
 func (engine *Engine) SetFuncMap(funcMap template.FuncMap) {
 	engine.funcMap = funcMap
+}
+
+func (engine *Engine) SetClientIPFunc(f frame.ClientIP) {
+	engine.clientIPFunc = f
+}
+
+func (engine *Engine) SetFormValueFunc(f frame.FormValueFunc) {
+	engine.formValueFunc = f
 }
 
 // Delims sets template left and right delims and returns an Engine instance.

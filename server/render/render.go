@@ -46,7 +46,7 @@ import "github.com/sujit-baniya/frame/pkg/protocol"
 // Render interface is to be implemented by JSON, XML, HTML, YAML and so on.
 type Render interface {
 	// Render writes data with custom ContentType.
-	// Do not panic inside, RequestContext will handle it.
+	// Do not panic inside, Context will handle it.
 	Render(resp *protocol.Response) error
 	// WriteContentType writes custom ContentType.
 	WriteContentType(resp *protocol.Response)

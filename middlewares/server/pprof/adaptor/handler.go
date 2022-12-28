@@ -23,47 +23,47 @@ import (
 	"unsafe"
 )
 
-// NewFrameHTTPHandlerFunc wraps net/http handler to hertz app.HandlerFunc,
-// so it can be passed to hertz server
+// NewFrameHTTPHandlerFunc wraps net/http handler to frame app.HandlerFunc,
+// so it can be passed to frame server
 //
-// While this function may be used for easy switching from net/http to hertz,
-// it has the following drawbacks comparing to using manually written hertz
+// While this function may be used for easy switching from net/http to frame,
+// it has the following drawbacks comparing to using manually written frame
 // request handler:
 //
-//   - A lot of useful functionality provided by hertz is missing
+//   - A lot of useful functionality provided by frame is missing
 //     from net/http handler.
 //
-//   - net/http -> hertz handler conversion has some overhead,
+//   - net/http -> frame handler conversion has some overhead,
 //     so the returned handler will be always slower than manually written
-//     hertz handler.
+//     frame handler.
 //
-// So it is advisable using this function only for net/http -> hertz switching.
-// Then manually convert net/http handlers to hertz handlers
+// So it is advisable using this function only for net/http -> frame switching.
+// Then manually convert net/http handlers to frame handlers
 func NewFrameHTTPHandlerFunc(h http.HandlerFunc) frame.HandlerFunc {
 	return NewFrameHTTPHandler(h)
 }
 
-// NewFrameHTTPHandler wraps net/http handler to hertz app.HandlerFunc,
-// so it can be passed to hertz server
+// NewFrameHTTPHandler wraps net/http handler to frame app.HandlerFunc,
+// so it can be passed to frame server
 //
-// While this function may be used for easy switching from net/http to hertz,
-// it has the following drawbacks comparing to using manually written hertz
+// While this function may be used for easy switching from net/http to frame,
+// it has the following drawbacks comparing to using manually written frame
 // request handler:
 //
-//   - A lot of useful functionality provided by hertz is missing
+//   - A lot of useful functionality provided by frame is missing
 //     from net/http handler.
 //
-//   - net/http -> hertz handler conversion has some overhead,
+//   - net/http -> frame handler conversion has some overhead,
 //     so the returned handler will be always slower than manually written
-//     hertz handler.
+//     frame handler.
 //
-// So it is advisable using this function only for net/http -> hertz switching.
-// Then manually convert net/http handlers to hertz handlers
+// So it is advisable using this function only for net/http -> frame switching.
+// Then manually convert net/http handlers to frame handlers
 func NewFrameHTTPHandler(h http.Handler) frame.HandlerFunc {
 	return func(ctx context.Context, c *frame.Context) {
 		req, err := adaptor.GetCompatRequest(c.GetRequest())
 		if err != nil {
-			hlog.CtxErrorf(ctx, "HERTZ: Get request error: %v", err)
+			hlog.CtxErrorf(ctx, "FRAME: Get request error: %v", err)
 			c.String(http.StatusInternalServerError, consts.StatusMessage(http.StatusInternalServerError))
 			return
 		}

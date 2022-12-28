@@ -45,6 +45,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/sujit-baniya/frame/pkg/common/hlog"
+	"io"
 	"reflect"
 	"strings"
 	"sync"
@@ -535,12 +537,19 @@ func (c *Client) mCleaner() {
 	mustStop := false
 
 	for {
+		time.Sleep(10 * time.Second)
 		c.mLock.Lock()
 		for k, v := range c.m {
 			shouldRemove := v.ShouldRemove()
 
 			if shouldRemove {
 				delete(c.m, k)
+				if f, ok := v.(io.Closer); ok {
+					err := f.Close()
+					if err != nil {
+						hlog.Warnf("clean hostclient error, addr: %s, err: %s", k, err.Error())
+					}
+				}
 			}
 		}
 		if len(c.m) == 0 {
@@ -551,7 +560,6 @@ func (c *Client) mCleaner() {
 		if mustStop {
 			break
 		}
-		time.Sleep(10 * time.Second)
 	}
 }
 
@@ -628,5 +636,7 @@ func newHttp1OptionFromClient(c *Client) *http1.ClientOptions {
 		ResponseBodyStream:            c.options.ResponseBodyStream,
 		RetryConfig:                   c.options.RetryConfig,
 		RetryIfFunc:                   c.RetryIfFunc,
+		StateObserve:                  c.options.HostClientStateObserve,
+		ObservationInterval:           c.options.ObservationInterval,
 	}
 }

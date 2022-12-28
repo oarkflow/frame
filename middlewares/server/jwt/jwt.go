@@ -43,12 +43,12 @@ import (
 // This is the default claims type if you don't supply one
 type MapClaims map[string]interface{}
 
-// HertzJWTMiddleware provides a Json-Web-Token authentication implementation. On failure, a 401 HTTP response
+// FrameJWTMiddleware provides a Json-Web-Token authentication implementation. On failure, a 401 HTTP response
 // is returned. On success, the wrapped middleware is called, and the userID is made available as
 // c.Get("userID").(string).
 // Users can get a token by posting a json request to LoginHandler. The token then needs to be passed in
 // the Authentication header. Example: Authorization:Bearer XXX_TOKEN_XXX
-type HertzJWTMiddleware struct {
+type FrameJWTMiddleware struct {
 	// Realm name to display to the user. Required.
 	Realm string
 
@@ -191,7 +191,7 @@ var (
 	ErrForbidden = errors.New("you don't have permission to access this resource")
 
 	// ErrMissingAuthenticatorFunc indicates Authenticator is required
-	ErrMissingAuthenticatorFunc = errors.New("HertzJWTMiddleware.Authenticator func is undefined")
+	ErrMissingAuthenticatorFunc = errors.New("FrameJWTMiddleware.Authenticator func is undefined")
 
 	// ErrMissingLoginValues indicates a user tried to authenticate without username or password
 	ErrMissingLoginValues = errors.New("missing Username or Password")
@@ -245,8 +245,8 @@ var (
 	IdentityKey = "identity"
 )
 
-// New for check error with HertzJWTMiddleware
-func New(m *HertzJWTMiddleware) (*HertzJWTMiddleware, error) {
+// New for check error with FrameJWTMiddleware
+func New(m *FrameJWTMiddleware) (*FrameJWTMiddleware, error) {
 	if err := m.MiddlewareInit(); err != nil {
 		return nil, err
 	}
@@ -254,7 +254,7 @@ func New(m *HertzJWTMiddleware) (*HertzJWTMiddleware, error) {
 	return m, nil
 }
 
-func (mw *HertzJWTMiddleware) readKeys() error {
+func (mw *FrameJWTMiddleware) readKeys() error {
 	err := mw.privateKey()
 	if err != nil {
 		return err
@@ -266,7 +266,7 @@ func (mw *HertzJWTMiddleware) readKeys() error {
 	return nil
 }
 
-func (mw *HertzJWTMiddleware) privateKey() error {
+func (mw *FrameJWTMiddleware) privateKey() error {
 	var keyData []byte
 	if mw.PrivKeyFile == "" {
 		keyData = mw.PrivKeyBytes
@@ -295,7 +295,7 @@ func (mw *HertzJWTMiddleware) privateKey() error {
 	return nil
 }
 
-func (mw *HertzJWTMiddleware) publicKey() error {
+func (mw *FrameJWTMiddleware) publicKey() error {
 	var keyData []byte
 	if mw.PubKeyFile == "" {
 		keyData = mw.PubKeyBytes
@@ -315,7 +315,7 @@ func (mw *HertzJWTMiddleware) publicKey() error {
 	return nil
 }
 
-func (mw *HertzJWTMiddleware) usingPublicKeyAlgo() bool {
+func (mw *FrameJWTMiddleware) usingPublicKeyAlgo() bool {
 	switch mw.SigningAlgorithm {
 	case "RS256", "RS512", "RS384":
 		return true
@@ -324,7 +324,7 @@ func (mw *HertzJWTMiddleware) usingPublicKeyAlgo() bool {
 }
 
 // MiddlewareInit initialize jwt configs.
-func (mw *HertzJWTMiddleware) MiddlewareInit() error {
+func (mw *FrameJWTMiddleware) MiddlewareInit() error {
 	if mw.TokenLookup == "" {
 		mw.TokenLookup = "header:Authorization"
 	}
@@ -407,7 +407,7 @@ func (mw *HertzJWTMiddleware) MiddlewareInit() error {
 	}
 
 	if mw.Realm == "" {
-		mw.Realm = "hertz jwt"
+		mw.Realm = "frame jwt"
 	}
 
 	if mw.CookieMaxAge == 0 {
@@ -433,14 +433,14 @@ func (mw *HertzJWTMiddleware) MiddlewareInit() error {
 	return nil
 }
 
-// MiddlewareFunc makes HertzJWTMiddleware implement the Middleware interface.
-func (mw *HertzJWTMiddleware) MiddlewareFunc() frame.HandlerFunc {
+// MiddlewareFunc makes FrameJWTMiddleware implement the Middleware interface.
+func (mw *FrameJWTMiddleware) MiddlewareFunc() frame.HandlerFunc {
 	return func(ctx context.Context, c *frame.Context) {
 		mw.middlewareImpl(ctx, c)
 	}
 }
 
-func (mw *HertzJWTMiddleware) middlewareImpl(ctx context.Context, c *frame.Context) {
+func (mw *FrameJWTMiddleware) middlewareImpl(ctx context.Context, c *frame.Context) {
 	claims, err := mw.GetClaimsFromJWT(ctx, c)
 	if err != nil {
 		mw.unauthorized(ctx, c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(err, ctx, c))
@@ -478,7 +478,7 @@ func (mw *HertzJWTMiddleware) middlewareImpl(ctx context.Context, c *frame.Conte
 }
 
 // GetClaimsFromJWT get claims from JWT token
-func (mw *HertzJWTMiddleware) GetClaimsFromJWT(ctx context.Context, c *frame.Context) (MapClaims, error) {
+func (mw *FrameJWTMiddleware) GetClaimsFromJWT(ctx context.Context, c *frame.Context) (MapClaims, error) {
 	token, err := mw.ParseToken(ctx, c)
 	if err != nil {
 		return nil, err
@@ -501,7 +501,7 @@ func (mw *HertzJWTMiddleware) GetClaimsFromJWT(ctx context.Context, c *frame.Con
 // LoginHandler can be used by clients to get a jwt token.
 // Payload needs to be json in the form of {"username": "USERNAME", "password": "PASSWORD"}.
 // Reply will be of the form {"token": "TOKEN"}.
-func (mw *HertzJWTMiddleware) LoginHandler(ctx context.Context, c *frame.Context) {
+func (mw *FrameJWTMiddleware) LoginHandler(ctx context.Context, c *frame.Context) {
 	if mw.Authenticator == nil {
 		mw.unauthorized(ctx, c, http.StatusInternalServerError, mw.HTTPStatusMessageFunc(ErrMissingAuthenticatorFunc, ctx, c))
 		return
@@ -543,7 +543,7 @@ func (mw *HertzJWTMiddleware) LoginHandler(ctx context.Context, c *frame.Context
 }
 
 // LogoutHandler can be used by clients to remove the jwt cookie (if set)
-func (mw *HertzJWTMiddleware) LogoutHandler(ctx context.Context, c *frame.Context) {
+func (mw *FrameJWTMiddleware) LogoutHandler(ctx context.Context, c *frame.Context) {
 	// delete auth cookie
 	if mw.SendCookie {
 		c.SetCookie(mw.CookieName, "", -1, "/", mw.CookieDomain, mw.CookieSameSite, mw.SecureCookie, mw.CookieHTTPOnly)
@@ -552,7 +552,7 @@ func (mw *HertzJWTMiddleware) LogoutHandler(ctx context.Context, c *frame.Contex
 	mw.LogoutResponse(ctx, c, http.StatusOK)
 }
 
-func (mw *HertzJWTMiddleware) signedString(token *jwt.Token) (string, error) {
+func (mw *FrameJWTMiddleware) signedString(token *jwt.Token) (string, error) {
 	var tokenString string
 	var err error
 	if mw.usingPublicKeyAlgo() {
@@ -564,9 +564,9 @@ func (mw *HertzJWTMiddleware) signedString(token *jwt.Token) (string, error) {
 }
 
 // RefreshHandler can be used to refresh a token. The token still needs to be valid on refresh.
-// Shall be put under an endpoint that is using the HertzJWTMiddleware.
+// Shall be put under an endpoint that is using the FrameJWTMiddleware.
 // Reply will be of the form {"token": "TOKEN"}.
-func (mw *HertzJWTMiddleware) RefreshHandler(ctx context.Context, c *frame.Context) {
+func (mw *FrameJWTMiddleware) RefreshHandler(ctx context.Context, c *frame.Context) {
 	tokenString, expire, err := mw.RefreshToken(ctx, c)
 	if err != nil {
 		mw.unauthorized(ctx, c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(err, ctx, c))
@@ -577,7 +577,7 @@ func (mw *HertzJWTMiddleware) RefreshHandler(ctx context.Context, c *frame.Conte
 }
 
 // RefreshToken refresh token and check if token is expired
-func (mw *HertzJWTMiddleware) RefreshToken(ctx context.Context, c *frame.Context) (string, time.Time, error) {
+func (mw *FrameJWTMiddleware) RefreshToken(ctx context.Context, c *frame.Context) (string, time.Time, error) {
 	claims, err := mw.CheckIfTokenExpire(ctx, c)
 	if err != nil {
 		return "", time.Now(), err
@@ -610,7 +610,7 @@ func (mw *HertzJWTMiddleware) RefreshToken(ctx context.Context, c *frame.Context
 }
 
 // CheckIfTokenExpire check if token expire
-func (mw *HertzJWTMiddleware) CheckIfTokenExpire(ctx context.Context, c *frame.Context) (jwt.MapClaims, error) {
+func (mw *FrameJWTMiddleware) CheckIfTokenExpire(ctx context.Context, c *frame.Context) (jwt.MapClaims, error) {
 	token, err := mw.ParseToken(ctx, c)
 	if err != nil {
 		validationErr, ok := err.(*jwt.ValidationError)
@@ -631,7 +631,7 @@ func (mw *HertzJWTMiddleware) CheckIfTokenExpire(ctx context.Context, c *frame.C
 }
 
 // TokenGenerator method that clients can use to get a jwt token.
-func (mw *HertzJWTMiddleware) TokenGenerator(data interface{}) (string, time.Time, error) {
+func (mw *FrameJWTMiddleware) TokenGenerator(data interface{}) (string, time.Time, error) {
 	token := jwt.New(jwt.GetSigningMethod(mw.SigningAlgorithm))
 	claims := token.Claims.(jwt.MapClaims)
 
@@ -652,7 +652,7 @@ func (mw *HertzJWTMiddleware) TokenGenerator(data interface{}) (string, time.Tim
 	return tokenString, expire, nil
 }
 
-func (mw *HertzJWTMiddleware) jwtFromHeader(ctx context.Context, c *frame.Context, key string) (string, error) {
+func (mw *FrameJWTMiddleware) jwtFromHeader(ctx context.Context, c *frame.Context, key string) (string, error) {
 	authHeader := c.Request.Header.Get(key)
 
 	if authHeader == "" {
@@ -668,7 +668,7 @@ func (mw *HertzJWTMiddleware) jwtFromHeader(ctx context.Context, c *frame.Contex
 	return parts[len(parts)-1], nil
 }
 
-func (mw *HertzJWTMiddleware) jwtFromQuery(ctx context.Context, c *frame.Context, key string) (string, error) {
+func (mw *FrameJWTMiddleware) jwtFromQuery(ctx context.Context, c *frame.Context, key string) (string, error) {
 	token := c.Query(key)
 
 	if token == "" {
@@ -678,7 +678,7 @@ func (mw *HertzJWTMiddleware) jwtFromQuery(ctx context.Context, c *frame.Context
 	return token, nil
 }
 
-func (mw *HertzJWTMiddleware) jwtFromCookie(ctx context.Context, c *frame.Context, key string) (string, error) {
+func (mw *FrameJWTMiddleware) jwtFromCookie(ctx context.Context, c *frame.Context, key string) (string, error) {
 	cookie := string(c.Cookie(key))
 
 	if cookie == "" {
@@ -688,7 +688,7 @@ func (mw *HertzJWTMiddleware) jwtFromCookie(ctx context.Context, c *frame.Contex
 	return cookie, nil
 }
 
-func (mw *HertzJWTMiddleware) jwtFromParam(ctx context.Context, c *frame.Context, key string) (string, error) {
+func (mw *FrameJWTMiddleware) jwtFromParam(ctx context.Context, c *frame.Context, key string) (string, error) {
 	token := c.Param(key)
 
 	if token == "" {
@@ -698,8 +698,8 @@ func (mw *HertzJWTMiddleware) jwtFromParam(ctx context.Context, c *frame.Context
 	return token, nil
 }
 
-// ParseToken parse jwt token from hertz context
-func (mw *HertzJWTMiddleware) ParseToken(ctx context.Context, c *frame.Context) (*jwt.Token, error) {
+// ParseToken parse jwt token from frame context
+func (mw *FrameJWTMiddleware) ParseToken(ctx context.Context, c *frame.Context) (*jwt.Token, error) {
 	var token string
 	var err error
 
@@ -747,7 +747,7 @@ func (mw *HertzJWTMiddleware) ParseToken(ctx context.Context, c *frame.Context) 
 }
 
 // ParseTokenString parse jwt token string
-func (mw *HertzJWTMiddleware) ParseTokenString(token string) (*jwt.Token, error) {
+func (mw *FrameJWTMiddleware) ParseTokenString(token string) (*jwt.Token, error) {
 	if mw.KeyFunc != nil {
 		return jwt.Parse(token, mw.KeyFunc)
 	}
@@ -764,7 +764,7 @@ func (mw *HertzJWTMiddleware) ParseTokenString(token string) (*jwt.Token, error)
 	})
 }
 
-func (mw *HertzJWTMiddleware) unauthorized(ctx context.Context, c *frame.Context, code int, message string) {
+func (mw *FrameJWTMiddleware) unauthorized(ctx context.Context, c *frame.Context, code int, message string) {
 	c.Header("WWW-Authenticate", "JWT realm="+mw.Realm)
 	if !mw.DisabledAbort {
 		c.Abort()

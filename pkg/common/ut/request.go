@@ -19,11 +19,9 @@ package ut
 
 import (
 	"context"
-	"io"
-	"io/ioutil"
-
 	"github.com/sujit-baniya/frame/pkg/protocol"
 	"github.com/sujit-baniya/frame/pkg/route"
+	"io"
 )
 
 // Header is a key-value pair indicating one http header
@@ -58,7 +56,7 @@ func PerformRequest(engine *route.Engine, method, url string, body *Body, header
 		if engine.IsStreamRequestBody() || body.Len == -1 {
 			ctx.Request.SetBodyStream(body.Body, body.Len)
 		} else {
-			buf, err := ioutil.ReadAll(&io.LimitedReader{R: body.Body, N: int64(body.Len)})
+			buf, err := io.ReadAll(&io.LimitedReader{R: body.Body, N: int64(body.Len)})
 			ctx.Request.SetBody(buf)
 			if err != nil && err != io.EOF {
 				panic(err)
