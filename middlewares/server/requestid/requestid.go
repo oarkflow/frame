@@ -85,7 +85,7 @@ func WithHandler(handler Handler) Option {
 	}
 }
 
-// Config defines the config for RequestID middleware
+// config defines the config for RequestID middleware
 type config struct {
 	// Generator defines a function to generate an ID.
 	// Optional. Default: func() string {

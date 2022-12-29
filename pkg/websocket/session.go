@@ -35,14 +35,14 @@ func NewSession(id string, ctx *frame.Context, conn *Conn, keys map[string]any, 
 
 func (s *Session) writeMessage(message *envelope) error {
 	if s.closed() {
-		s.hub.errorHandler(s, ErrWriteClosed)
+		s.hub.config.Handlers.ErrorHandler(s, ErrWriteClosed)
 		return ErrWriteClosed
 	}
 
 	select {
 	case s.output <- message:
 	default:
-		s.hub.errorHandler(s, ErrMessageBufferFull)
+		s.hub.config.Handlers.ErrorHandler(s, ErrMessageBufferFull)
 		return ErrMessageBufferFull
 	}
 	return nil
@@ -53,7 +53,7 @@ func (s *Session) writeRaw(message *envelope) error {
 		return ErrWriteClosed
 	}
 
-	s.conn.SetWriteDeadline(time.Now().Add(s.hub.Config.WriteWait))
+	s.conn.SetWriteDeadline(time.Now().Add(s.hub.config.WriteWait))
 	err := s.conn.WriteMessage(message.t, message.msg)
 
 	if err != nil {
@@ -86,7 +86,7 @@ func (s *Session) ping() {
 }
 
 func (s *Session) writePump() {
-	ticker := time.NewTicker(s.hub.Config.PingPeriod)
+	ticker := time.NewTicker(s.hub.config.PingPeriod)
 	defer ticker.Stop()
 
 loop:
@@ -96,7 +96,7 @@ loop:
 			err := s.writeRaw(msg)
 
 			if err != nil {
-				s.hub.errorHandler(s, err)
+				s.hub.config.Handlers.ErrorHandler(s, err)
 				break loop
 			}
 
@@ -105,11 +105,11 @@ loop:
 			}
 
 			if msg.t == TextMessage {
-				s.hub.messageSentHandler(s, msg.msg)
+				s.hub.config.Handlers.MessageSentHandler(s, msg.msg)
 			}
 
 			if msg.t == BinaryMessage {
-				s.hub.messageSentHandlerBinary(s, msg.msg)
+				s.hub.config.Handlers.BinaryMessageSentHandler(s, msg.msg)
 			}
 		case <-ticker.C:
 			s.ping()
@@ -122,18 +122,18 @@ loop:
 }
 
 func (s *Session) readPump() {
-	s.conn.SetReadLimit(s.hub.Config.MaxMessageSize)
-	s.conn.SetReadDeadline(time.Now().Add(s.hub.Config.PongWait))
+	s.conn.SetReadLimit(s.hub.config.MaxMessageSize)
+	s.conn.SetReadDeadline(time.Now().Add(s.hub.config.PongWait))
 
 	s.conn.SetPongHandler(func(string) error {
-		s.conn.SetReadDeadline(time.Now().Add(s.hub.Config.PongWait))
-		s.hub.pongHandler(s)
+		s.conn.SetReadDeadline(time.Now().Add(s.hub.config.PongWait))
+		s.hub.config.Handlers.PongHandler(s)
 		return nil
 	})
 
-	if s.hub.closeHandler != nil {
+	if s.hub.config.Handlers.CloseHandler != nil {
 		s.conn.SetCloseHandler(func(code int, text string) error {
-			return s.hub.closeHandler(s, code, text)
+			return s.hub.config.Handlers.CloseHandler(s, code, text)
 		})
 	}
 
@@ -141,16 +141,16 @@ func (s *Session) readPump() {
 		t, message, err := s.conn.ReadMessage()
 
 		if err != nil {
-			s.hub.errorHandler(s, err)
+			s.hub.config.Handlers.ErrorHandler(s, err)
 			break
 		}
 
 		if t == TextMessage {
-			s.hub.messageHandler(s, message)
+			s.hub.config.Handlers.MessageHandler(s, message)
 		}
 
 		if t == BinaryMessage {
-			s.hub.messageHandlerBinary(s, message)
+			s.hub.config.Handlers.BinaryMessageSentHandler(s, message)
 		}
 	}
 }
