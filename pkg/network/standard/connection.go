@@ -19,10 +19,10 @@ package standard
 import (
 	"crypto/tls"
 	errs "errors"
-	"golang.org/x/sys/unix"
 	"io"
 	"net"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/sujit-baniya/frame/pkg/common/errors"
@@ -47,7 +47,7 @@ type Conn struct {
 }
 
 func (c *Conn) ToFrameError(err error) error {
-	if errs.Is(err, unix.EPIPE) || errs.Is(err, unix.ENOTCONN) {
+	if errs.Is(err, syscall.EPIPE) || errs.Is(err, syscall.ENOTCONN) {
 		return errors.ErrConnectionClosed
 	}
 	return err

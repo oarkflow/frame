@@ -352,7 +352,7 @@ func (engine *Engine) Run() (err error) {
 		}
 	}
 
-	return engine.listenAndServe()
+	return engine.ListenAndServe()
 }
 
 func (engine *Engine) Init() error {
@@ -382,7 +382,7 @@ func (engine *Engine) alpnEnable() bool {
 	return engine.options.TLS != nil && engine.options.ALPN
 }
 
-func (engine *Engine) listenAndServe() error {
+func (engine *Engine) ListenAndServe() error {
 	hlog.SystemLogger().Infof("Using network library=%s", engine.GetTransporterName())
 	return engine.transport.ListenAndServe(engine.onData)
 }

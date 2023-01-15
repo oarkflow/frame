@@ -39,7 +39,10 @@ const (
 	HeaderContentRange = "Content-Range"
 
 	HeaderIfModifiedSince = "If-Modified-Since"
-	HeaderLastModified    = "Last-Modified"
+
+	HeaderIfNoneMatch = "If-None-Match"
+
+	HeaderLastModified = "Last-Modified"
 
 	// Message body information
 	HeaderContentEncoding = "Content-Encoding"
