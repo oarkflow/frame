@@ -26,8 +26,8 @@
 package cookie
 
 import (
-	gsessions "github.com/gorilla/sessions"
 	"github.com/sujit-baniya/frame/middlewares/server/sessions"
+	gsessions "github.com/sujit-baniya/sessions"
 )
 
 type Store interface {

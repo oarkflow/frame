@@ -31,8 +31,8 @@ import (
 	"errors"
 	"github.com/sujit-baniya/frame"
 	"github.com/sujit-baniya/frame/pkg/protocol"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -271,7 +271,7 @@ func (mw *FrameJWTMiddleware) privateKey() error {
 	if mw.PrivKeyFile == "" {
 		keyData = mw.PrivKeyBytes
 	} else {
-		filecontent, err := ioutil.ReadFile(mw.PrivKeyFile)
+		filecontent, err := os.ReadFile(mw.PrivKeyFile)
 		if err != nil {
 			return ErrNoPrivKeyFile
 		}
@@ -300,7 +300,7 @@ func (mw *FrameJWTMiddleware) publicKey() error {
 	if mw.PubKeyFile == "" {
 		keyData = mw.PubKeyBytes
 	} else {
-		filecontent, err := ioutil.ReadFile(mw.PubKeyFile)
+		filecontent, err := os.ReadFile(mw.PubKeyFile)
 		if err != nil {
 			return ErrNoPubKeyFile
 		}

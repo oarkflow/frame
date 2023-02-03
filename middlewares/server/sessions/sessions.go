@@ -31,10 +31,9 @@ import (
 	"github.com/sujit-baniya/frame"
 	"github.com/sujit-baniya/frame/pkg/common/adaptor"
 	"github.com/sujit-baniya/frame/pkg/common/hlog"
+	"github.com/sujit-baniya/sessions"
+	"github.com/sujit-baniya/sessions/context"
 	"net/http"
-
-	"github.com/gorilla/context"
-	"github.com/gorilla/sessions"
 )
 
 const (

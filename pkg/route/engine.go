@@ -638,7 +638,7 @@ func (engine *Engine) recv(ctx *frame.Context) {
 }
 
 // HandleContext Re-enter a context that has been rewritten.
-// This can be done by setting ctx.Request.SetRequestURI() to new target and response will be reset.
+// This can be done by setting context.Request.SetRequestURI() to new target and response will be reset.
 // Disclaimer: Maybe loop self to death with this, use wisely.
 func (engine *Engine) HandleContext(c context.Context, ctx *frame.Context) {
 	old := ctx.GetIndex()

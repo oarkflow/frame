@@ -41,7 +41,7 @@ type transporter struct {
 	listener         net.Listener
 	eventLoop        netpoll.EventLoop
 	listenConfig     *net.ListenConfig
-	OnAccept         func(conn network.Conn) context.Context
+	OnAccept         func(conn net.Conn) context.Context
 	OnConnect        func(ctx context.Context, conn network.Conn) context.Context
 }
 
@@ -124,7 +124,7 @@ func (t *transporter) Close() error {
 }
 
 // Shutdown will trigger listener stop and graceful shutdown
-// It will wait all connections close until reaching ctx.Deadline()
+// It will wait all connections close until reaching context.Deadline()
 func (t *transporter) Shutdown(ctx context.Context) error {
 	defer func() {
 		network.UnlinkUdsFile(t.network, t.addr) //nolint:errcheck

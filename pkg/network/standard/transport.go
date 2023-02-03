@@ -46,7 +46,7 @@ type transport struct {
 	tls              *tls.Config
 	listenConfig     *net.ListenConfig
 	lock             sync.Mutex
-	OnAccept         func(conn network.Conn) context.Context
+	OnAccept         func(conn net.Conn) context.Context
 	OnConnect        func(ctx context.Context, conn network.Conn) context.Context
 }
 

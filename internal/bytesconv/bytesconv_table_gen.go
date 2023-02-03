@@ -47,8 +47,8 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 )
 
 const (
@@ -168,7 +168,7 @@ func main() {
 	fmt.Fprintf(w, "const QuotedPathShouldEscapeTable = %q\n", quotedPathShouldEscapeTable)
 	fmt.Fprintf(w, "const ValidCookieValueTable = %q\n", validCookieValueTable)
 
-	if err := ioutil.WriteFile("bytesconv_table.go", w.Bytes(), 0o660); err != nil {
+	if err := os.WriteFile("bytesconv_table.go", w.Bytes(), 0o660); err != nil {
 		log.Fatal(err)
 	}
 }

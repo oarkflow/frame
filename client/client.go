@@ -205,7 +205,7 @@ func Get(ctx context.Context, dst []byte, url string, requestOptions ...config.R
 // continue in the background and the response will be discarded.
 // If requests take too long and the connection pool gets filled up please
 // try using a customized Client instance with a ReadTimeout config or set the request level read timeout like:
-// `GetTimeout(ctx, dst, url, timeout, config.WithReadTimeout(1 * time.Second))`
+// `GetTimeout(context, dst, url, timeout, config.WithReadTimeout(1 * time.Second))`
 func GetTimeout(ctx context.Context, dst []byte, url string, timeout time.Duration, requestOptions ...config.RequestOption) (statusCode int, body []byte, err error) {
 	return defaultClient.GetTimeout(ctx, dst, url, timeout, requestOptions...)
 }
@@ -224,7 +224,7 @@ func GetTimeout(ctx context.Context, dst []byte, url string, timeout time.Durati
 // continue in the background and the response will be discarded.
 // If requests take too long and the connection pool gets filled up please
 // try using a customized Client instance with a ReadTimeout config or set the request level read timeout like:
-// `GetDeadline(ctx, dst, url, timeout, config.WithReadTimeout(1 * time.Second))`
+// `GetDeadline(context, dst, url, timeout, config.WithReadTimeout(1 * time.Second))`
 func GetDeadline(ctx context.Context, dst []byte, url string, deadline time.Time, requestOptions ...config.RequestOption) (statusCode int, body []byte, err error) {
 	return defaultClient.GetDeadline(ctx, dst, url, deadline, requestOptions...)
 }

@@ -285,7 +285,7 @@ type HijackHandler func(c network.Conn)
 // Server limits such as Concurrency, ReadTimeout, WriteTimeout, etc.
 // aren't applied to hijacked connections.
 //
-// The handler must not retain references to ctx members.
+// The handler must not retain references to context members.
 //
 // Arbitrary 'Connection: Upgrade' protocols may be implemented
 // with HijackHandler. For instance,
@@ -338,9 +338,9 @@ func (ctx *Context) GetResponse() (dst *protocol.Response) {
 // if no value is associated with key. Successive calls to Value with
 // the same key returns the same result.
 //
-// In case the Key is reset after response, Value() return nil if ctx.Key is nil.
+// In case the Key is reset after response, Value() return nil if context.Key is nil.
 func (ctx *Context) Value(key interface{}) interface{} {
-	// this ctx has been reset, return nil.
+	// this context has been reset, return nil.
 	if ctx.Keys == nil {
 		return nil
 	}
@@ -1083,13 +1083,13 @@ func (ctx *Context) Cookie(key string) []byte {
 //	sameSite let servers specify whether/when cookies are sent with cross-site requests; eg. Set-Cookie: name=value;HttpOnly; secure; SameSite=Lax;
 //
 //	For example:
-//	1. ctx.SetCookie("user", "frame", 1, "/", "localhost",protocol.CookieSameSiteLaxMode, true, true)
+//	1. context.SetCookie("user", "frame", 1, "/", "localhost",protocol.CookieSameSiteLaxMode, true, true)
 //	add response header --->  Set-Cookie: user=frame; max-age=1; domain=localhost; path=/; HttpOnly; secure; SameSite=Lax;
-//	2. ctx.SetCookie("user", "frame", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
+//	2. context.SetCookie("user", "frame", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
 //	add response header --->  Set-Cookie: user=frame; max-age=10; domain=localhost; path=/; SameSite=Lax;
-//	3. ctx.SetCookie("", "frame", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
+//	3. context.SetCookie("", "frame", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
 //	add response header --->  Set-Cookie: frame; max-age=10; domain=localhost; path=/; SameSite=Lax;
-//	4. ctx.SetCookie("user", "", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
+//	4. context.SetCookie("user", "", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
 //	add response header --->  Set-Cookie: user=; max-age=10; domain=localhost; path=/; SameSite=Lax;
 func (ctx *Context) SetCookie(name, value string, maxAge int, path, domain string, sameSite protocol.CookieSameSite, secure, httpOnly bool) {
 	if path == "" {

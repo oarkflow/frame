@@ -359,7 +359,7 @@ func (req *Request) SwapBody(body []byte) []byte {
 func (req *Request) CopyTo(dst *Request) {
 	req.CopyToSkipBody(dst)
 	if req.bodyRaw != nil {
-		dst.bodyRaw = append(dst.bodyRaw, req.bodyRaw...)
+		dst.bodyRaw = append(dst.bodyRaw[:0], req.bodyRaw...)
 		if dst.body != nil {
 			dst.body.Reset()
 		}

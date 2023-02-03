@@ -48,7 +48,6 @@ import (
 	"fmt"
 	"html"
 	"io"
-	"io/ioutil"
 	"mime"
 	"net/http"
 	"os"
@@ -86,8 +85,8 @@ var (
 	strInvalidHost = []byte("invalid-host")
 )
 
-// PathRewriteFunc must return new request path based on arbitrary ctx
-// info such as ctx.Path().
+// PathRewriteFunc must return new request path based on arbitrary context
+// info such as context.Path().
 //
 // Path rewriter is used in FS for translating the current request
 // to the local filesystem path relative to FS.Root.
@@ -95,7 +94,7 @@ var (
 // The returned path must not contain '/../' substrings due to security reasons,
 // since such paths may refer files outside FS.Root.
 //
-// The returned path may refer to ctx members. For example, ctx.Path().
+// The returned path may refer to context members. For example, context.Path().
 type PathRewriteFunc func(ctx *Context) []byte
 
 type StaticConfig struct {
@@ -821,8 +820,8 @@ func (h *fsHandler) handleRequest(c context.Context, ctx *Context) {
 		return
 	}
 	if h.pathRewrite != nil {
-		// There is no need to check for '/../' if path = ctx.Path(),
-		// since ctx.Path must normalize and sanitize the path.
+		// There is no need to check for '/../' if path = context.Path(),
+		// since context.Path must normalize and sanitize the path.
 
 		if n := bytes.Index(path, bytestr.StrSlashDotDotSlash); n >= 0 {
 			hlog.SystemLogger().Errorf("Cannot serve path with '/../' at position=%d due to security reasons, path=%q", n, path)
@@ -1088,7 +1087,7 @@ func readFileHeader(f *os.File, compressed bool) ([]byte, error) {
 		R: r,
 		N: 512,
 	}
-	data, err := ioutil.ReadAll(lr)
+	data, err := io.ReadAll(lr)
 	if _, err := f.Seek(0, 0); err != nil {
 		return nil, err
 	}
