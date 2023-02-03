@@ -13,7 +13,7 @@ require (
 	github.com/phuslu/log v1.0.83
 	github.com/redis/go-redis/v9 v9.0.2
 	github.com/savsgio/gotils v0.0.0-20220530130905-52f3993e8d6d
-	github.com/sujit-baniya/sessions v0.0.2
+	github.com/sujit-baniya/sessions v0.0.3
 	golang.org/x/crypto v0.5.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.4.0

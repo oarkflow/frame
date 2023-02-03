@@ -17,6 +17,6 @@ func (c *store) Options(opts sessions.Options) {
 	c.FilesystemStore.Options = opts.ToGorillaOptions()
 }
 
-func NewStore(path string, keyPairs ...[]byte) Store {
-	return &store{gsessions.NewFilesystemStore(path, keyPairs...)}
+func NewStore(name, path string, keyPairs ...[]byte) Store {
+	return &store{gsessions.NewFilesystemStore(name, path, keyPairs...)}
 }

@@ -64,6 +64,8 @@ github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKs
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/sujit-baniya/sessions v0.0.2 h1:MV67kIc7klvpCcOuiBC0izjoWdhCO6zLiD5dYWu+iMc=
 github.com/sujit-baniya/sessions v0.0.2/go.mod h1:seuTRm7kJ4bDzLHxDLdkBfMCmYr71TwWHbMBLisjySw=
+github.com/sujit-baniya/sessions v0.0.3 h1:98VDVYvhd/s6HEOpaH3Mr00sDieCIFaub7XqzzTuKfI=
+github.com/sujit-baniya/sessions v0.0.3/go.mod h1:seuTRm7kJ4bDzLHxDLdkBfMCmYr71TwWHbMBLisjySw=
 github.com/tidwall/gjson v1.9.3/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=
 github.com/tidwall/gjson v1.14.4 h1:uo0p8EbA09J7RQaflQ1aBRffTR7xedD2bcIVSYxLnkM=
 github.com/tidwall/gjson v1.14.4/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=
