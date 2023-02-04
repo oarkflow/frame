@@ -187,59 +187,35 @@ func (s *Session) SetExpiry(exp time.Duration) {
 
 func (s *Session) setSession() {
 	if s.config.source == SourceHeader {
-		s.ctx.Request.Header.Set(s.config.sessionName, s.id)
-		s.ctx.Response.Header.SetBytesV(s.config.sessionName, []byte(s.id))
-	} else {
-		fcookie := protocol.AcquireCookie()
-		fcookie.SetKey(s.config.sessionName)
-		fcookie.SetValue(s.id)
-		fcookie.SetPath(s.config.CookiePath)
-		fcookie.SetDomain(s.config.CookieDomain)
-		fcookie.SetMaxAge(int(s.exp.Seconds()))
-		fcookie.SetExpire(time.Now().Add(s.exp))
-		fcookie.SetSecure(s.config.CookieSecure)
-		fcookie.SetHTTPOnly(s.config.CookieHTTPOnly)
-
-		switch utils.ToLower(s.config.CookieSameSite) {
-		case "strict":
-			fcookie.SetSameSite(protocol.CookieSameSiteStrictMode)
-		case "none":
-			fcookie.SetSameSite(protocol.CookieSameSiteNoneMode)
-		default:
-			fcookie.SetSameSite(protocol.CookieSameSiteLaxMode)
-		}
-		s.ctx.Response.Header.SetCookie(fcookie)
-		protocol.ReleaseCookie(fcookie)
+		s.ctx.Header(s.config.sessionName, s.id)
 	}
+	var sameSite protocol.CookieSameSite
+	switch utils.ToLower(s.config.CookieSameSite) {
+	case "strict":
+		sameSite = protocol.CookieSameSiteStrictMode
+	case "none":
+		sameSite = protocol.CookieSameSiteNoneMode
+	default:
+		sameSite = protocol.CookieSameSiteLaxMode
+	}
+	s.ctx.SetCookie(s.config.sessionName, s.id, int(s.exp.Seconds()), s.config.CookiePath, s.config.CookieDomain, sameSite, s.config.CookieSecure, s.config.CookieHTTPOnly)
 }
 
 func (s *Session) delSession() {
 	if s.config.source == SourceHeader {
 		s.ctx.Request.Header.DelBytes([]byte(s.config.sessionName))
 		s.ctx.Response.Header.DelBytes([]byte(s.config.sessionName))
-	} else {
-		s.ctx.Request.Header.DelCookie(s.config.sessionName)
-		s.ctx.Response.Header.DelCookie(s.config.sessionName)
-
-		fcookie := protocol.AcquireCookie()
-		fcookie.SetKey(s.config.sessionName)
-		fcookie.SetPath(s.config.CookiePath)
-		fcookie.SetDomain(s.config.CookieDomain)
-		fcookie.SetMaxAge(-1)
-		fcookie.SetExpire(time.Now().Add(-1 * time.Minute))
-		fcookie.SetSecure(s.config.CookieSecure)
-		fcookie.SetHTTPOnly(s.config.CookieHTTPOnly)
-
-		switch utils.ToLower(s.config.CookieSameSite) {
-		case "strict":
-			fcookie.SetSameSite(protocol.CookieSameSiteStrictMode)
-		case "none":
-			fcookie.SetSameSite(protocol.CookieSameSiteNoneMode)
-		default:
-			fcookie.SetSameSite(protocol.CookieSameSiteLaxMode)
-		}
-
-		s.ctx.Response.Header.SetCookie(fcookie)
-		protocol.ReleaseCookie(fcookie)
 	}
+	s.ctx.Request.Header.DelCookie(s.config.sessionName)
+	s.ctx.Response.Header.DelCookie(s.config.sessionName)
+	var sameSite protocol.CookieSameSite
+	switch utils.ToLower(s.config.CookieSameSite) {
+	case "strict":
+		sameSite = protocol.CookieSameSiteStrictMode
+	case "none":
+		sameSite = protocol.CookieSameSiteNoneMode
+	default:
+		sameSite = protocol.CookieSameSiteLaxMode
+	}
+	s.ctx.SetCookie(s.config.sessionName, "", -1, s.config.CookiePath, s.config.CookieDomain, sameSite, s.config.CookieSecure, s.config.CookieHTTPOnly)
 }
