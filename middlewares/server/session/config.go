@@ -2,6 +2,7 @@ package session
 
 import (
 	"encoding/gob"
+	"github.com/sujit-baniya/frame"
 	"github.com/sujit-baniya/frame/pkg/common/xid"
 	"strings"
 	"time"
@@ -66,6 +67,8 @@ type Config struct {
 	// Value of SameSite cookie.
 	// Optional. Default value "Lax".
 	CookieSameSite string
+
+	ErrorHandler func(ctx *frame.Context, err error)
 
 	// KeyGenerator generates the session key.
 	// Optional. Default value utils.UUIDv4

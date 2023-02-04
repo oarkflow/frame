@@ -112,7 +112,7 @@ func Regenerate(c *frame.Context) error {
 }
 
 func mustPickSession(c *frame.Context) *Session {
-	sess, err := DefaultSession.Get(c)
+	sess, err := DefaultSession.Get(c, DefaultSession.Config.ErrorHandler)
 	if err != nil {
 		panic(err)
 	}

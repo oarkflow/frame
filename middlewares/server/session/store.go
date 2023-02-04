@@ -36,12 +36,11 @@ func (*Store) RegisterType(i interface{}) {
 }
 
 // Get will get/create a session
-func (s *Store) Get(c *frame.Context) (*Session, error) {
+func (s *Store) Get(c *frame.Context, errorHandler ...func(ctx *frame.Context, err error)) (*Session, error) {
 	var fresh bool
 	loadData := true
 
 	id := s.getSessionID(c)
-
 	if len(id) == 0 {
 		fresh = true
 		var err error
@@ -77,7 +76,12 @@ func (s *Store) Get(c *frame.Context) (*Session, error) {
 				return nil, fmt.Errorf("failed to decode session data: %w", err)
 			}
 		} else if err != nil {
-			return nil, err
+			if len(errorHandler) > 0 {
+				errorHandler[0](c, err)
+				sess.fresh = true
+			} else {
+				return nil, err
+			}
 		} else {
 			// both raw and err is nil, which means id is not in the storage
 			sess.fresh = true
