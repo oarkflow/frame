@@ -19,8 +19,8 @@ package recovery
 import (
 	"context"
 	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/protocol/consts"
+	"github.com/sujit-baniya/log"
 )
 
 type (
@@ -32,7 +32,7 @@ type (
 )
 
 func defaultRecoveryHandler(c context.Context, ctx *frame.Context, err interface{}, stack []byte) {
-	hlog.SystemLogger().CtxErrorf(c, "[Recovery] err=%v\nstack=%s", err, stack)
+	log.Error().Str("log_service", "HTTP Server").Msgf("[Recovery] err=%v\nstack=%s", err, stack)
 	ctx.AbortWithStatus(consts.StatusInternalServerError)
 }
 

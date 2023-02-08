@@ -62,7 +62,7 @@ func New(config Config) frame.HandlerFunc {
 			Str("latency", fmt.Sprintf("%s", time.Since(start))).
 			Str("ua", string(ctx.GetHeader("User-Agent")))
 
-		log.Info().Str("request_id", rid).
+		log.Info().Str("log_service", "HTTP Server").Str("request_id", rid).
 			Str("remote_ip", ip).
 			Str("method", string(ctx.Method())).
 			Str("host", string(ctx.Host())).
@@ -76,22 +76,22 @@ func New(config Config) frame.HandlerFunc {
 		switch {
 		case ctx.Response.StatusCode() >= 500:
 			config.Logger.Error().Context(ctxx).Msg("server error")
-			log.Error().Context(ctxx).Msg("server error")
+			log.Error().Str("log_service", "HTTP Server").Context(ctxx).Msg("server error")
 		case ctx.Response.StatusCode() >= 400:
 			config.Logger.Error().Context(ctxx).Msg("client error")
-			log.Error().Context(ctxx).Msg("client error")
+			log.Error().Str("log_service", "HTTP Server").Context(ctxx).Msg("client error")
 		case ctx.Response.StatusCode() >= 300:
 			config.Logger.Warn().Context(ctxx).Msg("redirect")
-			log.Info().Context(ctxx).Msg("redirect")
+			log.Info().Str("log_service", "HTTP Server").Context(ctxx).Msg("redirect")
 		case ctx.Response.StatusCode() >= 200:
 			config.Logger.Info().Context(ctxx).Msg("success")
-			log.Info().Context(ctxx).Msg("success")
+			log.Info().Str("log_service", "HTTP Server").Context(ctxx).Msg("success")
 		case ctx.Response.StatusCode() >= 100:
 			config.Logger.Info().Context(ctxx).Msg("informative")
-			log.Info().Context(ctxx).Msg("informative")
+			log.Info().Str("log_service", "HTTP Server").Context(ctxx).Msg("informative")
 		default:
 			config.Logger.Warn().Context(ctxx).Msg("unknown status")
-			log.Info().Context(ctxx).Msg("unknown status")
+			log.Info().Str("log_service", "HTTP Server").Context(ctxx).Msg("unknown status")
 		}
 	}
 }

@@ -18,9 +18,11 @@ package network
 
 import (
 	"context"
+	"net"
 )
 
 type Transporter interface {
+	Listener() net.Listener
 	// Close the transporter immediately
 	Close() error
 

@@ -52,9 +52,9 @@ import (
 	"github.com/sujit-baniya/frame/internal/bytestr"
 	"github.com/sujit-baniya/frame/internal/nocopy"
 	errs "github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/common/utils"
 	"github.com/sujit-baniya/frame/pkg/protocol/consts"
+	"github.com/sujit-baniya/log"
 )
 
 var (
@@ -469,7 +469,7 @@ func checkWriteHeaderCode(code int) {
 	// For now, we only emit a warning for bad codes.
 	// In the future we might block things over 599 or under 100
 	if code < 100 || code > 599 {
-		hlog.SystemLogger().Warnf("Invalid StatusCode code %v, status code should not be under 100 or over 599.\n"+
+		log.Warn().Str("log_service", "HTTP Server").Msgf("Invalid StatusCode code %v, status code should not be under 100 or over 599.\n"+
 			"For more info: https://www.rfc-editor.org/rfc/rfc9110.html#name-status-codes", code)
 	}
 }

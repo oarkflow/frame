@@ -22,9 +22,9 @@ import (
 	"sync"
 
 	"github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/common/tracer"
 	"github.com/sujit-baniya/frame/pkg/protocol"
+	"github.com/sujit-baniya/log"
 )
 
 const (
@@ -59,7 +59,7 @@ type ServerMap map[string]protocol.Server
 
 func (c *Config) Add(protocol string, factory ServerFactory) {
 	if fac := c.configMap[protocol]; fac != nil {
-		hlog.SystemLogger().Warnf("ServerFactory of protocol: %s will be overridden by customized function", protocol)
+		log.Warn().Str("log_service", "HTTP Server").Msgf("ServerFactory of protocol: %s will be overridden by customized function", protocol)
 	}
 	c.configMap[protocol] = factory
 }

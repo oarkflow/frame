@@ -47,8 +47,10 @@ import (
 	"fmt"
 	"github.com/sujit-baniya/frame"
 	"github.com/sujit-baniya/frame/server/render"
+	"github.com/sujit-baniya/log"
 	"html/template"
 	"io"
+	"net"
 	"reflect"
 	"runtime"
 	"strings"
@@ -61,7 +63,6 @@ import (
 	internalStats "github.com/sujit-baniya/frame/internal/stats"
 	"github.com/sujit-baniya/frame/pkg/common/config"
 	errs "github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/common/tracer"
 	"github.com/sujit-baniya/frame/pkg/common/tracer/stats"
 	"github.com/sujit-baniya/frame/pkg/common/tracer/traceinfo"
@@ -298,17 +299,17 @@ func (engine *Engine) Shutdown(ctx context.Context) (err error) {
 		// ensure that the hook is executed until wait timeout or finish
 		select {
 		case <-ctx.Done():
-			hlog.SystemLogger().Infof("Execute OnShutdownHooks timeout: error=%v", ctx.Err())
+			log.Info().Str("log_service", "HTTP Server").Msgf("Execute OnShutdownHooks timeout: error=%v", ctx.Err())
 			return
 		case <-ch:
-			hlog.SystemLogger().Info("Execute OnShutdownHooks finish")
+			log.Info().Str("log_service", "HTTP Server").Msgf("Execute OnShutdownHooks finish")
 			return
 		}
 	}()
 
 	if opt := engine.options; opt != nil && opt.Registry != nil {
 		if err = opt.Registry.Deregister(opt.RegistryInfo); err != nil {
-			hlog.SystemLogger().Errorf("Deregister error=%v", err)
+			log.Error().Str("log_service", "HTTP Server").Msgf("Deregister error=%v", err)
 			return err
 		}
 	}
@@ -382,8 +383,12 @@ func (engine *Engine) alpnEnable() bool {
 	return engine.options.TLS != nil && engine.options.ALPN
 }
 
+func (engine *Engine) Listener() net.Listener {
+	return engine.transport.Listener()
+}
+
 func (engine *Engine) ListenAndServe() error {
-	hlog.SystemLogger().Infof("Using network library=%s", engine.GetTransporterName())
+	log.Info().Str("log_service", "HTTP Server").Str("network_library", engine.GetTransporterName()).Msg("Default network library")
 	return engine.transport.ListenAndServe(engine.onData)
 }
 
@@ -403,7 +408,7 @@ func (engine *Engine) getNextProto(conn network.Conn) (proto string, err error) 
 	if tlsConn, ok := conn.(network.ConnTLSer); ok {
 		if engine.options.ReadTimeout > 0 {
 			if err := conn.SetReadTimeout(engine.options.ReadTimeout); err != nil {
-				hlog.SystemLogger().Errorf("BUG: error in SetReadDeadline=%s: error=%s", engine.options.ReadTimeout, err)
+				log.Error().Str("log_service", "HTTP Server").Msgf("BUG: error in SetReadDeadline=%s: error=%s", engine.options.ReadTimeout, err)
 			}
 		}
 		err = tlsConn.Handshake()
@@ -451,7 +456,7 @@ func errProcess(conn io.Closer, err error) {
 		}
 	}
 	// other errors
-	hlog.SystemLogger().Errorf("Error=%s, remoteAddr=%s", err.Error(), rip)
+	log.Error().Str("log_service", "HTTP Server").Msgf("Error=%s, remoteAddr=%s", err.Error(), rip)
 }
 
 func getRemoteAddrFromCloser(conn io.Closer) string {
@@ -497,7 +502,7 @@ func (engine *Engine) Serve(c context.Context, conn network.Conn) (err error) {
 		if bytes.Equal(buf, bytestr.StrClientPreface) && engine.protocolServers[suite.HTTP2] != nil {
 			return engine.protocolServers[suite.HTTP2].Serve(c, conn)
 		}
-		hlog.SystemLogger().Warn("HTTP2 server is not loaded, request is going to fallback to HTTP1 server")
+		log.Warn().Str("log_service", "HTTP Server").Msg("HTTP2 server is not loaded, request is going to fallback to HTTP1 server")
 	}
 
 	// ALPN path
@@ -588,7 +593,12 @@ func debugPrintRoute(httpMethod, absolutePath string, handlers frame.HandlersCha
 	if handlerName == "" {
 		handlerName = utils.NameOfFunction(handlers.Last())
 	}
-	hlog.SystemLogger().Debugf("Method=%-6s absolutePath=%-25s --> handlerName=%s (num=%d handlers)", httpMethod, absolutePath, handlerName, nuHandlers)
+	log.Debug().Str("log_service", "HTTP Server").
+		Str("method", httpMethod).
+		Str("path", absolutePath).
+		Str("handler", handlerName).
+		Int("total_handlers", nuHandlers).
+		Msgf("Available Routes")
 }
 
 func (engine *Engine) addRoute(method, path string, handlers frame.HandlersChain) {

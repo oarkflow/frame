@@ -17,8 +17,8 @@ import (
 	"context"
 	"github.com/sujit-baniya/frame"
 	"github.com/sujit-baniya/frame/pkg/common/adaptor"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/protocol/consts"
+	"github.com/sujit-baniya/log"
 	"net/http"
 	"unsafe"
 )
@@ -63,7 +63,7 @@ func NewFrameHTTPHandler(h http.Handler) frame.HandlerFunc {
 	return func(ctx context.Context, c *frame.Context) {
 		req, err := adaptor.GetCompatRequest(c.GetRequest())
 		if err != nil {
-			hlog.CtxErrorf(ctx, "FRAME: Get request error: %v", err)
+			log.Error().Str("log_service", "HTTP Server").Err(err).Msg("Server Error: Get request error")
 			c.String(http.StatusInternalServerError, consts.StatusMessage(http.StatusInternalServerError))
 			return
 		}

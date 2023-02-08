@@ -22,13 +22,13 @@ package netpoll
 import (
 	"errors"
 	errs "github.com/sujit-baniya/frame/pkg/common/errors"
+	"github.com/sujit-baniya/log"
 	"golang.org/x/sys/unix"
 	"io"
 	"strings"
 	"syscall"
 
 	"github.com/cloudwego/netpoll"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/network"
 )
 
@@ -91,7 +91,7 @@ func (c *Conn) HandleSpecificError(err error, rip string) (needIgnore bool) {
 		if strings.Contains(err.Error(), "when flush") {
 			return true
 		}
-		hlog.SystemLogger().Debugf("Netpoll error=%s, remoteAddr=%s", err.Error(), rip)
+		log.Debug().Str("log_service", "HTTP Server").Msgf("Netpoll error=%s, remoteAddr=%s", err.Error(), rip)
 		return true
 	}
 	return false

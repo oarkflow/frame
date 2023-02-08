@@ -27,8 +27,8 @@ import (
 
 	"github.com/cloudwego/netpoll"
 	"github.com/sujit-baniya/frame/pkg/common/config"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/network"
+	"github.com/sujit-baniya/log"
 )
 
 type transporter struct {
@@ -59,6 +59,10 @@ func NewTransporter(options *config.Options) network.Transporter {
 		OnAccept:         options.OnAccept,
 		OnConnect:        options.OnConnect,
 	}
+}
+
+func (t *transporter) Listener() net.Listener {
+	return t.listener
 }
 
 // ListenAndServe binds listen address and keep serving, until an error occurs
@@ -105,7 +109,10 @@ func (t *transporter) ListenAndServe(onReq network.OnData) (err error) {
 	}
 
 	// Start Server
-	hlog.SystemLogger().Infof("HTTP server listening on address=%s", t.listener.Addr().String())
+	log.Info().Str("log_service", "HTTP Server").
+		Str("address", t.listener.Addr().String()).
+		Str("status", "listening").
+		Msg("Server started")
 	t.RLock()
 	err = t.eventLoop.Serve(t.listener)
 	t.RUnlock()

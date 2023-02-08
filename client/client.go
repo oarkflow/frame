@@ -45,7 +45,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
+	"github.com/sujit-baniya/log"
 	"io"
 	"reflect"
 	"strings"
@@ -547,7 +547,7 @@ func (c *Client) mCleaner() {
 				if f, ok := v.(io.Closer); ok {
 					err := f.Close()
 					if err != nil {
-						hlog.Warnf("clean hostclient error, addr: %s, err: %s", k, err.Error())
+						log.Warn().Str("log_service", "HTTP Server").Str("hostname", k).Err(err).Msg("Client error")
 					}
 				}
 			}

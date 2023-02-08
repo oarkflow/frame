@@ -23,7 +23,7 @@ import (
 	"github.com/sujit-baniya/frame/pkg/common/config"
 	"github.com/sujit-baniya/frame/pkg/network/standard"
 	"github.com/sujit-baniya/frame/server"
-	"log"
+	"github.com/sujit-baniya/log"
 	"net/http"
 	"os"
 
@@ -47,7 +47,7 @@ func NewTlsConfig(domains ...string) *tls.Config {
 	}
 	dir := cacheDir()
 	if err := os.MkdirAll(dir, 0o700); err != nil {
-		log.Printf("warning: autocert.NewListener not using a cache: %v", err)
+		log.Error().Str("log_service", "HTTP Server").Err(err).Str("log_service", "HTTP Server").Msg("Server Error: autocert.NewListener not using a cache")
 	} else {
 		m.Cache = autocert.DirCache(dir)
 	}
@@ -109,7 +109,7 @@ func NewServerWithManagerAndTlsConfig(m *autocert.Manager, tlsc *tls.Config, opt
 		var e error
 		m.Cache, e = getCacheDir()
 		if e != nil {
-			log.Println(e)
+			log.Error().Str("log_service", "HTTP Server").Str("log_service", "HTTP Server").Err(e).Msg("")
 		}
 	}
 

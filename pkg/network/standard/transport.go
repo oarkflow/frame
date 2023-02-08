@@ -19,12 +19,12 @@ package standard
 import (
 	"context"
 	"crypto/tls"
+	"github.com/sujit-baniya/log"
 	"net"
 	"sync"
 	"time"
 
 	"github.com/sujit-baniya/frame/pkg/common/config"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/network"
 )
 
@@ -62,13 +62,16 @@ func (t *transport) serve() (err error) {
 	if err != nil {
 		return err
 	}
-	hlog.SystemLogger().Infof("FRAME: HTTP server listening on address=%s", t.ln.Addr().String())
+	log.Info().Str("log_service", "HTTP Server").
+		Str("address", t.ln.Addr().String()).
+		Str("status", "listening").
+		Msg("Server started")
 	for {
 		ctx := context.Background()
 		conn, err := t.ln.Accept()
 		var c network.Conn
 		if err != nil {
-			hlog.SystemLogger().Errorf("Error=%s", err.Error())
+			log.Error().Str("log_service", "HTTP Server").Msgf("Error=%s", err.Error())
 			return err
 		}
 		if t.OnAccept != nil {
@@ -84,6 +87,10 @@ func (t *transport) serve() (err error) {
 		}
 		go t.handler(ctx, c)
 	}
+}
+
+func (t *transport) Listener() net.Listener {
+	return t.ln
 }
 
 func (t *transport) ListenAndServe(onData network.OnData) (err error) {
