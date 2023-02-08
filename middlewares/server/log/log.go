@@ -8,8 +8,7 @@ import (
 
 	"github.com/sujit-baniya/frame"
 	"github.com/sujit-baniya/frame/pkg/common/xid"
-
-	"github.com/phuslu/log"
+	"github.com/sujit-baniya/log"
 )
 
 type Config struct {
