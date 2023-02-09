@@ -3,7 +3,6 @@ package log
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/sujit-baniya/frame"
@@ -15,17 +14,20 @@ type Config struct {
 	Logger    *log.Logger
 	LogWriter log.Writer
 	RequestID func() string
+	Skip      func(c *frame.Context) bool
 }
 
-// New Middleware request_id + logger + recover for request traceability
 func New(config Config) frame.HandlerFunc {
-	return func(c context.Context, ctx *frame.Context) {
+	return func(ctx context.Context, c *frame.Context) {
 		start := time.Now()
-		if strings.Contains(string(ctx.Path()), "favicon") {
-			ctx.Next(c)
+		c.Next(ctx)
+		end := time.Now()
+		latency := end.Sub(start)
+
+		if config.Skip != nil && config.Skip(c) {
 			return
 		}
-		rid := string(ctx.GetHeader("X-Request-ID"))
+		rid := string(c.GetHeader("X-Request-ID"))
 		if config.RequestID == nil {
 			config.RequestID = func() string {
 				return xid.New().String()
@@ -33,9 +35,8 @@ func New(config Config) frame.HandlerFunc {
 		}
 		if rid == "" {
 			rid = config.RequestID()
-			ctx.Header("X-Request-ID", rid)
+			c.Header("X-Request-ID", rid)
 		}
-		ctx.Next(c)
 
 		if config.Logger == nil {
 			config.Logger = &log.Logger{
@@ -43,55 +44,46 @@ func New(config Config) frame.HandlerFunc {
 				TimeFormat: "2006-01-02 15:04:05",
 			}
 		}
-		if config.LogWriter != nil {
-			config.Logger.Writer = config.LogWriter
-		}
-		ip := ctx.ClientIP()
+		ip := c.ClientIP()
 		curIP := ctx.Value("ip")
 		if curIP != nil {
 			ip = curIP.(string)
 		}
-		logging := log.NewContext(nil).
+
+		status := c.Response.StatusCode()
+		msg := "Request"
+		var e *log.Entry
+		switch {
+		case status >= 500:
+			e = config.Logger.Error()
+			msg = "Server Error"
+		case status >= 400 && status < 500:
+			e = config.Logger.Warn()
+			msg = "Client Error"
+		case status >= 300 && status < 400:
+			e = config.Logger.Warn()
+			msg = "Redirect"
+		case status >= 200 && status < 300:
+			e = config.Logger.Info()
+			msg = "Success"
+		case status >= 100:
+			e = config.Logger.Info()
+			msg = "Informative"
+		default:
+			e = config.Logger.Info()
+			msg = "Unknown"
+		}
+		e.Str("log_service", "HTTP Server").
+			Int("status", status).
 			Str("request_id", rid).
 			Str("remote_ip", ip).
-			Str("method", string(ctx.Method())).
-			Str("host", string(ctx.Host())).
-			Str("path", string(ctx.Path())).
-			Str("protocol", string(ctx.Request.Scheme())).
-			Int("status", ctx.Response.StatusCode()).
-			Str("latency", fmt.Sprintf("%s", time.Since(start))).
-			Str("ua", string(ctx.GetHeader("User-Agent")))
-
-		log.Info().Str("log_service", "HTTP Server").Str("request_id", rid).
-			Str("remote_ip", ip).
-			Str("method", string(ctx.Method())).
-			Str("host", string(ctx.Host())).
-			Str("path", string(ctx.Path())).
-			Str("protocol", string(ctx.Request.Scheme())).
-			Int("status", ctx.Response.StatusCode()).
-			Str("latency", fmt.Sprintf("%s", time.Since(start))).
-			Str("ua", string(ctx.GetHeader("User-Agent")))
-
-		ctxx := logging.Value()
-		switch {
-		case ctx.Response.StatusCode() >= 500:
-			config.Logger.Error().Context(ctxx).Msg("server error")
-			log.Error().Str("log_service", "HTTP Server").Context(ctxx).Msg("server error")
-		case ctx.Response.StatusCode() >= 400:
-			config.Logger.Error().Context(ctxx).Msg("client error")
-			log.Error().Str("log_service", "HTTP Server").Context(ctxx).Msg("client error")
-		case ctx.Response.StatusCode() >= 300:
-			config.Logger.Warn().Context(ctxx).Msg("redirect")
-			log.Info().Str("log_service", "HTTP Server").Context(ctxx).Msg("redirect")
-		case ctx.Response.StatusCode() >= 200:
-			config.Logger.Info().Context(ctxx).Msg("success")
-			log.Info().Str("log_service", "HTTP Server").Context(ctxx).Msg("success")
-		case ctx.Response.StatusCode() >= 100:
-			config.Logger.Info().Context(ctxx).Msg("informative")
-			log.Info().Str("log_service", "HTTP Server").Context(ctxx).Msg("informative")
-		default:
-			config.Logger.Warn().Context(ctxx).Msg("unknown status")
-			log.Info().Str("log_service", "HTTP Server").Context(ctxx).Msg("unknown status")
-		}
+			Str("method", string(c.Method())).
+			Str("host", string(c.Host())).
+			Str("path", string(c.Path())).
+			Str("protocol", string(c.Request.Scheme())).
+			Int("status", c.Response.StatusCode()).
+			Str("latency", fmt.Sprintf("%s", latency)).
+			Str("ua", string(c.GetHeader("User-Agent"))).
+			Msg(msg)
 	}
 }
