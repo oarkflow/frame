@@ -73,9 +73,11 @@ func New(config Config) frame.HandlerFunc {
 			e = config.Logger.Info()
 			msg = "Unknown"
 		}
-		e.Str("log_service", "HTTP Server").
+		if !log.DefaultLogger.EnableTracing {
+			e = e.Str("request_id", rid)
+		}
+		e.WithContext(ctx).Str("log_service", "HTTP Server").
 			Int("status", status).
-			Str("request_id", rid).
 			Str("remote_ip", ip).
 			Str("method", string(c.Method())).
 			Str("host", string(c.Host())).
