@@ -134,7 +134,7 @@ type Engine struct {
 	// For render HTML
 	delims     render.Delims
 	funcMap    template.FuncMap
-	htmlRender *render.HtmlEngine
+	HtmlEngine *render.HtmlEngine
 
 	// NoHijackConnPool will control whether invite pool to acquire/release the hijackConn or not.
 	// If it is difficult to guarantee that hijackConn will not be closed repeatedly, set it to true.
@@ -469,8 +469,8 @@ func getRemoteAddrFromCloser(conn io.Closer) string {
 }
 
 func (engine *Engine) Close() error {
-	if engine.htmlRender != nil {
-		engine.htmlRender.Close() //nolint:errcheck
+	if engine.HtmlEngine != nil {
+		engine.HtmlEngine.Close() //nolint:errcheck
 	}
 	return engine.transport.Close()
 }
@@ -829,11 +829,11 @@ func (engine *Engine) Use(middleware ...frame.HandlerFunc) IRoutes {
 
 // SetHTMLTemplate associate a template with HTML renderer.
 func (engine *Engine) SetHTMLTemplate(directory, extension string) {
-	engine.htmlRender = render.NewHtmlRender(render.HtmlConfig{
+	engine.HtmlEngine = render.NewHtmlRender(render.HtmlConfig{
 		Directory: directory,
 		Extension: extension,
 	})
-	engine.htmlRender.Reload(engine.options.AutoReloadRender)
+	engine.HtmlEngine.Reload(engine.options.AutoReloadRender)
 }
 
 // SetFuncMap sets the funcMap used for template.funcMap.
@@ -952,7 +952,7 @@ func newHttp1OptionFromEngine(engine *Engine) *http1.Option {
 		ServerName:                   engine.GetServerName(),
 		ContinueHandler:              engine.ContinueHandler,
 		TLS:                          engine.options.TLS,
-		HTMLRender:                   engine.htmlRender,
+		HTMLRender:                   engine.HtmlEngine,
 		EnableTrace:                  engine.IsTraceEnable(),
 		HijackConnHandle:             engine.HijackConnHandle,
 	}
