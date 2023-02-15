@@ -78,21 +78,71 @@ type Handler interface {
 
 type ClientIP func(ctx *Context) string
 
-var defaultClientIP = func(ctx *Context) string {
-	RemoteIPHeaders := []string{"X-Real-IP", "X-Forwarded-For"}
-	for _, headerName := range RemoteIPHeaders {
-		ip := ctx.Request.Header.Get(headerName)
-		if ip != "" {
-			return ip
+type ClientIPOptions struct {
+	RemoteIPHeaders []string
+	TrustedProxies  map[string]bool
+}
+
+var defaultClientIPOptions = ClientIPOptions{
+	RemoteIPHeaders: []string{"X-Real-IP", "X-Forwarded-For"},
+	TrustedProxies: map[string]bool{
+		"0.0.0.0": true,
+	},
+}
+
+// ClientIPWithOption used to generate custom ClientIP function and set by engine.SetClientIPFunc
+func ClientIPWithOption(opts ClientIPOptions) ClientIP {
+	return func(ctx *Context) string {
+		RemoteIPHeaders := opts.RemoteIPHeaders
+		TrustedProxies := opts.TrustedProxies
+
+		remoteIP, _, err := net.SplitHostPort(strings.TrimSpace(ctx.RemoteAddr().String()))
+		if err != nil {
+			return ""
+		}
+		trusted := isTrustedProxy(TrustedProxies, remoteIP)
+
+		if trusted {
+			for _, headerName := range RemoteIPHeaders {
+				ip, valid := validateHeader(TrustedProxies, ctx.Request.Header.Get(headerName))
+				if valid {
+					return ip
+				}
+			}
+		}
+
+		return remoteIP
+	}
+}
+
+// isTrustedProxy will check whether the IP address is included in the trusted list according to TrustedProxies
+func isTrustedProxy(trustedProxies map[string]bool, remoteIP string) bool {
+	return trustedProxies[remoteIP]
+}
+
+// validateHeader will parse X-Real-IP and X-Forwarded-For header and return the Initial client IP address or an untrusted IP address
+func validateHeader(trustedProxies map[string]bool, header string) (clientIP string, valid bool) {
+	if header == "" {
+		return "", false
+	}
+	items := strings.Split(header, ",")
+	for i := len(items) - 1; i >= 0; i-- {
+		ipStr := strings.TrimSpace(items[i])
+		ip := net.ParseIP(ipStr)
+		if ip == nil {
+			break
+		}
+
+		// X-Forwarded-For is appended by proxy
+		// Check IPs in reverse order and stop when find untrusted proxy
+		if (i == 0) || (!isTrustedProxy(trustedProxies, ipStr)) {
+			return ipStr, true
 		}
 	}
-
-	if ip, _, err := net.SplitHostPort(strings.TrimSpace(ctx.RemoteAddr().String())); err == nil {
-		return ip
-	}
-
-	return ""
+	return "", false
 }
+
+var defaultClientIP = ClientIPWithOption(defaultClientIPOptions)
 
 // SetClientIPFunc sets ClientIP function implementation to get ClientIP.
 // Deprecated: Use engine.SetClientIPFunc instead of SetClientIPFunc
@@ -304,10 +354,6 @@ func (c HandlersChain) Last() HandlerFunc {
 		return c[length-1]
 	}
 	return nil
-}
-
-func (ctx *Context) SetIndex(i int8) {
-	ctx.index = i
 }
 
 func (ctx *Context) Finished() <-chan struct{} {
@@ -527,6 +573,7 @@ func (ctx *Context) FormFile(name string) (*multipart.FileHeader, error) {
 //   - MultipartForm for obtaining values from multipart form.
 //   - FormFile for obtaining uploaded files.
 //
+// The returned value is valid until returning from RequestHandler.
 // Use engine.SetCustomFormValueFunc to change action of FormValue.
 func (ctx *Context) FormValue(key string) []byte {
 	if ctx.formValueFunc != nil {
@@ -1133,42 +1180,13 @@ func (ctx *Context) Body() ([]byte, error) {
 	return ctx.Request.BodyE()
 }
 
-// isTrustedProxy will check whether the IP address is included in the trusted list according to TrustedProxies
-func isTrustedProxy(trustedProxies []string, remoteIP string) bool {
-	for _, proxy := range trustedProxies {
-		if proxy == remoteIP {
-			return true
-		}
-	}
-	return false
-}
-
-// validateHeader will parse X-Forwarded-For and X-Real-IP header and return the Initial client IP address or an untrusted IP address
-func validateHeader(trustedProxies []string, header string) (clientIP string, valid bool) {
-	if header == "" {
-		return "", false
-	}
-	items := strings.Split(header, ",")
-	for i := len(items) - 1; i >= 0; i-- {
-		ipStr := strings.TrimSpace(items[i])
-		ip := net.ParseIP(ipStr)
-		if ip == nil {
-			break
-		}
-
-		// X-Forwarded-For is appended by proxy
-		// Check IPs in reverse order and stop when find untrusted proxy
-		if (i == 0) || (!isTrustedProxy(trustedProxies, ipStr)) {
-			return ipStr, true
-		}
-	}
-	return "", false
-}
-
 // ClientIP tries to parse the headers in [X-Real-Ip, X-Forwarded-For].
 // It calls RemoteIP() under the hood. If it cannot satisfy the requirements,
-// use SetClientIPFunc to inject your own implementation.
+// use engine.SetClientIPFunc to inject your own implementation.
 func (ctx *Context) ClientIP() string {
+	if ctx.clientIPFunc != nil {
+		return ctx.clientIPFunc(ctx)
+	}
 	return defaultClientIP(ctx)
 }
 

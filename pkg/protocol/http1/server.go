@@ -20,16 +20,17 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/server/render"
 	"io"
 	"net"
+	"sync"
 	"time"
 
+	"github.com/sujit-baniya/frame"
 	"github.com/sujit-baniya/frame/internal/bytestr"
 	internalStats "github.com/sujit-baniya/frame/internal/stats"
 	errs "github.com/sujit-baniya/frame/pkg/common/errors"
 	"github.com/sujit-baniya/frame/pkg/common/tracer/stats"
+	"github.com/sujit-baniya/frame/pkg/common/tracer/traceinfo"
 	"github.com/sujit-baniya/frame/pkg/network"
 	"github.com/sujit-baniya/frame/pkg/protocol"
 	"github.com/sujit-baniya/frame/pkg/protocol/consts"
@@ -37,6 +38,7 @@ import (
 	"github.com/sujit-baniya/frame/pkg/protocol/http1/req"
 	"github.com/sujit-baniya/frame/pkg/protocol/http1/resp"
 	"github.com/sujit-baniya/frame/pkg/protocol/suite"
+	"github.com/sujit-baniya/frame/server/render"
 )
 
 // NextProtoTLS is the NPN/ALPN protocol negotiated during
@@ -73,6 +75,8 @@ type Option struct {
 type Server struct {
 	Option
 	Core suite.Core
+
+	eventStackPool *sync.Pool
 }
 
 func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
@@ -95,19 +99,31 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 		// 4. Reset and recycle
 		ctx = s.Core.GetCtxPool().Get().(*frame.Context)
 
-		traceCtl = s.Core.GetTracer()
+		traceCtl        = s.Core.GetTracer()
+		eventsToTrigger *eventStack
 
 		// Use a new variable to hold the standard context to avoid modify the initial
 		// context.
 		cc = c
 	)
 
+	if s.EnableTrace {
+		eventsToTrigger = s.eventStackPool.Get().(*eventStack)
+	}
+
 	defer func() {
-		// error case
-		if err != nil && s.EnableTrace {
-			if !errors.Is(err, errs.ErrIdleTimeout) && !errors.Is(err, errs.ErrHijacked) {
+		if s.EnableTrace {
+			if err != nil && !errors.Is(err, errs.ErrIdleTimeout) && !errors.Is(err, errs.ErrHijacked) {
 				ctx.GetTraceInfo().Stats().SetError(err)
 			}
+			// in case of error, we need to trigger all events
+			if eventsToTrigger != nil {
+				for last := eventsToTrigger.pop(); last != nil; last = eventsToTrigger.pop() {
+					last(ctx.GetTraceInfo(), err)
+				}
+				s.eventStackPool.Put(eventsToTrigger)
+			}
+
 			traceCtl.DoFinish(cc, ctx, err)
 		}
 
@@ -149,7 +165,7 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 			ctx.GetConn().SetReadTimeout(s.IdleTimeout) //nolint:errcheck
 
 			_, err = zr.Peek(4)
-			// This is not the first request and we haven't read a single byte
+			// This is not the first request, and we haven't read a single byte
 			// of a new request yet. This means it's just a keep-alive connection
 			// closing down either because the remote closed it or because
 			// or a read timeout on our side. Either way just close the connection
@@ -162,15 +178,25 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 			// Reset the real read timeout for the coming request
 			ctx.GetConn().SetReadTimeout(s.ReadTimeout) //nolint:errcheck
 		}
+
 		if s.EnableTrace {
 			cc = traceCtl.DoStart(c, ctx)
 			internalStats.Record(ctx.GetTraceInfo(), stats.ReadHeaderStart, err)
+			eventsToTrigger.push(func(ti traceinfo.TraceInfo, err error) {
+				internalStats.Record(ti, stats.ReadHeaderFinish, err)
+			})
 		}
 		// Read Headers
 		if err = req.ReadHeader(&ctx.Request.Header, zr); err == nil {
 			if s.EnableTrace {
-				internalStats.Record(ctx.GetTraceInfo(), stats.ReadHeaderFinish, err)
+				// read header finished
+				if last := eventsToTrigger.pop(); last != nil {
+					last(ctx.GetTraceInfo(), err)
+				}
 				internalStats.Record(ctx.GetTraceInfo(), stats.ReadBodyStart, err)
+				eventsToTrigger.push(func(ti traceinfo.TraceInfo, err error) {
+					internalStats.Record(ti, stats.ReadBodyFinish, err)
+				})
 			}
 			// Read body
 			if s.StreamRequestBody {
@@ -186,7 +212,10 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 			} else {
 				ctx.GetTraceInfo().Stats().SetRecvSize(0)
 			}
-			internalStats.Record(ctx.GetTraceInfo(), stats.ReadBodyFinish, err)
+			// read body finished
+			if last := eventsToTrigger.pop(); last != nil {
+				last(ctx.GetTraceInfo(), err)
+			}
 		}
 
 		if err != nil {
@@ -247,6 +276,9 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 		}
 		if s.EnableTrace {
 			internalStats.Record(ctx.GetTraceInfo(), stats.ServerHandleStart, err)
+			eventsToTrigger.push(func(ti traceinfo.TraceInfo, err error) {
+				internalStats.Record(ti, stats.ServerHandleFinish, err)
+			})
 		}
 		// Handle the request
 		//
@@ -254,7 +286,10 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 		// and the route has been matched.
 		s.Core.ServeHTTP(cc, ctx)
 		if s.EnableTrace {
-			internalStats.Record(ctx.GetTraceInfo(), stats.ServerHandleFinish, err)
+			// application layer handle finished
+			if last := eventsToTrigger.pop(); last != nil {
+				last(ctx.GetTraceInfo(), err)
+			}
 		}
 
 		// exit check
@@ -281,6 +316,9 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 		}
 		if s.EnableTrace {
 			internalStats.Record(ctx.GetTraceInfo(), stats.WriteStart, err)
+			eventsToTrigger.push(func(ti traceinfo.TraceInfo, err error) {
+				internalStats.Record(ti, stats.WriteFinish, err)
+			})
 		}
 		if err = writeResponse(ctx, zw); err != nil {
 			return
@@ -304,7 +342,10 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 			return
 		}
 		if s.EnableTrace {
-			internalStats.Record(ctx.GetTraceInfo(), stats.WriteFinish, err)
+			// write finished
+			if last := eventsToTrigger.pop(); last != nil {
+				last(ctx.GetTraceInfo(), err)
+			}
 		}
 
 		// Release request body stream
@@ -351,6 +392,16 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 	}
 }
 
+func NewServer() *Server {
+	return &Server{
+		eventStackPool: &sync.Pool{
+			New: func() interface{} {
+				return &eventStack{}
+			},
+		},
+	}
+}
+
 func writeErrorResponse(zw network.Writer, ctx *frame.Context, serverName []byte, err error) network.Writer {
 	errorHandler := defaultErrorHandler
 
@@ -385,4 +436,23 @@ func defaultErrorHandler(ctx *frame.Context, err error) {
 	} else {
 		ctx.AbortWithMsg("Error when parsing request", consts.StatusBadRequest)
 	}
+}
+
+type eventStack []func(ti traceinfo.TraceInfo, err error)
+
+func (e *eventStack) isEmpty() bool {
+	return len(*e) == 0
+}
+
+func (e *eventStack) push(f func(ti traceinfo.TraceInfo, err error)) {
+	*e = append(*e, f)
+}
+
+func (e *eventStack) pop() func(ti traceinfo.TraceInfo, err error) {
+	if e.isEmpty() {
+		return nil
+	}
+	last := (*e)[len(*e)-1]
+	*e = (*e)[:len(*e)-1]
+	return last
 }

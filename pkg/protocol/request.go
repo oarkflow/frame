@@ -62,7 +62,6 @@ import (
 	"github.com/sujit-baniya/frame/pkg/common/utils"
 	"github.com/sujit-baniya/frame/pkg/network"
 	"github.com/sujit-baniya/frame/pkg/protocol/consts"
-	"github.com/sujit-baniya/frame/pkg/protocol/http1/ext"
 )
 
 var (
@@ -74,6 +73,17 @@ var (
 
 	requestPool sync.Pool
 )
+
+// NoBody is an io.ReadCloser with no bytes. Read always returns EOF
+// and Close always returns nil. It can be used in an outgoing client
+// request to explicitly signal that a request has zero bytes.
+// An alternative, however, is to simply set Request.Body to nil.
+var NoBody = noBody{}
+
+type noBody struct{}
+
+func (noBody) Read([]byte) (int, error) { return 0, io.EOF }
+func (noBody) Close() error             { return nil }
 
 type Request struct {
 	noCopy nocopy.NoCopy //lint:ignore U1000 until noCopy is used
@@ -91,6 +101,9 @@ type Request struct {
 
 	multipartForm         *multipart.Form
 	multipartFormBoundary string
+
+	// only for Client
+	sendDone <-chan struct{} // close after client send all data to server
 
 	// Group bool members in order to reduce Request object size.
 	parsedURI      bool
@@ -188,24 +201,13 @@ func SwapRequestBody(a, b *Request) {
 	a.multipartFiles, b.multipartFiles = b.multipartFiles, a.multipartFiles
 }
 
-func (req *Request) ResetSkipHeaderAndBody() {
-	req.uri.Reset()
-	req.parsedURI = false
-	req.parsedPostArgs = false
-	req.postArgs.Reset()
-	req.isTLS = false
-}
-
-func (req *Request) SetURIParsed(b bool) {
-	req.parsedURI = b
-}
-
 // Reset clears request contents.
 func (req *Request) Reset() {
 	req.Header.Reset()
 	req.ResetSkipHeader()
 	req.CloseBodyStream()
 
+	req.sendDone = nil
 	req.options = nil
 }
 
@@ -627,12 +629,12 @@ func (req *Request) HasMultipartForm() bool {
 
 // IsBodyStream returns true if body is set via SetBodyStream*
 func (req *Request) IsBodyStream() bool {
-	return req.bodyStream != nil && req.bodyStream != ext.NoBody
+	return req.bodyStream != nil && req.bodyStream != NoBody
 }
 
 func (req *Request) BodyStream() io.Reader {
 	if req.bodyStream == nil {
-		req.bodyStream = ext.NoBody
+		req.bodyStream = NoBody
 	}
 	return req.bodyStream
 }
@@ -829,11 +831,48 @@ func AcquireRequest() *Request {
 	return v.(*Request)
 }
 
-// ReleaseRequest returns req acquired via AcquireRequest to request pool.
+// IsSendEnd return true if the client has sent all data of this request
+func (req *Request) IsSendEnd() bool {
+	if req.sendDone == nil {
+		return true
+	}
+
+	select {
+	case <-req.sendDone:
+		return true
+	default:
+		return false
+	}
+}
+
+// WaitSendEnd will wait until the client has sent all data of this request
+func (req *Request) WaitSendEnd() {
+	if req.sendDone == nil {
+		return
+	}
+
+	<-req.sendDone
+}
+
+// SetSendDone set a sendDone channel to Request
 //
-// It is forbidden accessing req and/or its members after returning
-// it to request pool.
+// NOTE: It is an internal function. You should not use it.
+func (req *Request) SetSendDone(sendDone <-chan struct{}) {
+	req.sendDone = sendDone
+}
+
 func ReleaseRequest(req *Request) {
+	if req.IsSendEnd() {
+		req.Reset()
+		requestPool.Put(req)
+		return
+	}
+
+	go releaseRequestAsync(req)
+}
+
+func releaseRequestAsync(req *Request) {
+	req.WaitSendEnd()
 	req.Reset()
 	requestPool.Put(req)
 }

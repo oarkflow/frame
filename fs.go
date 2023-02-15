@@ -929,7 +929,7 @@ func (h *fsHandler) handleRequest(c context.Context, ctx *Context) {
 
 	hdr := &ctx.Response.Header
 	if ff.compressed {
-		hdr.SetCanonical(bytestr.StrContentEncoding, bytestr.StrGzip)
+		hdr.SetContentEncodingBytes(bytestr.StrGzip)
 	}
 
 	statusCode := consts.StatusOK

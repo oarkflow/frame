@@ -74,13 +74,13 @@ func (t *transport) serve() (err error) {
 			log.Error().Str("log_service", "HTTP Server").Msgf("Error=%s", err.Error())
 			return err
 		}
-		if t.OnAccept != nil {
-			ctx = t.OnAccept(c)
-		}
 		if t.tls != nil {
 			c = newTLSConn(tls.Server(conn, t.tls), t.readBufferSize)
 		} else {
 			c = newConn(conn, t.readBufferSize)
+		}
+		if t.OnAccept != nil {
+			ctx = t.OnAccept(c)
 		}
 		if t.OnConnect != nil {
 			ctx = t.OnConnect(ctx, c)

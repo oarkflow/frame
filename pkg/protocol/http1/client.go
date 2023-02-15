@@ -522,12 +522,14 @@ func (c *HostClient) doNonNilReqResp(req *protocol.Request, resp *protocol.Respo
 		req.Header.SetUserAgentBytes(c.getClientName())
 	}
 	zw := c.acquireWriter(conn)
-
+	sendDone := make(chan struct{})
+	req.SetSendDone(sendDone)
 	if !usingProxy {
 		err = reqI.Write(req, zw)
 	} else {
 		err = reqI.ProxyWrite(req, zw)
 	}
+	close(sendDone)
 	if resetConnection {
 		req.Header.ResetConnectionClose()
 	}

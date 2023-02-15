@@ -155,8 +155,9 @@ type Engine struct {
 	enableTrace bool
 
 	// protocol layer management
-	protocolSuite   *suite.Config
-	protocolServers map[string]protocol.Server
+	protocolSuite         *suite.Config
+	protocolServers       map[string]protocol.Server
+	protocolStreamServers map[string]protocol.StreamServer
 
 	// Context pool
 	ctxPool sync.Pool
@@ -353,7 +354,7 @@ func (engine *Engine) Run() (err error) {
 		}
 	}
 
-	return engine.ListenAndServe()
+	return engine.listenAndServe()
 }
 
 func (engine *Engine) Init() error {
@@ -362,12 +363,13 @@ func (engine *Engine) Init() error {
 		engine.AddProtocol(suite.HTTP1, factory.NewServerFactory(newHttp1OptionFromEngine(engine)))
 	}
 
-	serverMap, err := engine.protocolSuite.LoadAll(engine)
+	serverMap, streamServerMap, err := engine.protocolSuite.LoadAll(engine)
 	if err != nil {
 		return errs.New(err, errs.ErrorTypePrivate, "LoadAll protocol suite error")
 	}
 
 	engine.protocolServers = serverMap
+	engine.protocolStreamServers = streamServerMap
 
 	if engine.alpnEnable() {
 		engine.options.TLS.NextProtos = append(engine.options.TLS.NextProtos, suite.HTTP1)
@@ -387,7 +389,7 @@ func (engine *Engine) Listener() net.Listener {
 	return engine.transport.Listener()
 }
 
-func (engine *Engine) ListenAndServe() error {
+func (engine *Engine) listenAndServe() error {
 	log.Info().Str("log_service", "HTTP Server").Str("network_library", engine.GetTransporterName()).Msg("Default network library")
 	return engine.transport.ListenAndServe(engine.onData)
 }
@@ -419,8 +421,13 @@ func (engine *Engine) getNextProto(conn network.Conn) (proto string, err error) 
 	return
 }
 
-func (engine *Engine) onData(c context.Context, conn network.Conn) (err error) {
-	err = engine.Serve(c, conn)
+func (engine *Engine) onData(c context.Context, conn interface{}) (err error) {
+	switch conn := conn.(type) {
+	case network.Conn:
+		err = engine.Serve(c, conn)
+	case network.StreamConn:
+		err = engine.ServeStream(c, conn)
+	}
 	return
 }
 
@@ -531,6 +538,23 @@ func (engine *Engine) Serve(c context.Context, conn network.Conn) (err error) {
 	return
 }
 
+func (engine *Engine) ServeStream(ctx context.Context, conn network.StreamConn) error {
+	// ALPN path
+	if engine.options.ALPN && engine.options.TLS != nil {
+		version := conn.GetVersion()
+		nextProtocol := versionToALNP(version)
+		if server, ok := engine.protocolStreamServers[nextProtocol]; ok {
+			return server.Serve(ctx, conn)
+		}
+	}
+
+	// default path
+	if server, ok := engine.protocolStreamServers[suite.HTTP3]; ok {
+		return server.Serve(ctx, conn)
+	}
+	return errs.ErrNotSupportProtocol
+}
+
 func NewEngine(opt *config.Options) *Engine {
 	engine := &Engine{
 		trees: make(MethodTrees, 0, 9),
@@ -539,11 +563,12 @@ func NewEngine(opt *config.Options) *Engine {
 			basePath: opt.BasePath,
 			root:     true,
 		},
-		transport:       defaultTransporter(opt),
-		tracerCtl:       &internalStats.Controller{},
-		protocolServers: make(map[string]protocol.Server),
-		enableTrace:     true,
-		options:         opt,
+		transport:             defaultTransporter(opt),
+		tracerCtl:             &internalStats.Controller{},
+		protocolServers:       make(map[string]protocol.Server),
+		protocolStreamServers: make(map[string]protocol.StreamServer),
+		enableTrace:           true,
+		options:               opt,
 	}
 	if opt.TransporterNewer != nil {
 		engine.transport = opt.TransporterNewer(opt)
@@ -645,20 +670,6 @@ func (engine *Engine) recv(ctx *frame.Context) {
 	if rcv := recover(); rcv != nil {
 		engine.PanicHandler(context.Background(), ctx)
 	}
-}
-
-// HandleContext Re-enter a context that has been rewritten.
-// This can be done by setting context.Request.SetRequestURI() to new target and response will be reset.
-// Disclaimer: Maybe loop self to death with this, use wisely.
-func (engine *Engine) HandleContext(c context.Context, ctx *frame.Context) {
-	old := ctx.GetIndex()
-	ctx.Response.Reset()
-	ctx.Request.ResetSkipHeaderAndBody()
-	ctx.Params = ctx.Params[:0]
-	ctx.Errors = ctx.Errors[0:0]
-	ctx.SetIndex(-1)
-	engine.ServeHTTP(c, ctx)
-	ctx.SetIndex(old)
 }
 
 // ServeHTTP makes the router implement the Handler interface.
@@ -902,8 +913,13 @@ func (engine *Engine) Routes() (routes RoutesInfo) {
 	return routes
 }
 
-func (engine *Engine) AddProtocol(protocol string, factory suite.ServerFactory) {
+func (engine *Engine) AddProtocol(protocol string, factory interface{}) {
 	engine.protocolSuite.Add(protocol, factory)
+}
+
+// SetAltHeader sets the value of "Alt-Svc" header for protocols other than targetProtocol.
+func (engine *Engine) SetAltHeader(targetProtocol, altHeaderValue string) {
+	engine.protocolSuite.SetAltHeader(targetProtocol, altHeaderValue)
 }
 
 func (engine *Engine) HasServer(name string) bool {
@@ -962,4 +978,14 @@ func newHttp1OptionFromEngine(engine *Engine) *http1.Option {
 		opt.IdleTimeout = -1
 	}
 	return opt
+}
+
+func versionToALNP(v uint32) string {
+	if v == network.Version1 || v == network.Version2 {
+		return suite.HTTP3
+	}
+	if v == network.VersionTLS || v == network.VersionDraft29 {
+		return suite.HTTP3Draft29
+	}
+	return ""
 }
