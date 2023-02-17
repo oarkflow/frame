@@ -55,6 +55,7 @@ const (
 	HeaderIfRange      = "If-Range"
 	HeaderRange        = "Range"
 
+	HeaderRetryAfter = "Retry-After"
 	// Response context
 	HeaderAllow       = "Allow"
 	HeaderServer      = "Server"

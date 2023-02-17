@@ -1,7 +1,7 @@
 package filesystem
 
 import (
-	"github.com/sujit-baniya/frame/middlewares/server/session"
+	"github.com/sujit-baniya/frame/pkg/common/storage"
 	"io"
 	"os"
 	"path/filepath"
@@ -15,7 +15,7 @@ type Filesystem struct {
 	fileMutex sync.RWMutex
 }
 
-func New(cfg ...Config) session.Storage {
+func New(cfg ...Config) storage.Storage {
 	var config Config
 	if len(cfg) > 0 {
 		config = cfg[0]

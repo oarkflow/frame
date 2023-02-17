@@ -3,7 +3,7 @@
 package memory
 
 import (
-	"github.com/sujit-baniya/frame/middlewares/server/session/utils"
+	"github.com/sujit-baniya/frame/pkg/common/utils"
 	"sync"
 	"sync/atomic"
 	"time"

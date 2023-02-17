@@ -2,10 +2,10 @@ package session
 
 import (
 	"encoding/gob"
+	"github.com/sujit-baniya/frame/middlewares/server/session/storage/memory"
 	"time"
 
 	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/middlewares/server/session/storage/memory"
 	"github.com/sujit-baniya/frame/pkg/common/utils"
 )
 

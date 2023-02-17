@@ -3,34 +3,11 @@ package session
 import (
 	"encoding/gob"
 	"github.com/sujit-baniya/frame"
+	"github.com/sujit-baniya/frame/pkg/common/storage"
 	"github.com/sujit-baniya/frame/pkg/common/xid"
 	"strings"
 	"time"
 )
-
-// Storage interface for communicating with different database/key-value
-// providers
-type Storage interface {
-	// Get gets the value for the given key.
-	// `nil, nil` is returned when the key does not exist
-	Get(key string) ([]byte, error)
-
-	// Set stores the given value for the given key along
-	// with an expiration value, 0 means no expiration.
-	// Empty key or value will be ignored without an error.
-	Set(key string, val []byte, exp time.Duration) error
-
-	// Delete deletes the value for the given key.
-	// It returns no error if the storage does not contain the key,
-	Delete(key string) error
-
-	// Reset resets the storage and delete all keys.
-	Reset() error
-
-	// Close closes the storage and will stop any running garbage
-	// collectors and open connections.
-	Close() error
-}
 
 // Config defines the config for middleware.
 type Config struct {
@@ -40,7 +17,7 @@ type Config struct {
 
 	// Storage interface to store the session data
 	// Optional. Default value memory.New()
-	Storage Storage
+	Storage storage.Storage
 
 	// KeyLookup is a string in the form of "<source>:<name>" that is used
 	// to extract session id from the request.
