@@ -44,16 +44,19 @@ package frame
 import (
 	"context"
 	"fmt"
+	"github.com/sujit-baniya/frame/pkg/common/storage/memory"
 	"io"
 	"mime/multipart"
 	"net"
 	"net/url"
 	"os"
 	"reflect"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
 
+	json "github.com/bytedance/sonic"
 	"github.com/sujit-baniya/frame/internal/bytesconv"
 	"github.com/sujit-baniya/frame/internal/bytestr"
 	"github.com/sujit-baniya/frame/pkg/common/errors"
@@ -68,9 +71,24 @@ import (
 	"github.com/sujit-baniya/frame/server/render"
 )
 
+type FlashConfig struct {
+	Name        string    `json:"name"`
+	Value       string    `json:"value"`
+	Path        string    `json:"path"`
+	Domain      string    `json:"domain"`
+	MaxAge      int       `json:"max_age"`
+	Expires     time.Time `json:"expires"`
+	Secure      bool      `json:"secure"`
+	HTTPOnly    bool      `json:"http_only"`
+	SameSite    string    `json:"same_site"`
+	SessionOnly bool      `json:"session_only"`
+}
+
 var zeroTCPAddr = &net.TCPAddr{
 	IP: net.IPv4zero,
 }
+
+var cookieKeyValueParser = regexp.MustCompile("\x00([^:]*):([^\x00]*)\x00")
 
 type Handler interface {
 	ServeHTTP(c context.Context, ctx *Context)
@@ -249,7 +267,7 @@ func NewContext(maxParams uint16) *Context {
 	return ctx
 }
 
-// Loop fn for every k/v in Keys
+// ForEachKey Loop fn for every k/v in Keys
 func (ctx *Context) ForEachKey(fn func(k string, v interface{})) {
 	ctx.mu.RLock()
 	for key, val := range ctx.Keys {
@@ -260,6 +278,48 @@ func (ctx *Context) ForEachKey(fn func(k string, v interface{})) {
 
 func (ctx *Context) SetConn(c network.Conn) {
 	ctx.conn = c
+}
+
+func (ctx *Context) Flash(data utils.H, config FlashConfig) *Context {
+	var sameSite protocol.CookieSameSite
+	switch utils.ToLower(config.SameSite) {
+	case "strict":
+		sameSite = protocol.CookieSameSiteStrictMode
+	case "none":
+		sameSite = protocol.CookieSameSiteNoneMode
+	default:
+		sameSite = protocol.CookieSameSiteLaxMode
+	}
+	bt, _ := json.Marshal(data)
+	memory.Default.Set(config.Name, bt, time.Duration(config.MaxAge)*time.Second)
+	ctx.SetCookie(config.Name, "", config.MaxAge, config.Path, config.Domain, sameSite, config.Secure, config.HTTPOnly)
+	return ctx
+}
+
+func (ctx *Context) FlashData(config FlashConfig) (data utils.H) {
+	d, err := memory.Default.Get(config.Name)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(d, &data)
+	if err != nil {
+		return
+	}
+	var sameSite protocol.CookieSameSite
+	switch utils.ToLower(config.SameSite) {
+	case "strict":
+		sameSite = protocol.CookieSameSiteStrictMode
+	case "none":
+		sameSite = protocol.CookieSameSiteNoneMode
+	default:
+		sameSite = protocol.CookieSameSiteLaxMode
+	}
+	err = memory.Default.Delete(config.Name)
+	if err != nil {
+		return
+	}
+	ctx.SetCookie(config.Name, "", -1, config.Path, config.Domain, sameSite, config.Secure, config.HTTPOnly)
+	return
 }
 
 func (ctx *Context) GetConn() network.Conn {

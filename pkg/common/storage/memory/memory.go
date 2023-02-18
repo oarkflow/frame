@@ -140,3 +140,5 @@ func (s *Storage) gc() {
 func (s *Storage) Conn() map[string]entry {
 	return s.db
 }
+
+var Default = New()

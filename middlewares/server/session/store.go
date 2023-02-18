@@ -4,7 +4,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/middlewares/server/session/storage/memory"
+	"github.com/sujit-baniya/frame/pkg/common/storage/memory"
 	"github.com/sujit-baniya/frame/pkg/common/utils"
 	"github.com/sujit-baniya/frame/pkg/protocol"
 	"sync"
