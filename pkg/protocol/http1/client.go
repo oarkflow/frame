@@ -47,6 +47,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"github.com/sujit-baniya/frame/client/retry"
+	"github.com/sujit-baniya/log"
 	"io"
 	"net"
 	"strings"
@@ -59,7 +60,6 @@ import (
 	"github.com/sujit-baniya/frame/internal/nocopy"
 	"github.com/sujit-baniya/frame/pkg/common/config"
 	errs "github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/common/timer"
 	"github.com/sujit-baniya/frame/pkg/network"
 	"github.com/sujit-baniya/frame/pkg/network/dialer"
@@ -522,12 +522,14 @@ func (c *HostClient) doNonNilReqResp(req *protocol.Request, resp *protocol.Respo
 		req.Header.SetUserAgentBytes(c.getClientName())
 	}
 	zw := c.acquireWriter(conn)
-
+	sendDone := make(chan struct{})
+	req.SetSendDone(sendDone)
 	if !usingProxy {
 		err = reqI.Write(req, zw)
 	} else {
 		err = reqI.ProxyWrite(req, zw)
 	}
+	close(sendDone)
 	if resetConnection {
 		req.Header.ResetConnectionClose()
 	}
@@ -1008,7 +1010,7 @@ func dialAddr(addr string, dial network.Dialer, dialDualStack bool, tlsConfig *t
 	var conn network.Conn
 	var err error
 	if dial == nil {
-		hlog.SystemLogger().Warn("HostClient: no dialer specified, trying to use default dialer")
+		log.Warn().Str("log_service", "HTTP Server").Msg("HostClient: no dialer specified, trying to use default dialer")
 		dial = dialer.DefaultDialer()
 	}
 	dialFunc := dial.DialConnection

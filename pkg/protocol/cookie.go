@@ -50,8 +50,8 @@ import (
 	"github.com/sujit-baniya/frame/internal/bytestr"
 	"github.com/sujit-baniya/frame/internal/nocopy"
 	"github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/common/utils"
+	"github.com/sujit-baniya/log"
 )
 
 const (
@@ -546,7 +546,7 @@ func getCookieKey(dst, src []byte) []byte {
 func warnIfInvalid(value []byte) bool {
 	for i := range value {
 		if bytesconv.ValidCookieValueTable[value[i]] == 0 {
-			hlog.SystemLogger().Warnf("Invalid byte %q in Cookie.Value, "+
+			log.Warn().Str("log_service", "HTTP Server").Msgf("Invalid byte %q in Cookie.Value, "+
 				"it may cause compatibility problems with user agents", value[i])
 			return false
 		}

@@ -18,10 +18,10 @@ package loadbalance
 
 import (
 	"github.com/sujit-baniya/frame/client/discovery"
+	"github.com/sujit-baniya/log"
 	"sync"
 
 	"github.com/bytedance/gopkg/lang/fastrand"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"golang.org/x/sync/singleflight"
 )
 
@@ -59,7 +59,10 @@ func (wb *weightedBalancer) calcWeightInfo(e discovery.Result) *weightInfo {
 			w.weightSum += weight
 			cnt++
 		} else {
-			hlog.SystemLogger().Warnf("Invalid weight=%d on instance address=%s", weight, e.Instances[idx].Address())
+			log.Warn().Str("log_service", "HTTP Server").
+				Int("weight", weight).
+				Str("address", e.Instances[idx].Address().String()).
+				Msg("Server Error: Invalid weight")
 		}
 	}
 

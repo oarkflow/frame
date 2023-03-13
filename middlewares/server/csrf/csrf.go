@@ -31,7 +31,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/middlewares/server/sessions"
+	"github.com/sujit-baniya/frame/middlewares/server/session"
 	"io"
 	"math/rand"
 	"net/textproto"
@@ -69,7 +69,6 @@ func New(opts ...Option) frame.HandlerFunc {
 			return
 		}
 
-		session := sessions.Default(c)
 		c.Set(csrfSecret, cfg.Secret)
 
 		if isIgnored(cfg.IgnoreMethods, string(c.Request.Method())) {
@@ -77,8 +76,9 @@ func New(opts ...Option) frame.HandlerFunc {
 			return
 		}
 
-		salt, ok := session.Get(csrfSalt).(string)
-		if !ok || len(salt) == 0 {
+		val, err := session.Get(c, csrfSalt)
+		salt := val.(string)
+		if err != nil {
 			c.Error(errMissingSalt)
 			cfg.ErrorFunc(ctx, c)
 			return
@@ -103,18 +103,18 @@ func New(opts ...Option) frame.HandlerFunc {
 
 // GetToken returns a CSRF token.
 func GetToken(c *frame.Context) string {
-	session := sessions.Default(c)
 	secret := c.MustGet(csrfSecret).(string)
 
 	if t, ok := c.Get(csrfToken); ok {
 		return t.(string)
 	}
 
-	salt, ok := session.Get(csrfSalt).(string)
-	if !ok {
+	val, err := session.Get(c, csrfSalt)
+	salt := val.(string)
+	if err != nil {
 		salt = randStr(16)
-		session.Set(csrfSalt, salt)
-		session.Save()
+		session.Set(c, csrfSalt, salt)
+		session.Save(c)
 	}
 	token := tokenize(secret, salt)
 	c.Set(csrfToken, token)

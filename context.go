@@ -44,16 +44,19 @@ package frame
 import (
 	"context"
 	"fmt"
+	"github.com/sujit-baniya/frame/pkg/common/storage/memory"
 	"io"
 	"mime/multipart"
 	"net"
 	"net/url"
 	"os"
 	"reflect"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
 
+	json "github.com/bytedance/sonic"
 	"github.com/sujit-baniya/frame/internal/bytesconv"
 	"github.com/sujit-baniya/frame/internal/bytestr"
 	"github.com/sujit-baniya/frame/pkg/common/errors"
@@ -68,9 +71,24 @@ import (
 	"github.com/sujit-baniya/frame/server/render"
 )
 
+type FlashConfig struct {
+	Name        string    `json:"name"`
+	Value       string    `json:"value"`
+	Path        string    `json:"path"`
+	Domain      string    `json:"domain"`
+	MaxAge      int       `json:"max_age"`
+	Expires     time.Time `json:"expires"`
+	Secure      bool      `json:"secure"`
+	HTTPOnly    bool      `json:"http_only"`
+	SameSite    string    `json:"same_site"`
+	SessionOnly bool      `json:"session_only"`
+}
+
 var zeroTCPAddr = &net.TCPAddr{
 	IP: net.IPv4zero,
 }
+
+var cookieKeyValueParser = regexp.MustCompile("\x00([^:]*):([^\x00]*)\x00")
 
 type Handler interface {
 	ServeHTTP(c context.Context, ctx *Context)
@@ -78,21 +96,71 @@ type Handler interface {
 
 type ClientIP func(ctx *Context) string
 
-var defaultClientIP = func(ctx *Context) string {
-	RemoteIPHeaders := []string{"X-Real-IP", "X-Forwarded-For"}
-	for _, headerName := range RemoteIPHeaders {
-		ip := ctx.Request.Header.Get(headerName)
-		if ip != "" {
-			return ip
+type ClientIPOptions struct {
+	RemoteIPHeaders []string
+	TrustedProxies  map[string]bool
+}
+
+var defaultClientIPOptions = ClientIPOptions{
+	RemoteIPHeaders: []string{"X-Real-IP", "X-Forwarded-For"},
+	TrustedProxies: map[string]bool{
+		"0.0.0.0": true,
+	},
+}
+
+// ClientIPWithOption used to generate custom ClientIP function and set by engine.SetClientIPFunc
+func ClientIPWithOption(opts ClientIPOptions) ClientIP {
+	return func(ctx *Context) string {
+		RemoteIPHeaders := opts.RemoteIPHeaders
+		TrustedProxies := opts.TrustedProxies
+
+		remoteIP, _, err := net.SplitHostPort(strings.TrimSpace(ctx.RemoteAddr().String()))
+		if err != nil {
+			return ""
+		}
+		trusted := isTrustedProxy(TrustedProxies, remoteIP)
+
+		if trusted {
+			for _, headerName := range RemoteIPHeaders {
+				ip, valid := validateHeader(TrustedProxies, ctx.Request.Header.Get(headerName))
+				if valid {
+					return ip
+				}
+			}
+		}
+
+		return remoteIP
+	}
+}
+
+// isTrustedProxy will check whether the IP address is included in the trusted list according to TrustedProxies
+func isTrustedProxy(trustedProxies map[string]bool, remoteIP string) bool {
+	return trustedProxies[remoteIP]
+}
+
+// validateHeader will parse X-Real-IP and X-Forwarded-For header and return the Initial client IP address or an untrusted IP address
+func validateHeader(trustedProxies map[string]bool, header string) (clientIP string, valid bool) {
+	if header == "" {
+		return "", false
+	}
+	items := strings.Split(header, ",")
+	for i := len(items) - 1; i >= 0; i-- {
+		ipStr := strings.TrimSpace(items[i])
+		ip := net.ParseIP(ipStr)
+		if ip == nil {
+			break
+		}
+
+		// X-Forwarded-For is appended by proxy
+		// Check IPs in reverse order and stop when find untrusted proxy
+		if (i == 0) || (!isTrustedProxy(trustedProxies, ipStr)) {
+			return ipStr, true
 		}
 	}
-
-	if ip, _, err := net.SplitHostPort(strings.TrimSpace(ctx.RemoteAddr().String())); err == nil {
-		return ip
-	}
-
-	return ""
+	return "", false
 }
+
+var defaultClientIP = ClientIPWithOption(defaultClientIPOptions)
 
 // SetClientIPFunc sets ClientIP function implementation to get ClientIP.
 // Deprecated: Use engine.SetClientIPFunc instead of SetClientIPFunc
@@ -199,7 +267,7 @@ func NewContext(maxParams uint16) *Context {
 	return ctx
 }
 
-// Loop fn for every k/v in Keys
+// ForEachKey Loop fn for every k/v in Keys
 func (ctx *Context) ForEachKey(fn func(k string, v interface{})) {
 	ctx.mu.RLock()
 	for key, val := range ctx.Keys {
@@ -210,6 +278,48 @@ func (ctx *Context) ForEachKey(fn func(k string, v interface{})) {
 
 func (ctx *Context) SetConn(c network.Conn) {
 	ctx.conn = c
+}
+
+func (ctx *Context) Flash(data utils.H, config FlashConfig) *Context {
+	var sameSite protocol.CookieSameSite
+	switch utils.ToLower(config.SameSite) {
+	case "strict":
+		sameSite = protocol.CookieSameSiteStrictMode
+	case "none":
+		sameSite = protocol.CookieSameSiteNoneMode
+	default:
+		sameSite = protocol.CookieSameSiteLaxMode
+	}
+	bt, _ := json.Marshal(data)
+	memory.Default.Set(config.Name, bt, time.Duration(config.MaxAge)*time.Second)
+	ctx.SetCookie(config.Name, "", config.MaxAge, config.Path, config.Domain, sameSite, config.Secure, config.HTTPOnly)
+	return ctx
+}
+
+func (ctx *Context) FlashData(config FlashConfig) (data utils.H) {
+	d, err := memory.Default.Get(config.Name)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(d, &data)
+	if err != nil {
+		return
+	}
+	var sameSite protocol.CookieSameSite
+	switch utils.ToLower(config.SameSite) {
+	case "strict":
+		sameSite = protocol.CookieSameSiteStrictMode
+	case "none":
+		sameSite = protocol.CookieSameSiteNoneMode
+	default:
+		sameSite = protocol.CookieSameSiteLaxMode
+	}
+	err = memory.Default.Delete(config.Name)
+	if err != nil {
+		return
+	}
+	ctx.SetCookie(config.Name, "", -1, config.Path, config.Domain, sameSite, config.Secure, config.HTTPOnly)
+	return
 }
 
 func (ctx *Context) GetConn() network.Conn {
@@ -285,7 +395,7 @@ type HijackHandler func(c network.Conn)
 // Server limits such as Concurrency, ReadTimeout, WriteTimeout, etc.
 // aren't applied to hijacked connections.
 //
-// The handler must not retain references to ctx members.
+// The handler must not retain references to context members.
 //
 // Arbitrary 'Connection: Upgrade' protocols may be implemented
 // with HijackHandler. For instance,
@@ -304,10 +414,6 @@ func (c HandlersChain) Last() HandlerFunc {
 		return c[length-1]
 	}
 	return nil
-}
-
-func (ctx *Context) SetIndex(i int8) {
-	ctx.index = i
 }
 
 func (ctx *Context) Finished() <-chan struct{} {
@@ -338,9 +444,9 @@ func (ctx *Context) GetResponse() (dst *protocol.Response) {
 // if no value is associated with key. Successive calls to Value with
 // the same key returns the same result.
 //
-// In case the Key is reset after response, Value() return nil if ctx.Key is nil.
+// In case the Key is reset after response, Value() return nil if context.Key is nil.
 func (ctx *Context) Value(key interface{}) interface{} {
-	// this ctx has been reset, return nil.
+	// this context has been reset, return nil.
 	if ctx.Keys == nil {
 		return nil
 	}
@@ -527,6 +633,7 @@ func (ctx *Context) FormFile(name string) (*multipart.FileHeader, error) {
 //   - MultipartForm for obtaining values from multipart form.
 //   - FormFile for obtaining uploaded files.
 //
+// The returned value is valid until returning from RequestHandler.
 // Use engine.SetCustomFormValueFunc to change action of FormValue.
 func (ctx *Context) FormValue(key string) []byte {
 	if ctx.formValueFunc != nil {
@@ -1083,13 +1190,13 @@ func (ctx *Context) Cookie(key string) []byte {
 //	sameSite let servers specify whether/when cookies are sent with cross-site requests; eg. Set-Cookie: name=value;HttpOnly; secure; SameSite=Lax;
 //
 //	For example:
-//	1. ctx.SetCookie("user", "frame", 1, "/", "localhost",protocol.CookieSameSiteLaxMode, true, true)
+//	1. context.SetCookie("user", "frame", 1, "/", "localhost",protocol.CookieSameSiteLaxMode, true, true)
 //	add response header --->  Set-Cookie: user=frame; max-age=1; domain=localhost; path=/; HttpOnly; secure; SameSite=Lax;
-//	2. ctx.SetCookie("user", "frame", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
+//	2. context.SetCookie("user", "frame", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
 //	add response header --->  Set-Cookie: user=frame; max-age=10; domain=localhost; path=/; SameSite=Lax;
-//	3. ctx.SetCookie("", "frame", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
+//	3. context.SetCookie("", "frame", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
 //	add response header --->  Set-Cookie: frame; max-age=10; domain=localhost; path=/; SameSite=Lax;
-//	4. ctx.SetCookie("user", "", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
+//	4. context.SetCookie("user", "", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
 //	add response header --->  Set-Cookie: user=; max-age=10; domain=localhost; path=/; SameSite=Lax;
 func (ctx *Context) SetCookie(name, value string, maxAge int, path, domain string, sameSite protocol.CookieSameSite, secure, httpOnly bool) {
 	if path == "" {
@@ -1133,42 +1240,13 @@ func (ctx *Context) Body() ([]byte, error) {
 	return ctx.Request.BodyE()
 }
 
-// isTrustedProxy will check whether the IP address is included in the trusted list according to TrustedProxies
-func isTrustedProxy(trustedProxies []string, remoteIP string) bool {
-	for _, proxy := range trustedProxies {
-		if proxy == remoteIP {
-			return true
-		}
-	}
-	return false
-}
-
-// validateHeader will parse X-Forwarded-For and X-Real-IP header and return the Initial client IP address or an untrusted IP address
-func validateHeader(trustedProxies []string, header string) (clientIP string, valid bool) {
-	if header == "" {
-		return "", false
-	}
-	items := strings.Split(header, ",")
-	for i := len(items) - 1; i >= 0; i-- {
-		ipStr := strings.TrimSpace(items[i])
-		ip := net.ParseIP(ipStr)
-		if ip == nil {
-			break
-		}
-
-		// X-Forwarded-For is appended by proxy
-		// Check IPs in reverse order and stop when find untrusted proxy
-		if (i == 0) || (!isTrustedProxy(trustedProxies, ipStr)) {
-			return ipStr, true
-		}
-	}
-	return "", false
-}
-
 // ClientIP tries to parse the headers in [X-Real-Ip, X-Forwarded-For].
 // It calls RemoteIP() under the hood. If it cannot satisfy the requirements,
-// use SetClientIPFunc to inject your own implementation.
+// use engine.SetClientIPFunc to inject your own implementation.
 func (ctx *Context) ClientIP() string {
+	if ctx.clientIPFunc != nil {
+		return ctx.clientIPFunc(ctx)
+	}
 	return defaultClientIP(ctx)
 }
 

@@ -18,9 +18,11 @@ package network
 
 import (
 	"context"
+	"net"
 )
 
 type Transporter interface {
+	Listener() net.Listener
 	// Close the transporter immediately
 	Close() error
 
@@ -32,4 +34,4 @@ type Transporter interface {
 }
 
 // Callback when data is ready on the connection
-type OnData func(ctx context.Context, conn Conn) error
+type OnData func(ctx context.Context, conn interface{}) error

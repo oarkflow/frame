@@ -1,21 +1,20 @@
+// Copyright 2022 Frame Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
 //go:build !windows
 // +build !windows
-
-/*
- * Copyright 2022 Frame Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package netpoll
 
@@ -27,8 +26,8 @@ import (
 
 	"github.com/cloudwego/netpoll"
 	"github.com/sujit-baniya/frame/pkg/common/config"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/network"
+	"github.com/sujit-baniya/log"
 )
 
 type transporter struct {
@@ -41,7 +40,7 @@ type transporter struct {
 	listener         net.Listener
 	eventLoop        netpoll.EventLoop
 	listenConfig     *net.ListenConfig
-	OnAccept         func(conn network.Conn) context.Context
+	OnAccept         func(conn net.Conn) context.Context
 	OnConnect        func(ctx context.Context, conn network.Conn) context.Context
 }
 
@@ -59,6 +58,10 @@ func NewTransporter(options *config.Options) network.Transporter {
 		OnAccept:         options.OnAccept,
 		OnConnect:        options.OnConnect,
 	}
+}
+
+func (t *transporter) Listener() net.Listener {
+	return t.listener
 }
 
 // ListenAndServe binds listen address and keep serving, until an error occurs
@@ -105,7 +108,10 @@ func (t *transporter) ListenAndServe(onReq network.OnData) (err error) {
 	}
 
 	// Start Server
-	hlog.SystemLogger().Infof("HTTP server listening on address=%s", t.listener.Addr().String())
+	log.Info().Str("log_service", "HTTP Server").
+		Str("address", t.listener.Addr().String()).
+		Str("status", "listening").
+		Msg("Server started")
 	t.RLock()
 	err = t.eventLoop.Serve(t.listener)
 	t.RUnlock()
@@ -124,12 +130,15 @@ func (t *transporter) Close() error {
 }
 
 // Shutdown will trigger listener stop and graceful shutdown
-// It will wait all connections close until reaching ctx.Deadline()
+// It will wait all connections close until reaching context.Deadline()
 func (t *transporter) Shutdown(ctx context.Context) error {
 	defer func() {
 		network.UnlinkUdsFile(t.network, t.addr) //nolint:errcheck
 		t.RUnlock()
 	}()
 	t.RLock()
+	if t.eventLoop == nil {
+		return nil
+	}
 	return t.eventLoop.Shutdown(ctx)
 }

@@ -47,8 +47,10 @@ import (
 	"fmt"
 	"github.com/sujit-baniya/frame"
 	"github.com/sujit-baniya/frame/server/render"
+	"github.com/sujit-baniya/log"
 	"html/template"
 	"io"
+	"net"
 	"reflect"
 	"runtime"
 	"strings"
@@ -61,7 +63,6 @@ import (
 	internalStats "github.com/sujit-baniya/frame/internal/stats"
 	"github.com/sujit-baniya/frame/pkg/common/config"
 	errs "github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/common/tracer"
 	"github.com/sujit-baniya/frame/pkg/common/tracer/stats"
 	"github.com/sujit-baniya/frame/pkg/common/tracer/traceinfo"
@@ -133,7 +134,7 @@ type Engine struct {
 	// For render HTML
 	delims     render.Delims
 	funcMap    template.FuncMap
-	htmlRender *render.HtmlEngine
+	HtmlEngine *render.HtmlEngine
 
 	// NoHijackConnPool will control whether invite pool to acquire/release the hijackConn or not.
 	// If it is difficult to guarantee that hijackConn will not be closed repeatedly, set it to true.
@@ -154,8 +155,9 @@ type Engine struct {
 	enableTrace bool
 
 	// protocol layer management
-	protocolSuite   *suite.Config
-	protocolServers map[string]protocol.Server
+	protocolSuite         *suite.Config
+	protocolServers       map[string]protocol.Server
+	protocolStreamServers map[string]protocol.StreamServer
 
 	// Context pool
 	ctxPool sync.Pool
@@ -298,17 +300,17 @@ func (engine *Engine) Shutdown(ctx context.Context) (err error) {
 		// ensure that the hook is executed until wait timeout or finish
 		select {
 		case <-ctx.Done():
-			hlog.SystemLogger().Infof("Execute OnShutdownHooks timeout: error=%v", ctx.Err())
+			log.Info().Str("log_service", "HTTP Server").Msgf("Execute OnShutdownHooks timeout: error=%v", ctx.Err())
 			return
 		case <-ch:
-			hlog.SystemLogger().Info("Execute OnShutdownHooks finish")
+			log.Info().Str("log_service", "HTTP Server").Msgf("Execute OnShutdownHooks finish")
 			return
 		}
 	}()
 
 	if opt := engine.options; opt != nil && opt.Registry != nil {
 		if err = opt.Registry.Deregister(opt.RegistryInfo); err != nil {
-			hlog.SystemLogger().Errorf("Deregister error=%v", err)
+			log.Error().Str("log_service", "HTTP Server").Msgf("Deregister error=%v", err)
 			return err
 		}
 	}
@@ -352,7 +354,7 @@ func (engine *Engine) Run() (err error) {
 		}
 	}
 
-	return engine.ListenAndServe()
+	return engine.listenAndServe()
 }
 
 func (engine *Engine) Init() error {
@@ -361,12 +363,13 @@ func (engine *Engine) Init() error {
 		engine.AddProtocol(suite.HTTP1, factory.NewServerFactory(newHttp1OptionFromEngine(engine)))
 	}
 
-	serverMap, err := engine.protocolSuite.LoadAll(engine)
+	serverMap, streamServerMap, err := engine.protocolSuite.LoadAll(engine)
 	if err != nil {
 		return errs.New(err, errs.ErrorTypePrivate, "LoadAll protocol suite error")
 	}
 
 	engine.protocolServers = serverMap
+	engine.protocolStreamServers = streamServerMap
 
 	if engine.alpnEnable() {
 		engine.options.TLS.NextProtos = append(engine.options.TLS.NextProtos, suite.HTTP1)
@@ -382,8 +385,12 @@ func (engine *Engine) alpnEnable() bool {
 	return engine.options.TLS != nil && engine.options.ALPN
 }
 
-func (engine *Engine) ListenAndServe() error {
-	hlog.SystemLogger().Infof("Using network library=%s", engine.GetTransporterName())
+func (engine *Engine) Listener() net.Listener {
+	return engine.transport.Listener()
+}
+
+func (engine *Engine) listenAndServe() error {
+	log.Info().Str("log_service", "HTTP Server").Str("network_library", engine.GetTransporterName()).Msg("Default network library")
 	return engine.transport.ListenAndServe(engine.onData)
 }
 
@@ -403,7 +410,7 @@ func (engine *Engine) getNextProto(conn network.Conn) (proto string, err error) 
 	if tlsConn, ok := conn.(network.ConnTLSer); ok {
 		if engine.options.ReadTimeout > 0 {
 			if err := conn.SetReadTimeout(engine.options.ReadTimeout); err != nil {
-				hlog.SystemLogger().Errorf("BUG: error in SetReadDeadline=%s: error=%s", engine.options.ReadTimeout, err)
+				log.Error().Str("log_service", "HTTP Server").Msgf("BUG: error in SetReadDeadline=%s: error=%s", engine.options.ReadTimeout, err)
 			}
 		}
 		err = tlsConn.Handshake()
@@ -414,8 +421,13 @@ func (engine *Engine) getNextProto(conn network.Conn) (proto string, err error) 
 	return
 }
 
-func (engine *Engine) onData(c context.Context, conn network.Conn) (err error) {
-	err = engine.Serve(c, conn)
+func (engine *Engine) onData(c context.Context, conn interface{}) (err error) {
+	switch conn := conn.(type) {
+	case network.Conn:
+		err = engine.Serve(c, conn)
+	case network.StreamConn:
+		err = engine.ServeStream(c, conn)
+	}
 	return
 }
 
@@ -451,7 +463,7 @@ func errProcess(conn io.Closer, err error) {
 		}
 	}
 	// other errors
-	hlog.SystemLogger().Errorf("Error=%s, remoteAddr=%s", err.Error(), rip)
+	log.Error().Str("log_service", "HTTP Server").Msgf("Error=%s, remoteAddr=%s", err.Error(), rip)
 }
 
 func getRemoteAddrFromCloser(conn io.Closer) string {
@@ -464,8 +476,8 @@ func getRemoteAddrFromCloser(conn io.Closer) string {
 }
 
 func (engine *Engine) Close() error {
-	if engine.htmlRender != nil {
-		engine.htmlRender.Close() //nolint:errcheck
+	if engine.HtmlEngine != nil {
+		engine.HtmlEngine.Close() //nolint:errcheck
 	}
 	return engine.transport.Close()
 }
@@ -497,7 +509,7 @@ func (engine *Engine) Serve(c context.Context, conn network.Conn) (err error) {
 		if bytes.Equal(buf, bytestr.StrClientPreface) && engine.protocolServers[suite.HTTP2] != nil {
 			return engine.protocolServers[suite.HTTP2].Serve(c, conn)
 		}
-		hlog.SystemLogger().Warn("HTTP2 server is not loaded, request is going to fallback to HTTP1 server")
+		log.Warn().Str("log_service", "HTTP Server").Msg("HTTP2 server is not loaded, request is going to fallback to HTTP1 server")
 	}
 
 	// ALPN path
@@ -526,6 +538,23 @@ func (engine *Engine) Serve(c context.Context, conn network.Conn) (err error) {
 	return
 }
 
+func (engine *Engine) ServeStream(ctx context.Context, conn network.StreamConn) error {
+	// ALPN path
+	if engine.options.ALPN && engine.options.TLS != nil {
+		version := conn.GetVersion()
+		nextProtocol := versionToALNP(version)
+		if server, ok := engine.protocolStreamServers[nextProtocol]; ok {
+			return server.Serve(ctx, conn)
+		}
+	}
+
+	// default path
+	if server, ok := engine.protocolStreamServers[suite.HTTP3]; ok {
+		return server.Serve(ctx, conn)
+	}
+	return errs.ErrNotSupportProtocol
+}
+
 func NewEngine(opt *config.Options) *Engine {
 	engine := &Engine{
 		trees: make(MethodTrees, 0, 9),
@@ -534,11 +563,12 @@ func NewEngine(opt *config.Options) *Engine {
 			basePath: opt.BasePath,
 			root:     true,
 		},
-		transport:       defaultTransporter(opt),
-		tracerCtl:       &internalStats.Controller{},
-		protocolServers: make(map[string]protocol.Server),
-		enableTrace:     true,
-		options:         opt,
+		transport:             defaultTransporter(opt),
+		tracerCtl:             &internalStats.Controller{},
+		protocolServers:       make(map[string]protocol.Server),
+		protocolStreamServers: make(map[string]protocol.StreamServer),
+		enableTrace:           true,
+		options:               opt,
 	}
 	if opt.TransporterNewer != nil {
 		engine.transport = opt.TransporterNewer(opt)
@@ -588,7 +618,12 @@ func debugPrintRoute(httpMethod, absolutePath string, handlers frame.HandlersCha
 	if handlerName == "" {
 		handlerName = utils.NameOfFunction(handlers.Last())
 	}
-	hlog.SystemLogger().Debugf("Method=%-6s absolutePath=%-25s --> handlerName=%s (num=%d handlers)", httpMethod, absolutePath, handlerName, nuHandlers)
+	log.Debug().Str("log_service", "HTTP Server").
+		Str("method", httpMethod).
+		Str("path", absolutePath).
+		Str("handler", handlerName).
+		Int("total_handlers", nuHandlers).
+		Msgf("Available Routes")
 }
 
 func (engine *Engine) addRoute(method, path string, handlers frame.HandlersChain) {
@@ -635,20 +670,6 @@ func (engine *Engine) recv(ctx *frame.Context) {
 	if rcv := recover(); rcv != nil {
 		engine.PanicHandler(context.Background(), ctx)
 	}
-}
-
-// HandleContext Re-enter a context that has been rewritten.
-// This can be done by setting ctx.Request.SetRequestURI() to new target and response will be reset.
-// Disclaimer: Maybe loop self to death with this, use wisely.
-func (engine *Engine) HandleContext(c context.Context, ctx *frame.Context) {
-	old := ctx.GetIndex()
-	ctx.Response.Reset()
-	ctx.Request.ResetSkipHeaderAndBody()
-	ctx.Params = ctx.Params[:0]
-	ctx.Errors = ctx.Errors[0:0]
-	ctx.SetIndex(-1)
-	engine.ServeHTTP(c, ctx)
-	ctx.SetIndex(old)
 }
 
 // ServeHTTP makes the router implement the Handler interface.
@@ -819,11 +840,11 @@ func (engine *Engine) Use(middleware ...frame.HandlerFunc) IRoutes {
 
 // SetHTMLTemplate associate a template with HTML renderer.
 func (engine *Engine) SetHTMLTemplate(directory, extension string) {
-	engine.htmlRender = render.NewHtmlRender(render.HtmlConfig{
+	engine.HtmlEngine = render.NewHtmlRender(render.HtmlConfig{
 		Directory: directory,
 		Extension: extension,
 	})
-	engine.htmlRender.Reload(engine.options.AutoReloadRender)
+	engine.HtmlEngine.Reload(engine.options.AutoReloadRender)
 }
 
 // SetFuncMap sets the funcMap used for template.funcMap.
@@ -892,8 +913,13 @@ func (engine *Engine) Routes() (routes RoutesInfo) {
 	return routes
 }
 
-func (engine *Engine) AddProtocol(protocol string, factory suite.ServerFactory) {
+func (engine *Engine) AddProtocol(protocol string, factory interface{}) {
 	engine.protocolSuite.Add(protocol, factory)
+}
+
+// SetAltHeader sets the value of "Alt-Svc" header for protocols other than targetProtocol.
+func (engine *Engine) SetAltHeader(targetProtocol, altHeaderValue string) {
+	engine.protocolSuite.SetAltHeader(targetProtocol, altHeaderValue)
 }
 
 func (engine *Engine) HasServer(name string) bool {
@@ -942,7 +968,7 @@ func newHttp1OptionFromEngine(engine *Engine) *http1.Option {
 		ServerName:                   engine.GetServerName(),
 		ContinueHandler:              engine.ContinueHandler,
 		TLS:                          engine.options.TLS,
-		HTMLRender:                   engine.htmlRender,
+		HTMLRender:                   engine.HtmlEngine,
 		EnableTrace:                  engine.IsTraceEnable(),
 		HijackConnHandle:             engine.HijackConnHandle,
 	}
@@ -952,4 +978,14 @@ func newHttp1OptionFromEngine(engine *Engine) *http1.Option {
 		opt.IdleTimeout = -1
 	}
 	return opt
+}
+
+func versionToALNP(v uint32) string {
+	if v == network.Version1 || v == network.Version2 {
+		return suite.HTTP3
+	}
+	if v == network.VersionTLS || v == network.VersionDraft29 {
+		return suite.HTTP3Draft29
+	}
+	return ""
 }

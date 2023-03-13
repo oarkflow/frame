@@ -20,13 +20,13 @@ import (
 	"context"
 	"errors"
 	"github.com/sujit-baniya/frame/middlewares/server/recovery"
+	"github.com/sujit-baniya/log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/sujit-baniya/frame/pkg/common/config"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/route"
 )
 
@@ -67,20 +67,20 @@ func (h *Frame) Spin() {
 	}
 
 	if err := signalWaiter(errCh); err != nil {
-		hlog.SystemLogger().Errorf("Receive close signal: error=%v", err)
+		log.Error().Str("log_service", "HTTP Server").Msgf("Receive close signal: error=%v", err)
 		if err := h.Engine.Close(); err != nil {
-			hlog.SystemLogger().Errorf("Close error=%v", err)
+			log.Error().Str("log_service", "HTTP Server").Msgf("Close error=%v", err)
 		}
 		return
 	}
 
-	hlog.SystemLogger().Infof("Begin graceful shutdown, wait at most num=%d seconds...", h.GetOptions().ExitWaitTimeout/time.Second)
+	log.Info().Str("log_service", "HTTP Server").Msgf("Begin graceful shutdown, wait at most num=%d seconds...", h.GetOptions().ExitWaitTimeout/time.Second)
 
 	ctx, cancel := context.WithTimeout(context.Background(), h.GetOptions().ExitWaitTimeout)
 	defer cancel()
 
 	if err := h.Shutdown(ctx); err != nil {
-		hlog.SystemLogger().Errorf("Shutdown error=%v", err)
+		log.Error().Str("log_service", "HTTP Server").Msgf("Shutdown error=%v", err)
 	}
 }
 
@@ -110,7 +110,7 @@ func waitSignal(errCh chan error) error {
 			// force exit
 			return errors.New(sig.String()) // nolint
 		case syscall.SIGHUP, syscall.SIGINT:
-			hlog.SystemLogger().Infof("Received signal: %s\n", sig)
+			log.Info().Str("log_service", "HTTP Server").Msgf("Received signal: %s\n", sig)
 			// graceful shutdown
 			return nil
 		}
@@ -130,7 +130,7 @@ func (h *Frame) initOnRunHooks(errChan chan error) {
 			// delay register 1s
 			time.Sleep(1 * time.Second)
 			if err := opt.Registry.Register(opt.RegistryInfo); err != nil {
-				hlog.SystemLogger().Errorf("Register error=%v", err)
+				log.Error().Str("log_service", "HTTP Server").Msgf("Register error=%v", err)
 				// pass err to errChan
 				errChan <- err
 			}

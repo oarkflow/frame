@@ -21,9 +21,9 @@ import (
 	"github.com/sujit-baniya/frame"
 	"runtime/debug"
 
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/common/tracer"
 	"github.com/sujit-baniya/frame/pkg/common/tracer/stats"
+	"github.com/sujit-baniya/log"
 )
 
 // Controller controls tracers.
@@ -67,6 +67,6 @@ func (ctl *Controller) HasTracer() bool {
 
 func (ctl *Controller) tryRecover() {
 	if err := recover(); err != nil {
-		hlog.SystemLogger().Warnf("Panic happened during tracer call. This doesn't affect the http call, but may lead to lack of monitor data such as metrics and logs: %s, %s", err, string(debug.Stack()))
+		log.Warn().Str("log_service", "HTTP Server").Msgf("Panic happened during tracer call. This doesn't affect the http call, but may lead to lack of monitor data such as metrics and logs: %s, %s", err, string(debug.Stack()))
 	}
 }

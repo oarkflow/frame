@@ -46,9 +46,9 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
+	"github.com/sujit-baniya/log"
 	"html"
 	"io"
-	"io/ioutil"
 	"mime"
 	"net/http"
 	"os"
@@ -64,7 +64,6 @@ import (
 	"github.com/sujit-baniya/frame/pkg/common/bytebufferpool"
 	"github.com/sujit-baniya/frame/pkg/common/compress"
 	"github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/common/utils"
 	"github.com/sujit-baniya/frame/pkg/network"
 	"github.com/sujit-baniya/frame/pkg/protocol"
@@ -86,8 +85,8 @@ var (
 	strInvalidHost = []byte("invalid-host")
 )
 
-// PathRewriteFunc must return new request path based on arbitrary ctx
-// info such as ctx.Path().
+// PathRewriteFunc must return new request path based on arbitrary context
+// info such as context.Path().
 //
 // Path rewriter is used in FS for translating the current request
 // to the local filesystem path relative to FS.Root.
@@ -95,7 +94,7 @@ var (
 // The returned path must not contain '/../' substrings due to security reasons,
 // since such paths may refer files outside FS.Root.
 //
-// The returned path may refer to ctx members. For example, ctx.Path().
+// The returned path may refer to context members. For example, context.Path().
 type PathRewriteFunc func(ctx *Context) []byte
 
 type StaticConfig struct {
@@ -297,7 +296,7 @@ func ServeFile(ctx *Context, path string) {
 		// extend relative path to absolute path
 		var err error
 		if path, err = filepath.Abs(path); err != nil {
-			hlog.SystemLogger().Errorf("Cannot resolve path=%q to absolute file error=%s", path, err)
+			log.Error().Str("log_service", "HTTP Server").Str("path", path).Err(err).Msg("Cannot resolve path")
 			ctx.AbortWithMsg("Internal Server Error", consts.StatusInternalServerError)
 			return
 		}
@@ -816,16 +815,25 @@ func (h *fsHandler) handleRequest(c context.Context, ctx *Context) {
 	path = stripTrailingSlashes(path)
 
 	if n := bytes.IndexByte(path, 0); n >= 0 {
-		hlog.SystemLogger().Errorf("Cannot serve path with nil byte at position=%d, path=%q", n, path)
+		log.Error().Str("log_service", "HTTP Server").
+			Str("error", "path with nil byte").
+			Int("position", n).
+			Str("path", string(path)).
+			Msg("Server Error")
 		ctx.AbortWithMsg("Are you a hacker?", consts.StatusBadRequest)
 		return
 	}
 	if h.pathRewrite != nil {
-		// There is no need to check for '/../' if path = ctx.Path(),
-		// since ctx.Path must normalize and sanitize the path.
+		// There is no need to check for '/../' if path = context.Path(),
+		// since context.Path must normalize and sanitize the path.
 
 		if n := bytes.Index(path, bytestr.StrSlashDotDotSlash); n >= 0 {
-			hlog.SystemLogger().Errorf("Cannot serve path with '/../' at position=%d due to security reasons, path=%q", n, path)
+			log.Error().Str("log_service", "HTTP Server").
+				Str("error", "path with '/../'").
+				Int("position", n).
+				Str("path", string(path)).
+				Msg("Server Error")
+			log.Error().Str("log_service", "HTTP Server").Msg("Server security error")
 			ctx.AbortWithMsg("Internal Server Error", consts.StatusInternalServerError)
 			return
 		}
@@ -853,20 +861,28 @@ func (h *fsHandler) handleRequest(c context.Context, ctx *Context) {
 		ff, err = h.openFSFile(filePath, mustCompress)
 
 		if mustCompress && err == errNoCreatePermission {
-			hlog.SystemLogger().Errorf("Insufficient permissions for saving compressed file for path=%q. Serving uncompressed file. "+
-				"Allow write access to the directory with this file in order to improve frame performance", filePath)
+			log.Error().Str("log_service", "HTTP Server").
+				Str("error", "Insufficient permissions for path").
+				Str("path", filePath).
+				Msg("Server error")
 			mustCompress = false
 			ff, err = h.openFSFile(filePath, mustCompress)
 		}
 		if err == errDirIndexRequired {
 			ff, err = h.openIndexFile(ctx, filePath, mustCompress)
 			if err != nil {
-				hlog.SystemLogger().Errorf("Cannot open dir index, path=%q, error=%s", filePath, err)
+				log.Error().Str("log_service", "HTTP Server").
+					Err(err).
+					Str("path", filePath).
+					Msg("Server Error: Cannot open dir")
 				ctx.AbortWithMsg("Directory index is forbidden", consts.StatusForbidden)
 				return
 			}
 		} else if err != nil {
-			hlog.SystemLogger().Errorf("Cannot open file=%q, error=%s", filePath, err)
+			log.Error().Str("log_service", "HTTP Server").
+				Err(err).
+				Str("path", filePath).
+				Msg("Server Error: Cannot open file")
 			if h.pathNotFound == nil {
 				ctx.AbortWithMsg("Cannot open requested path", consts.StatusNotFound)
 			} else {
@@ -903,14 +919,17 @@ func (h *fsHandler) handleRequest(c context.Context, ctx *Context) {
 
 	r, err := ff.NewReader()
 	if err != nil {
-		hlog.SystemLogger().Errorf("Cannot obtain file reader for path=%q, error=%s", path, err)
+		log.Error().Str("log_service", "HTTP Server").
+			Err(err).
+			Str("path", string(path)).
+			Msg("Server Error: Cannot obtain file reader")
 		ctx.AbortWithMsg("Internal Server Error", consts.StatusInternalServerError)
 		return
 	}
 
 	hdr := &ctx.Response.Header
 	if ff.compressed {
-		hdr.SetCanonical(bytestr.StrContentEncoding, bytestr.StrGzip)
+		hdr.SetContentEncodingBytes(bytestr.StrGzip)
 	}
 
 	statusCode := consts.StatusOK
@@ -921,14 +940,22 @@ func (h *fsHandler) handleRequest(c context.Context, ctx *Context) {
 			startPos, endPos, err := ParseByteRange(byteRange, contentLength)
 			if err != nil {
 				r.(io.Closer).Close()
-				hlog.SystemLogger().Errorf("Cannot parse byte range %q for path=%q,error=%s", byteRange, path, err)
+				log.Error().Str("log_service", "HTTP Server").
+					Err(err).
+					Str("path", string(path)).
+					Str("bytes", string(byteRange)).
+					Msg("Server Error: Cannot parse byte")
 				ctx.AbortWithMsg("Range Not Satisfiable", consts.StatusRequestedRangeNotSatisfiable)
 				return
 			}
 
 			if err = r.(byteRangeUpdater).UpdateByteRange(startPos, endPos); err != nil {
 				r.(io.Closer).Close()
-				hlog.SystemLogger().Errorf("Cannot seek byte range %q for path=%q, error=%s", byteRange, path, err)
+				log.Error().Str("log_service", "HTTP Server").
+					Err(err).
+					Str("path", string(path)).
+					Str("bytes", string(byteRange)).
+					Msg("Server Error: Cannot seek byte")
 				ctx.AbortWithMsg("Internal Server Error", consts.StatusInternalServerError)
 				return
 			}
@@ -948,7 +975,9 @@ func (h *fsHandler) handleRequest(c context.Context, ctx *Context) {
 		ctx.Response.Header.SetContentLength(contentLength)
 		if rc, ok := r.(io.Closer); ok {
 			if err := rc.Close(); err != nil {
-				hlog.SystemLogger().Errorf("Cannot close file reader: error=%s", err)
+				log.Error().Str("log_service", "HTTP Server").
+					Err(err).
+					Msg("Server Error: Cannot close file reader")
 				ctx.AbortWithMsg("Internal Server Error", consts.StatusInternalServerError)
 				return
 			}
@@ -1088,7 +1117,7 @@ func readFileHeader(f *os.File, compressed bool) ([]byte, error) {
 		R: r,
 		N: 512,
 	}
-	data, err := ioutil.ReadAll(lr)
+	data, err := io.ReadAll(lr)
 	if _, err := f.Seek(0, 0); err != nil {
 		return nil, err
 	}

@@ -20,12 +20,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/sujit-baniya/frame/client/discovery"
+	"github.com/sujit-baniya/log"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/common/hlog"
 	"github.com/sujit-baniya/frame/pkg/protocol"
 	"golang.org/x/sync/singleflight"
 )
@@ -111,7 +111,10 @@ func (b *BalancerFactory) refresh() {
 		b.cache.Range(func(key, value interface{}) bool {
 			res, err := b.resolver.Resolve(context.Background(), key.(string))
 			if err != nil {
-				hlog.SystemLogger().Warnf("resolver refresh failed, key=%s error=%s", key, err.Error())
+				log.Warn().Str("log_service", "HTTP Server").
+					Err(err).
+					Str("resolver_key", "key").
+					Msg("Server Error: Cannot close file reader")
 				return true
 			}
 			renameResultCacheKey(&res, b.resolver.Name())
@@ -132,7 +135,9 @@ func (b *BalancerFactory) GetInstance(ctx context.Context, req *protocol.Request
 	atomic.StoreInt32(&cacheRes.expire, 0)
 	ins := b.balancer.Pick(cacheRes.res.Load().(discovery.Result))
 	if ins == nil {
-		hlog.SystemLogger().Errorf("null instance. serviceName: %s, options: %v", string(req.Host()), req.Options())
+		log.Error().Str("log_service", "HTTP Server").
+			Str("service_name", string(req.Host())).
+			Msg("Server Error: null instance")
 		return nil, errors.NewPublic("instance not found")
 	}
 	return ins, nil

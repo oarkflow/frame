@@ -93,7 +93,7 @@ type Options struct {
 
 	// ErrorFunc is executed when an error is returned from frame.HandlerFunc.
 	//
-	// Optional. Default: func(ctx context.Context, c *frame.Context) { panic(c.Errors.Last()) }
+	// Optional. Default: func(context context.Context, c *frame.Context) { panic(c.Errors.Last()) }
 	ErrorFunc frame.HandlerFunc
 
 	// Extractor returns the csrf token.
