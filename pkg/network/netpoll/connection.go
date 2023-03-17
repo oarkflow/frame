@@ -17,15 +17,15 @@ package netpoll
 
 import (
 	"errors"
-	errs "github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/log"
+	errs "github.com/oarkflow/frame/pkg/common/errors"
+	"github.com/oarkflow/log"
 	"golang.org/x/sys/unix"
 	"io"
 	"strings"
 	"syscall"
 
 	"github.com/cloudwego/netpoll"
-	"github.com/sujit-baniya/frame/pkg/network"
+	"github.com/oarkflow/frame/pkg/network"
 )
 
 type Conn struct {

@@ -28,8 +28,8 @@ package secure
 import (
 	"context"
 	"fmt"
-	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/pkg/protocol"
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/pkg/protocol"
 )
 
 // New creates an instance of the secure middleware using the specified configuration.

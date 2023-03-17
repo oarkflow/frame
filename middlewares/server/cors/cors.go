@@ -29,8 +29,8 @@ package cors
 
 import (
 	"bytes"
-	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/pkg/protocol/consts"
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/pkg/protocol/consts"
 	"strings"
 )
 

@@ -44,8 +44,8 @@ package ext
 import (
 	"bytes"
 
-	errs "github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/common/utils"
+	errs "github.com/oarkflow/frame/pkg/common/errors"
+	"github.com/oarkflow/frame/pkg/common/utils"
 )
 
 var errInvalidName = errs.NewPublic("invalid header name")

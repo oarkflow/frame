@@ -27,7 +27,7 @@ package gzip
 
 import (
 	"compress/gzip"
-	"github.com/sujit-baniya/frame"
+	"github.com/oarkflow/frame"
 )
 
 const (

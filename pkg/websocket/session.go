@@ -1,7 +1,7 @@
 package websocket
 
 import (
-	"github.com/sujit-baniya/frame"
+	"github.com/oarkflow/frame"
 	"net"
 	"sync"
 	"time"

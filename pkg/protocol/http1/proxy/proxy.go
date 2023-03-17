@@ -31,13 +31,13 @@ import (
 	"errors"
 	"time"
 
-	"github.com/sujit-baniya/frame/internal/bytesconv"
-	"github.com/sujit-baniya/frame/internal/bytestr"
-	"github.com/sujit-baniya/frame/pkg/network"
-	"github.com/sujit-baniya/frame/pkg/protocol"
-	"github.com/sujit-baniya/frame/pkg/protocol/consts"
-	reqI "github.com/sujit-baniya/frame/pkg/protocol/http1/req"
-	respI "github.com/sujit-baniya/frame/pkg/protocol/http1/resp"
+	"github.com/oarkflow/frame/internal/bytesconv"
+	"github.com/oarkflow/frame/internal/bytestr"
+	"github.com/oarkflow/frame/pkg/network"
+	"github.com/oarkflow/frame/pkg/protocol"
+	"github.com/oarkflow/frame/pkg/protocol/consts"
+	reqI "github.com/oarkflow/frame/pkg/protocol/http1/req"
+	respI "github.com/oarkflow/frame/pkg/protocol/http1/resp"
 )
 
 func SetupProxy(conn network.Conn, addr string, proxyURI *protocol.URI, tlsConfig *tls.Config, isTLS bool, dialer network.Dialer) (network.Conn, error) {

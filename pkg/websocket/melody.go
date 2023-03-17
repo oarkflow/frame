@@ -1,8 +1,8 @@
 package websocket
 
 import (
-	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/pkg/common/xid"
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/pkg/common/xid"
 )
 
 type HandleMessageFunc func(*Session, []byte)

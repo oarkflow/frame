@@ -16,7 +16,7 @@
 
 package suite
 
-import "github.com/sujit-baniya/frame/pkg/protocol/client"
+import "github.com/oarkflow/frame/pkg/protocol/client"
 
 type ClientFactory interface {
 	NewHostClient() (hc client.HostClient, err error)

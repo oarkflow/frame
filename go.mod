@@ -1,4 +1,4 @@
-module github.com/sujit-baniya/frame
+module github.com/oarkflow/frame
 
 go 1.19
 
@@ -10,7 +10,7 @@ require (
 	github.com/cloudwego/netpoll v0.3.2
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/savsgio/gotils v0.0.0-20220530130905-52f3993e8d6d
-	github.com/sujit-baniya/log v1.0.72
+	github.com/oarkflow/log v1.0.72
 	github.com/tinylib/msgp v1.1.8
 	golang.org/x/crypto v0.2.0
 	golang.org/x/sync v0.1.0

@@ -1,6 +1,6 @@
 package throttle
 
-import "github.com/sujit-baniya/frame"
+import "github.com/oarkflow/frame"
 
 const (
 	// X-RateLimit-* headers

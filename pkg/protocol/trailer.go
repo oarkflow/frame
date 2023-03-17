@@ -19,10 +19,10 @@ package protocol
 import (
 	"bytes"
 
-	"github.com/sujit-baniya/frame/internal/bytestr"
-	errs "github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/common/utils"
-	"github.com/sujit-baniya/frame/pkg/protocol/consts"
+	"github.com/oarkflow/frame/internal/bytestr"
+	errs "github.com/oarkflow/frame/pkg/common/errors"
+	"github.com/oarkflow/frame/pkg/common/utils"
+	"github.com/oarkflow/frame/pkg/protocol/consts"
 )
 
 type Trailer struct {

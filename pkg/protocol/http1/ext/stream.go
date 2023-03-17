@@ -46,12 +46,12 @@ import (
 	"io"
 	"sync"
 
-	"github.com/sujit-baniya/frame/internal/bytestr"
-	"github.com/sujit-baniya/frame/pkg/common/bytebufferpool"
-	errs "github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/common/utils"
-	"github.com/sujit-baniya/frame/pkg/network"
-	"github.com/sujit-baniya/frame/pkg/protocol"
+	"github.com/oarkflow/frame/internal/bytestr"
+	"github.com/oarkflow/frame/pkg/common/bytebufferpool"
+	errs "github.com/oarkflow/frame/pkg/common/errors"
+	"github.com/oarkflow/frame/pkg/common/utils"
+	"github.com/oarkflow/frame/pkg/network"
+	"github.com/oarkflow/frame/pkg/protocol"
 )
 
 var (
@@ -64,7 +64,7 @@ var (
 	}
 )
 
-// Deprecated: Use github.com/sujit-baniya/frame/pkg/protocol.NoBody instead.
+// Deprecated: Use github.com/oarkflow/frame/pkg/protocol.NoBody instead.
 var NoBody = protocol.NoBody
 
 type bodyStream struct {

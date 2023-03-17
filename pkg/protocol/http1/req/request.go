@@ -49,13 +49,13 @@ import (
 	"io"
 	"mime/multipart"
 
-	"github.com/sujit-baniya/frame/internal/bytestr"
-	"github.com/sujit-baniya/frame/pkg/common/bytebufferpool"
-	errs "github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/network"
-	"github.com/sujit-baniya/frame/pkg/protocol"
-	"github.com/sujit-baniya/frame/pkg/protocol/consts"
-	"github.com/sujit-baniya/frame/pkg/protocol/http1/ext"
+	"github.com/oarkflow/frame/internal/bytestr"
+	"github.com/oarkflow/frame/pkg/common/bytebufferpool"
+	errs "github.com/oarkflow/frame/pkg/common/errors"
+	"github.com/oarkflow/frame/pkg/network"
+	"github.com/oarkflow/frame/pkg/protocol"
+	"github.com/oarkflow/frame/pkg/protocol/consts"
+	"github.com/oarkflow/frame/pkg/protocol/http1/ext"
 )
 
 var (

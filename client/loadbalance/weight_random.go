@@ -17,8 +17,8 @@
 package loadbalance
 
 import (
-	"github.com/sujit-baniya/frame/client/discovery"
-	"github.com/sujit-baniya/log"
+	"github.com/oarkflow/frame/client/discovery"
+	"github.com/oarkflow/log"
 	"sync"
 
 	"github.com/bytedance/gopkg/lang/fastrand"

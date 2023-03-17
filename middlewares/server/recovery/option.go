@@ -18,9 +18,9 @@ package recovery
 
 import (
 	"context"
-	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/pkg/protocol/consts"
-	"github.com/sujit-baniya/log"
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/pkg/protocol/consts"
+	"github.com/oarkflow/log"
 )
 
 type (

@@ -44,7 +44,7 @@ package render
 import (
 	"fmt"
 
-	"github.com/sujit-baniya/frame/pkg/protocol"
+	"github.com/oarkflow/frame/pkg/protocol"
 )
 
 // String contains the given interface object slice and its format.

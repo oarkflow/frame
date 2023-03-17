@@ -19,11 +19,11 @@ package config
 import (
 	"context"
 	"crypto/tls"
-	"github.com/sujit-baniya/frame/server/registry"
+	"github.com/oarkflow/frame/server/registry"
 	"net"
 	"time"
 
-	"github.com/sujit-baniya/frame/pkg/network"
+	"github.com/oarkflow/frame/pkg/network"
 )
 
 // Option is the only struct that can be used to set Options.

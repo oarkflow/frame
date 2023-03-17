@@ -19,13 +19,13 @@ package standard
 import (
 	"context"
 	"crypto/tls"
-	"github.com/sujit-baniya/log"
+	"github.com/oarkflow/log"
 	"net"
 	"sync"
 	"time"
 
-	"github.com/sujit-baniya/frame/pkg/common/config"
-	"github.com/sujit-baniya/frame/pkg/network"
+	"github.com/oarkflow/frame/pkg/common/config"
+	"github.com/oarkflow/frame/pkg/network"
 )
 
 type transport struct {

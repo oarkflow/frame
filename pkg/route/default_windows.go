@@ -17,7 +17,7 @@
 package route
 
 import (
-	"github.com/sujit-baniya/frame/pkg/network/standard"
+	"github.com/oarkflow/frame/pkg/network/standard"
 )
 
 func init() {

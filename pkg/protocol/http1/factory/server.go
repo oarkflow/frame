@@ -17,9 +17,9 @@
 package factory
 
 import (
-	"github.com/sujit-baniya/frame/pkg/protocol"
-	"github.com/sujit-baniya/frame/pkg/protocol/http1"
-	"github.com/sujit-baniya/frame/pkg/protocol/suite"
+	"github.com/oarkflow/frame/pkg/protocol"
+	"github.com/oarkflow/frame/pkg/protocol/http1"
+	"github.com/oarkflow/frame/pkg/protocol/suite"
 )
 
 var _ suite.ServerFactory = (*serverFactory)(nil)

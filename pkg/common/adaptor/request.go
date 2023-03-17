@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"net/http"
 
-	"github.com/sujit-baniya/frame/pkg/protocol"
+	"github.com/oarkflow/frame/pkg/protocol"
 )
 
 // GetCompatRequest only support basic function of Request, not for all.

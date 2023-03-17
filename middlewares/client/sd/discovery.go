@@ -18,10 +18,10 @@ package sd
 
 import (
 	"context"
-	"github.com/sujit-baniya/frame/client"
-	"github.com/sujit-baniya/frame/client/discovery"
-	"github.com/sujit-baniya/frame/client/loadbalance"
-	"github.com/sujit-baniya/frame/pkg/protocol"
+	"github.com/oarkflow/frame/client"
+	"github.com/oarkflow/frame/client/discovery"
+	"github.com/oarkflow/frame/client/loadbalance"
+	"github.com/oarkflow/frame/pkg/protocol"
 )
 
 // Discovery will construct a middleware with BalancerFactory.

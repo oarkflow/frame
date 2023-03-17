@@ -18,7 +18,7 @@ package limiter
 
 import (
 	"errors"
-	"github.com/sujit-baniya/frame/middlewares/server/limiter/utils"
+	"github.com/oarkflow/frame/middlewares/server/limiter/utils"
 	"math"
 	"sync/atomic"
 	"time"

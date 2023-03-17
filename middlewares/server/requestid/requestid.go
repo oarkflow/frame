@@ -18,8 +18,8 @@ package requestid
 
 import (
 	"context"
-	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/pkg/common/xid"
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/pkg/common/xid"
 )
 
 var headerXRequestID string

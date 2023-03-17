@@ -19,14 +19,14 @@ package loadbalance
 import (
 	"context"
 	"fmt"
-	"github.com/sujit-baniya/frame/client/discovery"
-	"github.com/sujit-baniya/log"
+	"github.com/oarkflow/frame/client/discovery"
+	"github.com/oarkflow/log"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/protocol"
+	"github.com/oarkflow/frame/pkg/common/errors"
+	"github.com/oarkflow/frame/pkg/protocol"
 	"golang.org/x/sync/singleflight"
 )
 

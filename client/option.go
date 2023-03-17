@@ -18,14 +18,14 @@ package client
 
 import (
 	"crypto/tls"
-	"github.com/sujit-baniya/frame/client/retry"
-	"github.com/sujit-baniya/frame/pkg/network/dialer"
+	"github.com/oarkflow/frame/client/retry"
+	"github.com/oarkflow/frame/pkg/network/dialer"
 	"time"
 
-	"github.com/sujit-baniya/frame/pkg/common/config"
-	"github.com/sujit-baniya/frame/pkg/network"
-	"github.com/sujit-baniya/frame/pkg/network/standard"
-	"github.com/sujit-baniya/frame/pkg/protocol/consts"
+	"github.com/oarkflow/frame/pkg/common/config"
+	"github.com/oarkflow/frame/pkg/network"
+	"github.com/oarkflow/frame/pkg/network/standard"
+	"github.com/oarkflow/frame/pkg/protocol/consts"
 )
 
 // WithDialTimeout sets dial timeout.

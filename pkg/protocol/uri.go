@@ -46,9 +46,9 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/sujit-baniya/frame/internal/bytesconv"
-	"github.com/sujit-baniya/frame/internal/bytestr"
-	"github.com/sujit-baniya/frame/internal/nocopy"
+	"github.com/oarkflow/frame/internal/bytesconv"
+	"github.com/oarkflow/frame/internal/bytestr"
+	"github.com/oarkflow/frame/internal/nocopy"
 )
 
 // AcquireURI returns an empty URI instance from the pool.

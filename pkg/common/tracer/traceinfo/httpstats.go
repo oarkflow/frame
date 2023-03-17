@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sujit-baniya/frame/pkg/common/tracer/stats"
+	"github.com/oarkflow/frame/pkg/common/tracer/stats"
 )
 
 var _ HTTPStats = (*httpStats)(nil)

@@ -25,8 +25,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/network"
+	"github.com/oarkflow/frame/pkg/common/errors"
+	"github.com/oarkflow/frame/pkg/network"
 )
 
 const (

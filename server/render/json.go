@@ -45,8 +45,8 @@ import (
 	"bytes"
 	"encoding/json"
 
-	hjson "github.com/sujit-baniya/frame/pkg/common/json"
-	"github.com/sujit-baniya/frame/pkg/protocol"
+	hjson "github.com/oarkflow/frame/pkg/common/json"
+	"github.com/oarkflow/frame/pkg/protocol"
 )
 
 // JSONMarshaler customize json.Marshal as you like

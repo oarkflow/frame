@@ -41,7 +41,7 @@
 
 package render
 
-import "github.com/sujit-baniya/frame/pkg/protocol"
+import "github.com/oarkflow/frame/pkg/protocol"
 
 // Data contains ContentType and bytes data.
 type Data struct {

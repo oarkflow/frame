@@ -19,9 +19,9 @@ package sd
 import (
 	"context"
 	"fmt"
-	"github.com/sujit-baniya/frame/client/discovery"
-	"github.com/sujit-baniya/frame/client/loadbalance"
-	"github.com/sujit-baniya/frame/server/registry"
+	"github.com/oarkflow/frame/client/discovery"
+	"github.com/oarkflow/frame/client/loadbalance"
+	"github.com/oarkflow/frame/server/registry"
 	"net"
 	"strings"
 )

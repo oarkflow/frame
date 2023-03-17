@@ -26,9 +26,9 @@
 package pprof
 
 import (
-	"github.com/sujit-baniya/frame/middlewares/server/pprof/adaptor"
-	"github.com/sujit-baniya/frame/pkg/route"
-	"github.com/sujit-baniya/frame/server"
+	"github.com/oarkflow/frame/middlewares/server/pprof/adaptor"
+	"github.com/oarkflow/frame/pkg/route"
+	"github.com/oarkflow/frame/server"
 	"net/http/pprof"
 )
 

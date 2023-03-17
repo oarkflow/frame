@@ -15,10 +15,10 @@ package adaptor
 
 import (
 	"context"
-	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/pkg/common/adaptor"
-	"github.com/sujit-baniya/frame/pkg/protocol/consts"
-	"github.com/sujit-baniya/log"
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/pkg/common/adaptor"
+	"github.com/oarkflow/frame/pkg/protocol/consts"
+	"github.com/oarkflow/log"
 	"net/http"
 	"unsafe"
 )

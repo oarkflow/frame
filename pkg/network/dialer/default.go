@@ -19,7 +19,7 @@
 
 package dialer
 
-import "github.com/sujit-baniya/frame/pkg/network/netpoll"
+import "github.com/oarkflow/frame/pkg/network/netpoll"
 
 func init() {
 	defaultDialer = netpoll.NewDialer()

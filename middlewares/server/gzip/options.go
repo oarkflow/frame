@@ -27,8 +27,8 @@ package gzip
 
 import (
 	"context"
-	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/pkg/common/compress"
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/pkg/common/compress"
 	"net/http"
 	"regexp"
 	"strings"

@@ -19,7 +19,7 @@ package traceinfo
 import (
 	"time"
 
-	"github.com/sujit-baniya/frame/pkg/common/tracer/stats"
+	"github.com/oarkflow/frame/pkg/common/tracer/stats"
 )
 
 // HTTPStats is used to collect statistics about the HTTP.

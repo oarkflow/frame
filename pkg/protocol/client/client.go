@@ -47,12 +47,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sujit-baniya/frame/internal/bytestr"
-	"github.com/sujit-baniya/frame/pkg/common/config"
-	"github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/common/timer"
-	"github.com/sujit-baniya/frame/pkg/protocol"
-	"github.com/sujit-baniya/frame/pkg/protocol/consts"
+	"github.com/oarkflow/frame/internal/bytestr"
+	"github.com/oarkflow/frame/pkg/common/config"
+	"github.com/oarkflow/frame/pkg/common/errors"
+	"github.com/oarkflow/frame/pkg/common/timer"
+	"github.com/oarkflow/frame/pkg/protocol"
+	"github.com/oarkflow/frame/pkg/protocol/consts"
 )
 
 const defaultMaxRedirectsCount = 16

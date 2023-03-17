@@ -19,8 +19,8 @@ package ut
 import (
 	"bytes"
 
-	"github.com/sujit-baniya/frame/pkg/protocol"
-	"github.com/sujit-baniya/frame/pkg/protocol/consts"
+	"github.com/oarkflow/frame/pkg/protocol"
+	"github.com/oarkflow/frame/pkg/protocol/consts"
 )
 
 // ResponseRecorder records handler's response for later test

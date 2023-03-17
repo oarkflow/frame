@@ -30,7 +30,7 @@ package cors
 import (
 	"context"
 	"errors"
-	"github.com/sujit-baniya/frame"
+	"github.com/oarkflow/frame"
 	"strings"
 	"time"
 )

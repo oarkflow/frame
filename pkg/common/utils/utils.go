@@ -56,8 +56,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/sujit-baniya/frame/internal/bytesconv"
-	errs "github.com/sujit-baniya/frame/pkg/common/errors"
+	"github.com/oarkflow/frame/internal/bytesconv"
+	errs "github.com/oarkflow/frame/pkg/common/errors"
 )
 
 var errNeedMore = errs.New(errs.ErrNeedMore, errs.ErrorTypePublic, "cannot find trailing lf")

@@ -51,10 +51,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sujit-baniya/frame/pkg/common/bytebufferpool"
-	"github.com/sujit-baniya/frame/pkg/common/utils"
-	"github.com/sujit-baniya/frame/pkg/network"
-	"github.com/sujit-baniya/frame/pkg/protocol/consts"
+	"github.com/oarkflow/frame/pkg/common/bytebufferpool"
+	"github.com/oarkflow/frame/pkg/common/utils"
+	"github.com/oarkflow/frame/pkg/network"
+	"github.com/oarkflow/frame/pkg/protocol/consts"
 )
 
 func ReadMultipartForm(r io.Reader, boundary string, size, maxInMemoryFileSize int) (*multipart.Form, error) {

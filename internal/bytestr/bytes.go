@@ -18,7 +18,7 @@
 package bytestr
 
 import (
-	"github.com/sujit-baniya/frame/pkg/protocol/consts"
+	"github.com/oarkflow/frame/pkg/protocol/consts"
 )
 
 var (

@@ -19,7 +19,7 @@ package client
 import (
 	"context"
 
-	"github.com/sujit-baniya/frame/pkg/protocol"
+	"github.com/oarkflow/frame/pkg/protocol"
 )
 
 // Endpoint represent one method for calling from remote.

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/pkg/common/xid"
-	"github.com/sujit-baniya/log"
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/pkg/common/xid"
+	"github.com/oarkflow/log"
 )
 
 type Config struct {

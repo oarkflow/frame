@@ -17,7 +17,7 @@
 package loadbalance
 
 import (
-	"github.com/sujit-baniya/frame/client/discovery"
+	"github.com/oarkflow/frame/client/discovery"
 	"time"
 )
 

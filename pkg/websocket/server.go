@@ -14,9 +14,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/pkg/network"
-	"github.com/sujit-baniya/frame/pkg/protocol/consts"
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/pkg/network"
+	"github.com/oarkflow/frame/pkg/protocol/consts"
 )
 
 const badHandshake = "websocket: the client is not using the websocket protocol: "

@@ -46,7 +46,7 @@ import (
 	"fmt"
 	"io"
 
-	errs "github.com/sujit-baniya/frame/pkg/common/errors"
+	errs "github.com/oarkflow/frame/pkg/common/errors"
 )
 
 var (

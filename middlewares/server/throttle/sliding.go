@@ -2,9 +2,9 @@ package throttle
 
 import (
 	"context"
-	"github.com/sujit-baniya/frame"
-	"github.com/sujit-baniya/frame/pkg/common/utils"
-	"github.com/sujit-baniya/frame/pkg/protocol/consts"
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/pkg/common/utils"
+	"github.com/oarkflow/frame/pkg/protocol/consts"
 	"strconv"
 	"sync"
 	"sync/atomic"

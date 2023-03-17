@@ -27,7 +27,7 @@ package csrf
 
 import (
 	"context"
-	"github.com/sujit-baniya/frame"
+	"github.com/oarkflow/frame"
 )
 
 // CsrfFromParam returns a function that extracts token from the url param string.

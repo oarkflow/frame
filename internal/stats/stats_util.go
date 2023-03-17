@@ -17,8 +17,8 @@
 package stats
 
 import (
-	"github.com/sujit-baniya/frame/pkg/common/tracer/stats"
-	"github.com/sujit-baniya/frame/pkg/common/tracer/traceinfo"
+	"github.com/oarkflow/frame/pkg/common/tracer/stats"
+	"github.com/oarkflow/frame/pkg/common/tracer/traceinfo"
 )
 
 // Record records the event to HTTPStats.

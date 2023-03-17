@@ -19,7 +19,7 @@ package utils
 import (
 	"io"
 
-	"github.com/sujit-baniya/frame/pkg/network"
+	"github.com/oarkflow/frame/pkg/network"
 )
 
 func CopyBuffer(dst network.Writer, src io.Reader, buf []byte) (written int64, err error) {

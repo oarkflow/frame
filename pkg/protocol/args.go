@@ -45,8 +45,8 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/sujit-baniya/frame/internal/bytesconv"
-	"github.com/sujit-baniya/frame/internal/nocopy"
+	"github.com/oarkflow/frame/internal/bytesconv"
+	"github.com/oarkflow/frame/internal/nocopy"
 )
 
 const (

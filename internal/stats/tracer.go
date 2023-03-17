@@ -18,12 +18,12 @@ package stats
 
 import (
 	"context"
-	"github.com/sujit-baniya/frame"
+	"github.com/oarkflow/frame"
 	"runtime/debug"
 
-	"github.com/sujit-baniya/frame/pkg/common/tracer"
-	"github.com/sujit-baniya/frame/pkg/common/tracer/stats"
-	"github.com/sujit-baniya/log"
+	"github.com/oarkflow/frame/pkg/common/tracer"
+	"github.com/oarkflow/frame/pkg/common/tracer/stats"
+	"github.com/oarkflow/log"
 )
 
 // Controller controls tracers.

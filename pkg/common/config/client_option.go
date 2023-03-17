@@ -18,11 +18,11 @@ package config
 
 import (
 	"crypto/tls"
-	"github.com/sujit-baniya/frame/client/retry"
+	"github.com/oarkflow/frame/client/retry"
 	"time"
 
-	"github.com/sujit-baniya/frame/pkg/network"
-	"github.com/sujit-baniya/frame/pkg/protocol/consts"
+	"github.com/oarkflow/frame/pkg/network"
+	"github.com/oarkflow/frame/pkg/protocol/consts"
 )
 
 type ConnPoolState struct {

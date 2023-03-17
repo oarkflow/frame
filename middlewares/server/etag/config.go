@@ -1,6 +1,6 @@
 package etag
 
-import "github.com/sujit-baniya/frame"
+import "github.com/oarkflow/frame"
 
 // Config defines the config for middleware.
 type Config struct {

@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/sujit-baniya/frame/internal/bytesconv"
-	"github.com/sujit-baniya/frame/internal/bytestr"
-	"github.com/sujit-baniya/frame/pkg/common/errors"
-	"github.com/sujit-baniya/frame/pkg/network"
+	"github.com/oarkflow/frame/internal/bytesconv"
+	"github.com/oarkflow/frame/internal/bytestr"
+	"github.com/oarkflow/frame/pkg/common/errors"
+	"github.com/oarkflow/frame/pkg/network"
 )
 
 var errBrokenChunk = errors.NewPublic("cannot find crlf at the end of chunk")

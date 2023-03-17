@@ -1,8 +1,8 @@
 package throttle
 
 import (
-	"github.com/sujit-baniya/frame/middlewares/server/throttle/memory"
-	"github.com/sujit-baniya/frame/pkg/common/storage"
+	"github.com/oarkflow/frame/middlewares/server/throttle/memory"
+	"github.com/oarkflow/frame/pkg/common/storage"
 	"sync"
 	"time"
 )

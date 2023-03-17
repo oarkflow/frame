@@ -18,10 +18,10 @@ package discovery
 
 import (
 	"context"
-	"github.com/sujit-baniya/frame/server/registry"
+	"github.com/oarkflow/frame/server/registry"
 	"net"
 
-	"github.com/sujit-baniya/frame/pkg/common/utils"
+	"github.com/oarkflow/frame/pkg/common/utils"
 )
 
 type TargetInfo struct {

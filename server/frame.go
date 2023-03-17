@@ -19,15 +19,15 @@ package server
 import (
 	"context"
 	"errors"
-	"github.com/sujit-baniya/frame/middlewares/server/recovery"
-	"github.com/sujit-baniya/log"
+	"github.com/oarkflow/frame/middlewares/server/recovery"
+	"github.com/oarkflow/log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/sujit-baniya/frame/pkg/common/config"
-	"github.com/sujit-baniya/frame/pkg/route"
+	"github.com/oarkflow/frame/pkg/common/config"
+	"github.com/oarkflow/frame/pkg/route"
 )
 
 // Frame is the core struct of frame.
