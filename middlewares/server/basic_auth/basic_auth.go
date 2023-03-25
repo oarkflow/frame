@@ -43,9 +43,10 @@ package basic_auth
 import (
 	"context"
 	"encoding/base64"
-	"github.com/oarkflow/frame"
 	"net/http"
 	"strconv"
+
+	"github.com/oarkflow/frame"
 
 	"github.com/oarkflow/frame/internal/bytesconv"
 )

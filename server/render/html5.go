@@ -2,7 +2,6 @@ package render
 
 import (
 	"fmt"
-	"github.com/oarkflow/frame/internal/utils"
 	"html/template"
 	"io"
 	"net/http"
@@ -10,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/oarkflow/frame/internal/utils"
 )
 
 // Delims represents a set of Left and Right delimiters for HTML template rendering.

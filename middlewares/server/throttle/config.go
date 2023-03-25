@@ -2,10 +2,11 @@ package throttle
 
 import (
 	"context"
+	"time"
+
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/pkg/common/storage"
 	"github.com/oarkflow/frame/pkg/protocol/consts"
-	"time"
 )
 
 // Config defines the config for middleware.

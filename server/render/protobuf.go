@@ -42,8 +42,9 @@
 package render
 
 import (
-	"github.com/oarkflow/frame/pkg/protocol"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/oarkflow/frame/pkg/protocol"
 )
 
 // ProtoBuf contains the given interface object.

@@ -1,12 +1,13 @@
 package filesystem
 
 import (
-	"github.com/oarkflow/frame/pkg/common/storage"
 	"io"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/oarkflow/frame/pkg/common/storage"
 )
 
 type Filesystem struct {

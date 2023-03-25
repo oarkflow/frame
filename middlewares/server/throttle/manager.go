@@ -1,10 +1,11 @@
 package throttle
 
 import (
-	"github.com/oarkflow/frame/middlewares/server/throttle/memory"
-	"github.com/oarkflow/frame/pkg/common/storage"
 	"sync"
 	"time"
+
+	"github.com/oarkflow/frame/middlewares/server/throttle/memory"
+	"github.com/oarkflow/frame/pkg/common/storage"
 )
 
 // go:generate msgp

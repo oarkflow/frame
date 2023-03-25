@@ -28,11 +28,12 @@ package gzip
 import (
 	"bytes"
 	"context"
+	"path/filepath"
+	"strings"
+
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/pkg/common/compress"
 	"github.com/oarkflow/frame/pkg/protocol"
-	"path/filepath"
-	"strings"
 )
 
 type gzipHandler struct {

@@ -2,8 +2,9 @@ package session
 
 import (
 	"encoding/gob"
-	"github.com/oarkflow/frame/pkg/common/storage/memory"
 	"time"
+
+	"github.com/oarkflow/frame/pkg/common/storage/memory"
 
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/pkg/common/utils"

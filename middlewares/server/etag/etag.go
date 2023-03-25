@@ -3,10 +3,11 @@ package etag
 import (
 	"bytes"
 	"context"
+	"hash/crc32"
+
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/pkg/common/bytebufferpool"
 	"github.com/oarkflow/frame/pkg/protocol/consts"
-	"hash/crc32"
 )
 
 var (

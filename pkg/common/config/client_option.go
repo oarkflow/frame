@@ -18,8 +18,9 @@ package config
 
 import (
 	"crypto/tls"
-	"github.com/oarkflow/frame/client/retry"
 	"time"
+
+	"github.com/oarkflow/frame/client/retry"
 
 	"github.com/oarkflow/frame/pkg/network"
 	"github.com/oarkflow/frame/pkg/protocol/consts"

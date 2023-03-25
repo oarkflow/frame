@@ -18,14 +18,16 @@ package suite
 
 import (
 	"context"
+	"sync"
+
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/pkg/protocol/consts"
-	"sync"
+
+	"github.com/oarkflow/log"
 
 	"github.com/oarkflow/frame/pkg/common/errors"
 	"github.com/oarkflow/frame/pkg/common/tracer"
 	"github.com/oarkflow/frame/pkg/protocol"
-	"github.com/oarkflow/log"
 )
 
 const (

@@ -46,7 +46,6 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
-	"github.com/oarkflow/log"
 	"html"
 	"io"
 	"mime"
@@ -57,6 +56,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/oarkflow/log"
 
 	"github.com/oarkflow/frame/internal/bytesconv"
 	"github.com/oarkflow/frame/internal/bytestr"

@@ -30,13 +30,14 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
-	"github.com/oarkflow/frame"
-	"github.com/oarkflow/frame/middlewares/server/session"
 	"io"
 	"math/rand"
 	"net/textproto"
 	"strings"
 	"time"
+
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/middlewares/server/session"
 )
 
 // New validates CSRF token.

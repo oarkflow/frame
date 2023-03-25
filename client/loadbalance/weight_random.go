@@ -17,9 +17,11 @@
 package loadbalance
 
 import (
-	"github.com/oarkflow/frame/client/discovery"
-	"github.com/oarkflow/log"
 	"sync"
+
+	"github.com/oarkflow/log"
+
+	"github.com/oarkflow/frame/client/discovery"
 
 	"github.com/bytedance/gopkg/lang/fastrand"
 	"golang.org/x/sync/singleflight"

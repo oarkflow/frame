@@ -71,7 +71,7 @@ func main() {
 		}
 		return b
 	}()
-
+	
 	toLowerTable := func() [256]byte {
 		var a [256]byte
 		for i := 0; i < 256; i++ {
@@ -83,7 +83,7 @@ func main() {
 		}
 		return a
 	}()
-
+	
 	toUpperTable := func() [256]byte {
 		var a [256]byte
 		for i := 0; i < 256; i++ {
@@ -95,14 +95,14 @@ func main() {
 		}
 		return a
 	}()
-
+	
 	quotedArgShouldEscapeTable := func() [256]byte {
 		// According to RFC 3986 §2.3
 		var a [256]byte
 		for i := 0; i < 256; i++ {
 			a[i] = 1
 		}
-
+		
 		// ALPHA
 		for i := int('a'); i <= int('z'); i++ {
 			a[i] = 0
@@ -110,20 +110,20 @@ func main() {
 		for i := int('A'); i <= int('Z'); i++ {
 			a[i] = 0
 		}
-
+		
 		// DIGIT
 		for i := int('0'); i <= int('9'); i++ {
 			a[i] = 0
 		}
-
+		
 		// Unreserved characters
 		for _, v := range `-_.~` {
 			a[v] = 0
 		}
-
+		
 		return a
 	}()
-
+	
 	quotedPathShouldEscapeTable := func() [256]byte {
 		// The implementation here equal to net/url shouldEscape(s, encodePath)
 		//
@@ -132,14 +132,14 @@ func main() {
 		// only manipulates the path as a whole, so we allow those
 		// last three as well. That leaves only ? to escape.
 		a := quotedArgShouldEscapeTable
-
+		
 		for _, v := range `$&+,/:;=@` {
 			a[v] = 0
 		}
-
+		
 		return a
 	}()
-
+	
 	validCookieValueTable := func() [256]byte {
 		// The implementation here is equal to net/http validCookieValueByte(b byte)
 		// see https://datatracker.ietf.org/doc/html/rfc6265#section-4.1.1
@@ -147,18 +147,18 @@ func main() {
 		for i := 0; i < 256; i++ {
 			a[i] = 0
 		}
-
+		
 		for i := 0x20; i < 0x7f; i++ {
 			a[i] = 1
 		}
-
+		
 		a['"'] = 0
 		a[';'] = 0
 		a['\\'] = 0
-
+		
 		return a
 	}()
-
+	
 	w := new(bytes.Buffer)
 	w.WriteString(pre)
 	fmt.Fprintf(w, "const Hex2intTable = %q\n", hex2intTable)
@@ -167,7 +167,7 @@ func main() {
 	fmt.Fprintf(w, "const QuotedArgShouldEscapeTable = %q\n", quotedArgShouldEscapeTable)
 	fmt.Fprintf(w, "const QuotedPathShouldEscapeTable = %q\n", quotedPathShouldEscapeTable)
 	fmt.Fprintf(w, "const ValidCookieValueTable = %q\n", validCookieValueTable)
-
+	
 	if err := os.WriteFile("bytesconv_table.go", w.Bytes(), 0o660); err != nil {
 		log.Fatal(err)
 	}

@@ -18,8 +18,9 @@ package discovery
 
 import (
 	"context"
-	"github.com/oarkflow/frame/server/registry"
 	"net"
+
+	"github.com/oarkflow/frame/server/registry"
 
 	"github.com/oarkflow/frame/pkg/common/utils"
 )

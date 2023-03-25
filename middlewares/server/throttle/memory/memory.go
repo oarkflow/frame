@@ -3,10 +3,11 @@
 package memory
 
 import (
-	"github.com/oarkflow/frame/pkg/common/utils"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/oarkflow/frame/pkg/common/utils"
 )
 
 type Storage struct {

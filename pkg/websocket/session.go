@@ -1,10 +1,11 @@
 package websocket
 
 import (
-	"github.com/oarkflow/frame"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/oarkflow/frame"
 )
 
 // Session wrapper around websocket connections.

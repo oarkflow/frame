@@ -26,10 +26,11 @@
 package pprof
 
 import (
+	"net/http/pprof"
+
 	"github.com/oarkflow/frame/middlewares/server/pprof/adaptor"
 	"github.com/oarkflow/frame/pkg/route"
 	"github.com/oarkflow/frame/server"
-	"net/http/pprof"
 )
 
 const (

@@ -18,9 +18,10 @@ package client
 
 import (
 	"crypto/tls"
+	"time"
+
 	"github.com/oarkflow/frame/client/retry"
 	"github.com/oarkflow/frame/pkg/network/dialer"
-	"time"
 
 	"github.com/oarkflow/frame/pkg/common/config"
 	"github.com/oarkflow/frame/pkg/network"

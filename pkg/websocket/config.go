@@ -1,8 +1,9 @@
 package websocket
 
 import (
-	"github.com/oarkflow/frame"
 	"time"
+
+	"github.com/oarkflow/frame"
 )
 
 // Config hub configuration struct.

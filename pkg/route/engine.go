@@ -45,9 +45,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/oarkflow/frame"
-	"github.com/oarkflow/frame/server/render"
-	"github.com/oarkflow/log"
 	"html/template"
 	"io"
 	"net"
@@ -56,6 +53,11 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+
+	"github.com/oarkflow/log"
+
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/server/render"
 
 	"github.com/oarkflow/frame/internal/bytesconv"
 	"github.com/oarkflow/frame/internal/bytestr"
@@ -131,6 +133,8 @@ type Engine struct {
 	noRoute     frame.HandlersChain
 	noMethod    frame.HandlersChain
 
+	customServeHTTP frame.HandlerFunc
+
 	// For render HTML
 	delims     render.Delims
 	funcMap    template.FuncMap
@@ -192,6 +196,13 @@ type Engine struct {
 	// Custom Functions
 	clientIPFunc  frame.ClientIP
 	formValueFunc frame.FormValueFunc
+}
+
+func (engine *Engine) SetCustomServeHTTP(f frame.HandlerFunc) {
+	if engine.IsRunning() {
+		log.Error().Msg("engine is running, can not set custom ServeHTTP handler")
+	}
+	engine.customServeHTTP = f
 }
 
 func (engine *Engine) IsTraceEnable() bool {
@@ -674,6 +685,10 @@ func (engine *Engine) recv(ctx *frame.Context) {
 
 // ServeHTTP makes the router implement the Handler interface.
 func (engine *Engine) ServeHTTP(c context.Context, ctx *frame.Context) {
+	if engine.customServeHTTP != nil {
+		engine.customServeHTTP(c, ctx)
+		return
+	}
 	if engine.PanicHandler != nil {
 		defer engine.recv(ctx)
 	}

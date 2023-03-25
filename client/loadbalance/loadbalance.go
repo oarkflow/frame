@@ -17,8 +17,9 @@
 package loadbalance
 
 import (
-	"github.com/oarkflow/frame/client/discovery"
 	"time"
+
+	"github.com/oarkflow/frame/client/discovery"
 )
 
 // Loadbalancer picks instance for the given service discovery result.

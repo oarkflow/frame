@@ -18,12 +18,14 @@ package stats
 
 import (
 	"context"
-	"github.com/oarkflow/frame"
 	"runtime/debug"
+
+	"github.com/oarkflow/frame"
+
+	"github.com/oarkflow/log"
 
 	"github.com/oarkflow/frame/pkg/common/tracer"
 	"github.com/oarkflow/frame/pkg/common/tracer/stats"
-	"github.com/oarkflow/log"
 )
 
 // Controller controls tracers.

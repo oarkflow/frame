@@ -30,9 +30,10 @@ package cors
 import (
 	"context"
 	"errors"
-	"github.com/oarkflow/frame"
 	"strings"
 	"time"
+
+	"github.com/oarkflow/frame"
 )
 
 // Config represents all available options for the middleware.

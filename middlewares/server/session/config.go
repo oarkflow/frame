@@ -2,11 +2,12 @@ package session
 
 import (
 	"encoding/gob"
+	"strings"
+	"time"
+
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/pkg/common/storage"
 	"github.com/oarkflow/frame/pkg/common/xid"
-	"strings"
-	"time"
 )
 
 // Config defines the config for middleware.

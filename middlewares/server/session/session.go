@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/pkg/common/utils"
 	"github.com/oarkflow/frame/pkg/protocol"
-	"sync"
-	"time"
 )
 
 type Session struct {

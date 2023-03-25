@@ -19,11 +19,12 @@ package sd
 import (
 	"context"
 	"fmt"
+	"net"
+	"strings"
+
 	"github.com/oarkflow/frame/client/discovery"
 	"github.com/oarkflow/frame/client/loadbalance"
 	"github.com/oarkflow/frame/server/registry"
-	"net"
-	"strings"
 )
 
 // ServiceDiscoveryOptions service discovery option for client

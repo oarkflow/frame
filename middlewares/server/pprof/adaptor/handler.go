@@ -15,12 +15,14 @@ package adaptor
 
 import (
 	"context"
+	"net/http"
+	"unsafe"
+
+	"github.com/oarkflow/log"
+
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/pkg/common/adaptor"
 	"github.com/oarkflow/frame/pkg/protocol/consts"
-	"github.com/oarkflow/log"
-	"net/http"
-	"unsafe"
 )
 
 // NewFrameHTTPHandlerFunc wraps net/http handler to frame app.HandlerFunc,

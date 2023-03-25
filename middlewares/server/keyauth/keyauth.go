@@ -28,8 +28,9 @@ package keyauth
 import (
 	"context"
 	"errors"
-	"github.com/oarkflow/frame"
 	"strings"
+
+	"github.com/oarkflow/frame"
 
 	"github.com/savsgio/gotils/strconv"
 )

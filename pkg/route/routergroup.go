@@ -42,11 +42,12 @@ package route
 
 import (
 	"context"
-	"github.com/oarkflow/frame"
-	"github.com/oarkflow/frame/internal/utils"
 	"path"
 	"regexp"
 	"strings"
+
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/internal/utils"
 
 	"github.com/oarkflow/frame/pkg/protocol/consts"
 	rConsts "github.com/oarkflow/frame/pkg/route/consts"

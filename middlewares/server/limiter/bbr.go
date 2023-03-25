@@ -18,10 +18,11 @@ package limiter
 
 import (
 	"errors"
-	"github.com/oarkflow/frame/middlewares/server/limiter/utils"
 	"math"
 	"sync/atomic"
 	"time"
+
+	"github.com/oarkflow/frame/middlewares/server/limiter/utils"
 
 	"github.com/c9s/goprocinfo/linux"
 )

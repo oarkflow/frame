@@ -19,9 +19,10 @@ package config
 import (
 	"context"
 	"crypto/tls"
-	"github.com/oarkflow/frame/server/registry"
 	"net"
 	"time"
+
+	"github.com/oarkflow/frame/server/registry"
 
 	"github.com/oarkflow/frame/pkg/network"
 )

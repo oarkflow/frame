@@ -29,9 +29,10 @@ package cors
 
 import (
 	"bytes"
+	"strings"
+
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/pkg/protocol/consts"
-	"strings"
 )
 
 type cors struct {

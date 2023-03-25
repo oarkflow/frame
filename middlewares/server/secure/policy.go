@@ -27,11 +27,12 @@ package secure
 
 import (
 	"context"
-	"github.com/oarkflow/frame"
-	"github.com/oarkflow/frame/pkg/protocol"
 	"net"
 	"net/http"
 	"strings"
+
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/pkg/protocol"
 )
 
 type (

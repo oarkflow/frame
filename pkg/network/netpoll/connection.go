@@ -17,14 +17,17 @@ package netpoll
 
 import (
 	"errors"
-	errs "github.com/oarkflow/frame/pkg/common/errors"
-	"github.com/oarkflow/log"
-	"golang.org/x/sys/unix"
 	"io"
 	"strings"
 	"syscall"
 
+	"github.com/oarkflow/log"
+	"golang.org/x/sys/unix"
+
+	errs "github.com/oarkflow/frame/pkg/common/errors"
+
 	"github.com/cloudwego/netpoll"
+
 	"github.com/oarkflow/frame/pkg/network"
 )
 

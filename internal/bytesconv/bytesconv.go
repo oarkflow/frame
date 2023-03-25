@@ -47,7 +47,7 @@ import (
 	"sync"
 	"time"
 	"unsafe"
-
+	
 	"github.com/oarkflow/frame/pkg/network"
 )
 
@@ -94,7 +94,7 @@ func WriteHexInt(w network.Writer, n int) error {
 	if n < 0 {
 		panic("BUG: int must be positive")
 	}
-
+	
 	v := hexIntBufPool.Get()
 	if v == nil {
 		v = make([]byte, maxHexIntChars+1)
@@ -123,13 +123,13 @@ func ReadHexInt(r network.Reader) (int, error) {
 		buf, err := r.Peek(1)
 		if err != nil {
 			r.Skip(1)
-
+			
 			if i > 0 {
 				return n, nil
 			}
 			return -1, err
 		}
-
+		
 		c := buf[0]
 		k = int(Hex2intTable[c])
 		if k == 16 {
@@ -143,7 +143,7 @@ func ReadHexInt(r network.Reader) (int, error) {
 			r.Skip(1)
 			return -1, errTooLargeHexNum
 		}
-
+		
 		r.Skip(1)
 		n = (n << 4) | k
 		i++
@@ -180,7 +180,7 @@ func AppendUint(dst []byte, n int) []byte {
 	if n < 0 {
 		panic("BUG: int must be positive")
 	}
-
+	
 	var b [20]byte
 	buf := b[:]
 	i := len(buf)
@@ -193,7 +193,7 @@ func AppendUint(dst []byte, n int) []byte {
 	}
 	i--
 	buf[i] = '0' + byte(n)
-
+	
 	dst = append(dst, buf[i:]...)
 	return dst
 }
@@ -209,7 +209,7 @@ func AppendQuotedPath(dst, src []byte) []byte {
 	if len(src) == 1 && src[0] == '*' {
 		return append(dst, '*')
 	}
-
+	
 	for _, c := range src {
 		if QuotedPathShouldEscapeTable[int(c)] != 0 {
 			dst = append(dst, '%', upperhex[c>>4], upperhex[c&15])

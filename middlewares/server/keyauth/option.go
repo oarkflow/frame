@@ -27,9 +27,10 @@ package keyauth
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/pkg/protocol/consts"
-	"net/http"
 )
 
 // Option is the only struct that can be used to set Options.

@@ -27,11 +27,12 @@ package gzip
 
 import (
 	"context"
-	"github.com/oarkflow/frame"
-	"github.com/oarkflow/frame/pkg/common/compress"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/pkg/common/compress"
 )
 
 var (

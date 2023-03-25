@@ -27,6 +27,7 @@ package gzip
 
 import (
 	"compress/gzip"
+
 	"github.com/oarkflow/frame"
 )
 
