@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/bytedance/go-tagexpr/v2 v2.9.7
 	github.com/bytedance/gopkg v0.0.0-20230324090325-a00d8057bef9
-	github.com/bytedance/sonic v1.8.6
+	github.com/bytedance/sonic v1.8.7
 	github.com/c9s/goprocinfo v0.0.0-20210130143923-c95fcf8c64a8
 	github.com/cloudwego/netpoll v0.3.2
 	github.com/golang-jwt/jwt/v4 v4.5.0
@@ -14,7 +14,7 @@ require (
 	github.com/tinylib/msgp v1.1.8
 	golang.org/x/crypto v0.7.0
 	golang.org/x/sync v0.1.0
-	golang.org/x/sys v0.6.0
+	golang.org/x/sys v0.7.0
 	google.golang.org/protobuf v1.30.0
 )
 
