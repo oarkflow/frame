@@ -82,6 +82,8 @@ const (
 	HeaderAcceptLanguage = "Accept-Language"
 	HeaderAltSvc         = "Alt-Svc"
 
+	HeaderIfNoneMatch = "If-None-Match"
+
 	// Protocol
 	HTTP11 = "HTTP/1.1"
 	HTTP10 = "HTTP/1.0"
