@@ -57,7 +57,7 @@ func Default(opts ...config.Option) *Frame {
 	return h
 }
 
-func (h *Frame) SpinWithKeepAlive() {
+func (h *Frame) keepAlive() {
 	addr := h.GetOptions().Addr
 	upg, _ := restart.New(restart.Options{
 		PIDFile: "/tmp/go-app.sock",
@@ -75,6 +75,8 @@ func (h *Frame) SpinWithKeepAlive() {
 					fmt.Println("Error while upgrade", err)
 					log.Fatal().Err(err).Msg("Error")
 				}
+			default:
+				os.Remove("/tmp/go-app.sock")
 			}
 		}
 	}()
@@ -102,7 +104,11 @@ func (h *Frame) SpinWithKeepAlive() {
 }
 
 // Spin runs the server until catching os.Signal or error returned by h.Run().
-func (h *Frame) Spin() {
+func (h *Frame) Spin(keepAlive ...bool) {
+	if len(keepAlive) > 0 && keepAlive[0] {
+		h.keepAlive()
+		return
+	}
 	errCh := make(chan error)
 	h.initOnRunHooks(errCh)
 	go func() {
