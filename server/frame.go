@@ -19,6 +19,7 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -27,6 +28,7 @@ import (
 	"github.com/oarkflow/log"
 
 	"github.com/oarkflow/frame/middlewares/server/recovery"
+	"github.com/oarkflow/frame/server/restart"
 
 	"github.com/oarkflow/frame/pkg/common/config"
 	"github.com/oarkflow/frame/pkg/route"
@@ -55,6 +57,50 @@ func Default(opts ...config.Option) *Frame {
 	return h
 }
 
+func (h *Frame) SpinWithKeepAlive() {
+	addr := h.GetOptions().Addr
+	upg, _ := restart.New(restart.Options{
+		PIDFile: "/tmp/go-app.sock",
+	})
+	defer upg.Stop()
+	// Listen for the process signal to trigger the tableflip upgrade.
+	go func() {
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, syscall.SIGHUP)
+		for ch := range sig {
+			switch ch {
+			case syscall.SIGHUP:
+				err := upg.Upgrade()
+				if err != nil {
+					fmt.Println("Error while upgrade", err)
+					log.Fatal().Err(err).Msg("Error")
+				}
+			}
+		}
+	}()
+
+	// Listen must be called before Ready
+	ln, err := upg.Listen("tcp", addr)
+	if err != nil {
+		panic(err)
+	}
+	defer ln.Close()
+
+	if ext, err := h.TransporterExt(); err == nil {
+		if err != nil {
+			panic(err)
+		}
+		ext.SetListener(ln)
+		go h.Spin()
+	}
+
+	if err := upg.Ready(); err != nil {
+		panic(err)
+	}
+
+	<-upg.Exit()
+}
+
 // Spin runs the server until catching os.Signal or error returned by h.Run().
 func (h *Frame) Spin() {
 	errCh := make(chan error)
@@ -81,9 +127,12 @@ func (h *Frame) Spin() {
 	ctx, cancel := context.WithTimeout(context.Background(), h.GetOptions().ExitWaitTimeout)
 	defer cancel()
 
-	if err := h.Shutdown(ctx); err != nil {
-		log.Error().Str("log_service", "HTTP Server").Msgf("Shutdown error=%v", err)
+	if h.IsRunning() {
+		if err := h.Shutdown(ctx); err != nil {
+			log.Error().Str("log_service", "HTTP Server").Msgf("Shutdown error=%v", err)
+		}
 	}
+
 }
 
 // SetCustomSignalWaiter sets the signal waiter function.

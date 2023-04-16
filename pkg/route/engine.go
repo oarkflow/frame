@@ -83,9 +83,10 @@ const unknownTransporterName = "unknown"
 var (
 	defaultTransporter = standard.NewTransporter
 
-	errInitFailed       = errs.NewPrivate("engine has been init already")
-	errAlreadyRunning   = errs.NewPrivate("engine is already running")
-	errStatusNotRunning = errs.NewPrivate("engine is not running")
+	errInitFailed               = errs.NewPrivate("engine has been init already")
+	errAlreadyRunning           = errs.NewPrivate("engine is already running")
+	errStatusNotRunning         = errs.NewPrivate("engine is not running")
+	errNotSupportTransporterExt = errs.NewPrivate("transporter does not support extension apis")
 
 	default404Body = []byte("404 page not found")
 	default405Body = []byte("405 method not allowed")
@@ -603,6 +604,14 @@ func NewEngine(opt *config.Options) *Engine {
 	engine.protocolSuite = suite.New()
 
 	return engine
+}
+
+func (engine *Engine) TransporterExt() (network.TransporterExt, error) {
+	ext, ok := engine.transport.(network.TransporterExt)
+	if !ok {
+		return nil, errNotSupportTransporterExt
+	}
+	return ext, nil
 }
 
 func initTrace(engine *Engine) stats.Level {

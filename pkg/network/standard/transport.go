@@ -51,15 +51,25 @@ type transport struct {
 	OnConnect        func(ctx context.Context, conn network.Conn) context.Context
 }
 
+func (t *transport) Listener() net.Listener {
+	return t.ln
+}
+
+func (t *transport) SetListener(l net.Listener) {
+	t.ln = l
+}
+
 func (t *transport) serve() (err error) {
 	network.UnlinkUdsFile(t.network, t.addr) //nolint:errcheck
-	t.lock.Lock()
-	if t.listenConfig != nil {
-		t.ln, err = t.listenConfig.Listen(context.Background(), t.network, t.addr)
-	} else {
-		t.ln, err = net.Listen(t.network, t.addr)
+	if t.ln == nil {
+		t.lock.Lock()
+		if t.listenConfig != nil {
+			t.ln, err = t.listenConfig.Listen(context.Background(), t.network, t.addr)
+		} else {
+			t.ln, err = net.Listen(t.network, t.addr)
+		}
+		t.lock.Unlock()
 	}
-	t.lock.Unlock()
 	if err != nil {
 		return err
 	}
@@ -88,10 +98,6 @@ func (t *transport) serve() (err error) {
 		}
 		go t.handler(ctx, c)
 	}
-}
-
-func (t *transport) Listener() net.Listener {
-	return t.ln
 }
 
 func (t *transport) ListenAndServe(onData network.OnData) (err error) {

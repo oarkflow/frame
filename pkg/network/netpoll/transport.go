@@ -65,14 +65,21 @@ func (t *transporter) Listener() net.Listener {
 	return t.listener
 }
 
+func (t *transporter) SetListener(l net.Listener) {
+	t.listener = l
+}
+
 // ListenAndServe binds listen address and keep serving, until an error occurs
 // or the transport shutdowns
 func (t *transporter) ListenAndServe(onReq network.OnData) (err error) {
 	network.UnlinkUdsFile(t.network, t.addr) //nolint:errcheck
-	if t.listenConfig != nil {
-		t.listener, err = t.listenConfig.Listen(context.Background(), t.network, t.addr)
-	} else {
-		t.listener, err = net.Listen(t.network, t.addr)
+
+	if t.listener == nil {
+		if t.listenConfig != nil {
+			t.listener, err = t.listenConfig.Listen(context.Background(), t.network, t.addr)
+		} else {
+			t.listener, err = net.Listen(t.network, t.addr)
+		}
 	}
 
 	if err != nil {

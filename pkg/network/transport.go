@@ -26,12 +26,21 @@ type Transporter interface {
 	// Close the transporter immediately
 	Close() error
 
-	// Graceful shutdown the transporter
+	// Shutdown is for graceful shutdown of transporter
 	Shutdown(ctx context.Context) error
 
-	// Start listen and ready to accept connection
+	// ListenAndServe start to listen and ready to accept connection
 	ListenAndServe(onData OnData) error
 }
 
-// Callback when data is ready on the connection
+// TransporterExt is the extended interface of Transporter
+type TransporterExt interface {
+	// Listener returns the listener of the transporter
+	Listener() net.Listener
+	// SetListener sets the listener of the transporter, SetListener should be called before ListenAndServe
+	// If the listener is set, the transporter will use the listener to accept connection
+	SetListener(l net.Listener)
+}
+
+// OnData Callback when data is ready on the connection
 type OnData func(ctx context.Context, conn interface{}) error
