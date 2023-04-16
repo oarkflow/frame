@@ -19,7 +19,6 @@ package server
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -57,30 +56,39 @@ func Default(opts ...config.Option) *Frame {
 	return h
 }
 
+func waitSignalAlive(errCh chan error, upg *restart.Upgrader) (os.Signal, error) {
+	signalToNotify := []os.Signal{syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM}
+	if signal.Ignored(syscall.SIGHUP) {
+		signalToNotify = []os.Signal{syscall.SIGINT, syscall.SIGTERM}
+	}
+
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, signalToNotify...)
+
+	select {
+	case sig := <-signals:
+		switch sig {
+		case syscall.SIGHUP:
+			return syscall.SIGHUP, upg.Upgrade()
+		case syscall.SIGTERM:
+			// force exit
+			return syscall.SIGTERM, errors.New(sig.String()) // nolint
+		case syscall.SIGINT:
+			log.Info().Str("log_service", "HTTP Server").Msgf("Received signal: %s\n", sig)
+			// graceful shutdown
+			return sig, nil
+		}
+	case err := <-errCh:
+		return nil, err
+	}
+
+	return nil, nil
+}
+
 func (h *Frame) keepAlive() {
 	addr := h.GetOptions().Addr
-	upg, _ := restart.New(restart.Options{
-		PIDFile: "/tmp/go-app.sock",
-	})
+	upg, _ := restart.New(restart.Options{})
 	defer upg.Stop()
-	// Listen for the process signal to trigger the tableflip upgrade.
-	go func() {
-		sig := make(chan os.Signal, 1)
-		signal.Notify(sig, syscall.SIGHUP)
-		for ch := range sig {
-			switch ch {
-			case syscall.SIGHUP:
-				err := upg.Upgrade()
-				if err != nil {
-					fmt.Println("Error while upgrade", err)
-					log.Fatal().Err(err).Msg("Error")
-				}
-			default:
-				os.Remove("/tmp/go-app.sock")
-			}
-		}
-	}()
-
 	// Listen must be called before Ready
 	ln, err := upg.Listen("tcp", addr)
 	if err != nil {
@@ -93,13 +101,33 @@ func (h *Frame) keepAlive() {
 			panic(err)
 		}
 		ext.SetListener(ln)
-		go h.Spin()
 	}
 
 	if err := upg.Ready(); err != nil {
 		panic(err)
 	}
+	errCh := make(chan error)
+	h.initOnRunHooks(errCh)
+	go func() {
+		errCh <- h.Run()
+	}()
+	sig, err := waitSignalAlive(errCh, upg)
+	if err != nil {
+		log.Error().Str("log_service", "HTTP Server").Msgf("Receive close signal: error=%v", err)
+		if err := h.Engine.Close(); err != nil {
+			log.Error().Str("log_service", "HTTP Server").Msgf("Close error=%v", err)
+		}
+	}
+	if sig != syscall.SIGHUP {
+		log.Info().Str("log_service", "HTTP Server").Msgf("Begin graceful shutdown, wait at most num=%d seconds...", h.GetOptions().ExitWaitTimeout/time.Second)
 
+		ctx, cancel := context.WithTimeout(context.Background(), h.GetOptions().ExitWaitTimeout)
+		defer cancel()
+
+		if err := h.Shutdown(ctx); err != nil {
+			log.Error().Str("log_service", "HTTP Server").Msgf("Shutdown error=%v", err)
+		}
+	}
 	<-upg.Exit()
 }
 
