@@ -21,6 +21,7 @@ import (
 	errs "errors"
 	"io"
 	"net"
+	"runtime"
 	"strconv"
 	"syscall"
 	"time"
@@ -562,20 +563,24 @@ func newTLSConn(c net.Conn, size int) network.Conn {
 		maxSize = size
 	}
 	node := newBufferNode(maxSize)
+	inputBuffer := &linkBuffer{
+		head:  node,
+		read:  node,
+		write: node,
+	}
+	runtime.SetFinalizer(inputBuffer, (*linkBuffer).release)
 	outputNode := newBufferNode(0)
+	outputBuffer := &linkBuffer{
+		head:  outputNode,
+		write: outputNode,
+	}
+	runtime.SetFinalizer(outputBuffer, (*linkBuffer).release)
 	return &TLSConn{
 		Conn{
-			c: c,
-			inputBuffer: &linkBuffer{
-				head:  node,
-				read:  node,
-				write: node,
-			},
-			outputBuffer: &linkBuffer{
-				head:  outputNode,
-				write: outputNode,
-			},
-			maxSize: maxSize,
+			c:            c,
+			inputBuffer:  inputBuffer,
+			outputBuffer: outputBuffer,
+			maxSize:      maxSize,
 		},
 	}
 }

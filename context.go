@@ -552,6 +552,22 @@ func (ctx *Context) String(code int, format string, values ...interface{}) {
 	ctx.Render(code, render.String{Format: format, Data: values})
 }
 
+func (ctx *Context) Bytes(code int, data []byte, contentType ...string) {
+	dataRenderer := render.Data{Data: data}
+	if len(contentType) > 0 {
+		dataRenderer.ContentType = contentType[0]
+	} else {
+		dataRenderer.ContentType = "text/plain; charset=utf-8"
+	}
+	ctx.Render(code, dataRenderer)
+}
+
+func (ctx *Context) HtmlBytes(code int, data []byte) {
+	dataRenderer := render.Data{Data: data}
+	dataRenderer.ContentType = "text/html; charset=utf-8"
+	ctx.Render(code, dataRenderer)
+}
+
 // FullPath returns a matched route full path. For not found routes
 // returns an empty string.
 //
@@ -596,10 +612,10 @@ func (ctx *Context) FileFromFS(filepath string, fs *FS) {
 	fs.NewRequestHandler()(context.Background(), ctx)
 }
 
-// FileAttachment use an efficient way to write the file to body stream.
+// Download use an efficient way to write the file to body stream.
 //
 // When client download the file, it will rename the file as filename
-func (ctx *Context) FileAttachment(filepath, filename string) {
+func (ctx *Context) Download(filepath, filename string) {
 	ctx.Response.Header.Set("content-disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 	ServeFile(ctx, filepath)
 }
