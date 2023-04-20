@@ -562,6 +562,12 @@ func (ctx *Context) Bytes(code int, data []byte, contentType ...string) {
 	ctx.Render(code, dataRenderer)
 }
 
+func (ctx *Context) JsonBytes(code int, data []byte) {
+	dataRenderer := render.Data{Data: data}
+	dataRenderer.ContentType = "application/json; charset=utf-8"
+	ctx.Render(code, dataRenderer)
+}
+
 func (ctx *Context) HtmlBytes(code int, data []byte) {
 	dataRenderer := render.Data{Data: data}
 	dataRenderer.ContentType = "text/html; charset=utf-8"
