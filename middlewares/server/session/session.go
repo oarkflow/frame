@@ -16,7 +16,7 @@ type Session struct {
 	id         string         // session id
 	fresh      bool           // if new session
 	ctx        *frame.Context // fiber context
-	config     *Store         // store configuration
+	store      *Store         // store configuration
 	data       *data          // key value data
 	byteBuffer *bytes.Buffer  // byte buffer for the en- and decode
 	exp        time.Duration  // expiration of this session
@@ -44,7 +44,7 @@ func releaseSession(s *Session) {
 	s.id = ""
 	s.exp = 0
 	s.ctx = nil
-	s.config = nil
+	s.store = nil
 	if s.data != nil {
 		s.data.Reset()
 	}
@@ -102,7 +102,7 @@ func (s *Session) Destroy() error {
 	s.data.Reset()
 
 	// Use external Storage if exist
-	if err := s.config.Storage.Delete(s.id); err != nil {
+	if err := s.store.Storage.Delete(s.id); err != nil {
 		return err
 	}
 
@@ -114,7 +114,7 @@ func (s *Session) Destroy() error {
 // Regenerate generates a new session id and delete the old one from Storage
 func (s *Session) Regenerate() error {
 	// Delete old id from storage
-	if err := s.config.Storage.Delete(s.id); err != nil {
+	if err := s.store.Storage.Delete(s.id); err != nil {
 		return err
 	}
 
@@ -127,7 +127,7 @@ func (s *Session) Regenerate() error {
 // refresh generates a new session, and set session.fresh to be true
 func (s *Session) refresh() {
 	// Create a new id
-	s.id = s.config.KeyGenerator()
+	s.id = s.store.KeyGenerator()
 
 	// We assign a new id to the session, so the session must be fresh
 	s.fresh = true
@@ -142,7 +142,7 @@ func (s *Session) Save() error {
 
 	// Check if session has your own expiration, otherwise use default value
 	if s.exp <= 0 {
-		s.exp = s.config.Expiration
+		s.exp = s.store.Expiration
 	}
 
 	// Update client cookie
@@ -162,7 +162,7 @@ func (s *Session) Save() error {
 	copy(encodedBytes, s.byteBuffer.Bytes())
 
 	// pass copied bytes with session id to provider
-	if err := s.config.Storage.Set(s.id, encodedBytes, s.exp); err != nil {
+	if err := s.store.Storage.Set(s.id, encodedBytes, s.exp); err != nil {
 		return err
 	}
 
@@ -187,11 +187,11 @@ func (s *Session) SetExpiry(exp time.Duration) {
 }
 
 func (s *Session) setSession() {
-	if s.config.source == SourceHeader {
-		s.ctx.Header(s.config.sessionName, s.id)
+	if s.store.source == SourceHeader {
+		s.ctx.Header(s.store.sessionName, s.id)
 	}
 	var sameSite protocol.CookieSameSite
-	switch utils.ToLower(s.config.CookieSameSite) {
+	switch utils.ToLower(s.store.CookieSameSite) {
 	case "strict":
 		sameSite = protocol.CookieSameSiteStrictMode
 	case "none":
@@ -199,18 +199,18 @@ func (s *Session) setSession() {
 	default:
 		sameSite = protocol.CookieSameSiteLaxMode
 	}
-	s.ctx.SetCookie(s.config.sessionName, s.id, int(s.exp.Seconds()), s.config.CookiePath, s.config.CookieDomain, sameSite, s.config.CookieSecure, s.config.CookieHTTPOnly)
+	s.ctx.SetCookie(s.store.sessionName, s.id, int(s.exp.Seconds()), s.store.CookiePath, s.store.CookieDomain, sameSite, s.store.CookieSecure, s.store.CookieHTTPOnly)
 }
 
 func (s *Session) delSession() {
-	if s.config.source == SourceHeader {
-		s.ctx.Request.Header.DelBytes([]byte(s.config.sessionName))
-		s.ctx.Response.Header.DelBytes([]byte(s.config.sessionName))
+	if s.store.source == SourceHeader {
+		s.ctx.Request.Header.DelBytes([]byte(s.store.sessionName))
+		s.ctx.Response.Header.DelBytes([]byte(s.store.sessionName))
 	}
-	s.ctx.Request.Header.DelCookie(s.config.sessionName)
-	s.ctx.Response.Header.DelCookie(s.config.sessionName)
+	s.ctx.Request.Header.DelCookie(s.store.sessionName)
+	s.ctx.Response.Header.DelCookie(s.store.sessionName)
 	var sameSite protocol.CookieSameSite
-	switch utils.ToLower(s.config.CookieSameSite) {
+	switch utils.ToLower(s.store.CookieSameSite) {
 	case "strict":
 		sameSite = protocol.CookieSameSiteStrictMode
 	case "none":
@@ -218,5 +218,5 @@ func (s *Session) delSession() {
 	default:
 		sameSite = protocol.CookieSameSiteLaxMode
 	}
-	s.ctx.SetCookie(s.config.sessionName, "", -1, s.config.CookiePath, s.config.CookieDomain, sameSite, s.config.CookieSecure, s.config.CookieHTTPOnly)
+	s.ctx.SetCookie(s.store.sessionName, "", -1, s.store.CookiePath, s.store.CookieDomain, sameSite, s.store.CookieSecure, s.store.CookieHTTPOnly)
 }

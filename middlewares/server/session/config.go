@@ -10,7 +10,7 @@ import (
 	"github.com/oarkflow/frame/pkg/common/xid"
 )
 
-// Config defines the config for middleware.
+// Config defines the store for middleware.
 type Config struct {
 	// Allowed session duration
 	// Optional. Default value 24 * time.Hour
@@ -72,7 +72,7 @@ const (
 	SourceURLQuery Source = "query"
 )
 
-// ConfigDefault is the default config
+// ConfigDefault is the default store
 var ConfigDefault = Config{
 	Expiration: 24 * time.Hour,
 	KeyLookup:  "cookie:session_id",
@@ -85,12 +85,12 @@ var ConfigDefault = Config{
 
 // Helper function to set default values
 func configDefault(config ...Config) Config {
-	// Return default config if nothing provided
+	// Return default store if nothing provided
 	if len(config) < 1 {
 		return ConfigDefault
 	}
 
-	// Override default config
+	// Override default store
 	cfg := config[0]
 
 	// Set default values
