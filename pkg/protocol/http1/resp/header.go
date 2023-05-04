@@ -60,7 +60,7 @@ import (
 
 var errTimeout = errs.New(errs.ErrTimeout, errs.ErrorTypePublic, "read response header")
 
-// Read reads response header from r.
+// ReadHeader reads response header from r.
 //
 // io.EOF is returned if r is closed before reading the first header byte.
 func ReadHeader(h *protocol.ResponseHeader, r network.Reader) error {
@@ -85,7 +85,7 @@ func ReadHeader(h *protocol.ResponseHeader, r network.Reader) error {
 	}
 }
 
-// Write writes response header to w.
+// WriteHeader writes response header to w.
 func WriteHeader(h *protocol.ResponseHeader, w network.Writer) error {
 	header := h.Header()
 	h.SetHeaderLength(len(header))
@@ -239,7 +239,13 @@ func parseFirstLine(h *protocol.ResponseHeader, buf []byte) (int, error) {
 	if n < 0 {
 		return 0, fmt.Errorf("cannot find whitespace in the first line of response %q", buf)
 	}
-	h.SetNoHTTP11(!bytes.Equal(b[:n], bytestr.StrHTTP11))
+	isHTTP11 := bytes.Equal(b[:n], bytestr.StrHTTP11)
+	if !isHTTP11 {
+		h.SetProtocol(consts.HTTP10)
+	} else {
+		h.SetProtocol(consts.HTTP11)
+	}
+
 	b = b[n+1:]
 
 	// parse status code
