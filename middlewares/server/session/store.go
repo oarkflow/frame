@@ -18,7 +18,7 @@ type Store struct {
 var mux sync.Mutex
 
 func New(config ...Config) *Store {
-	// Set default config
+	// Set default store
 	cfg := configDefault(config...)
 
 	if cfg.Storage == nil {
@@ -59,7 +59,7 @@ func (s *Store) Get(c *frame.Context, errorHandler ...func(ctx *frame.Context, e
 	// Create session object
 	sess := acquireSession()
 	sess.ctx = c
-	sess.config = s
+	sess.store = s
 	sess.id = id
 	sess.fresh = fresh
 
