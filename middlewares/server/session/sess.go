@@ -4,8 +4,6 @@ import (
 	"encoding/gob"
 	"time"
 
-	"github.com/oarkflow/frame/pkg/common/storage/memory"
-
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/pkg/common/utils"
 )
@@ -13,12 +11,7 @@ import (
 var RememberMeExpiry = 30 * 24 * time.Hour
 var DefaultSessionExpiry = 30 * time.Minute
 
-var DefaultStore = New(Config{
-	Expiration:     DefaultSessionExpiry,
-	KeyLookup:      "cookie:Frame-Session",
-	CookieHTTPOnly: true,
-	Storage:        memory.New(),
-})
+var DefaultStore *Store
 
 func Default(cfg Config) *Store {
 	DefaultStore = New(cfg)
