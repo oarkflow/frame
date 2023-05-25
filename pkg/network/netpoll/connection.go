@@ -21,13 +21,10 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/cloudwego/netpoll"
 	"github.com/oarkflow/log"
-	"golang.org/x/sys/unix"
 
 	errs "github.com/oarkflow/frame/pkg/common/errors"
-
-	"github.com/cloudwego/netpoll"
-
 	"github.com/oarkflow/frame/pkg/network"
 )
 
@@ -36,7 +33,7 @@ type Conn struct {
 }
 
 func (c *Conn) ToFrameError(err error) error {
-	if errors.Is(err, netpoll.ErrConnClosed) || errors.Is(err, unix.EPIPE) {
+	if errors.Is(err, netpoll.ErrConnClosed) || errors.Is(err, syscall.EPIPE) {
 		return errs.ErrConnectionClosed
 	}
 	return err
