@@ -19,5 +19,5 @@ package frame
 // Name and Version info of this framework, used for statistics and debug
 const (
 	Name    = "Frame"
-	Version = "v0.0.3"
+	Version = "v0.0.45"
 )

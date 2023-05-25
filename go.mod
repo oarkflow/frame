@@ -13,7 +13,7 @@ require (
 	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee
 	github.com/tinylib/msgp v1.1.8
 	golang.org/x/crypto v0.9.0
-	golang.org/x/sync v0.2.0
+	golang.org/x/sync v0.1.0
 	golang.org/x/sys v0.8.0
 	google.golang.org/protobuf v1.30.0
 )
