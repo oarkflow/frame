@@ -1393,3 +1393,36 @@ func (ctx *Context) Bind(obj interface{}) error {
 func (ctx *Context) Validate(obj interface{}) error {
 	return binding.Validate(obj)
 }
+
+// VisitAllQueryArgs calls f for each existing query arg.
+//
+// f must not retain references to key and value after returning.
+// Make key and/or value copies if you need storing them after returning.
+func (ctx *Context) VisitAllQueryArgs(f func(key, value []byte)) {
+	ctx.QueryArgs().VisitAll(f)
+}
+
+// VisitAllPostArgs calls f for each existing post arg.
+//
+// f must not retain references to key and value after returning.
+// Make key and/or value copies if you need storing them after returning.
+func (ctx *Context) VisitAllPostArgs(f func(key, value []byte)) {
+	ctx.Request.PostArgs().VisitAll(f)
+}
+
+// VisitAllHeaders calls f for each request header.
+//
+// f must not retain references to key and/or value after returning.
+// Copy key and/or value contents before returning if you need retaining them.
+//
+// To get the headers in order they were received use VisitAllInOrder.
+func (ctx *Context) VisitAllHeaders(f func(key, value []byte)) {
+	ctx.Request.Header.VisitAll(f)
+}
+
+// VisitAllCookie calls f for each request cookie.
+//
+// f must not retain references to key and/or value after returning.
+func (ctx *Context) VisitAllCookie(f func(key, value []byte)) {
+	ctx.Request.Header.VisitAllCookie(f)
+}
