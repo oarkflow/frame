@@ -47,6 +47,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/oarkflow/frame/pkg/common/utils"
+
 	"github.com/oarkflow/frame/internal/bytestr"
 	"github.com/oarkflow/frame/pkg/common/config"
 	"github.com/oarkflow/frame/pkg/common/errors"
@@ -71,6 +73,14 @@ type HostClient interface {
 	CloseIdleConnections()
 	ShouldRemove() bool
 	ConnectionCount() int
+}
+
+type Response struct {
+	Body       []byte
+	Header     map[string][]byte
+	Cookie     map[string][]byte
+	StatusCode int
+	Error      error
 }
 
 type Doer interface {
@@ -126,27 +136,31 @@ type clientURLResponse struct {
 	statusCode int
 	body       []byte
 	err        error
+	header     map[string][]byte
+	cookie     map[string][]byte
 }
 
-func GetURL(ctx context.Context, dst []byte, url string, c Doer, requestOptions ...config.RequestOption) (statusCode int, body []byte, err error) {
+func GetURL(ctx context.Context, dst []byte, url string, c Doer, requestOptions ...config.RequestOption) (response Response) {
 	req := protocol.AcquireRequest()
 	req.SetOptions(requestOptions...)
 
-	statusCode, body, err = doRequestFollowRedirectsBuffer(ctx, req, dst, url, c)
+	response = doRequestFollowRedirectsBuffer(ctx, req, dst, url, c)
 
 	protocol.ReleaseRequest(req)
-	return statusCode, body, err
+	return
 }
 
-func GetURLTimeout(ctx context.Context, dst []byte, url string, timeout time.Duration, c Doer, requestOptions ...config.RequestOption) (statusCode int, body []byte, err error) {
+func GetURLTimeout(ctx context.Context, dst []byte, url string, timeout time.Duration, c Doer, requestOptions ...config.RequestOption) (response Response) {
 	deadline := time.Now().Add(timeout)
 	return GetURLDeadline(ctx, dst, url, deadline, c, requestOptions...)
 }
 
-func GetURLDeadline(ctx context.Context, dst []byte, url string, deadline time.Time, c Doer, requestOptions ...config.RequestOption) (statusCode int, body []byte, err error) {
+func GetURLDeadline(ctx context.Context, dst []byte, url string, deadline time.Time, c Doer, requestOptions ...config.RequestOption) (response Response) {
 	timeout := -time.Since(deadline)
 	if timeout <= 0 {
-		return 0, dst, errTimeout
+		response.Body = dst
+		response.Error = errTimeout
+		return
 	}
 
 	var ch chan clientURLResponse
@@ -167,11 +181,13 @@ func GetURLDeadline(ctx context.Context, dst []byte, url string, deadline time.T
 	// concurrent requests, since timed out requests on client side
 	// usually continue execution on the host.
 	go func() {
-		statusCodeCopy, bodyCopy, errCopy := doRequestFollowRedirectsBuffer(ctx, req, dst, url, c)
+		rsp := doRequestFollowRedirectsBuffer(ctx, req, dst, url, c)
 		ch <- clientURLResponse{
-			statusCode: statusCodeCopy,
-			body:       bodyCopy,
-			err:        errCopy,
+			statusCode: rsp.StatusCode,
+			body:       rsp.Body,
+			err:        rsp.Error,
+			header:     rsp.Header,
+			cookie:     rsp.Cookie,
 		}
 	}()
 
@@ -180,19 +196,21 @@ func GetURLDeadline(ctx context.Context, dst []byte, url string, deadline time.T
 	case resp := <-ch:
 		protocol.ReleaseRequest(req)
 		clientURLResponseChPool.Put(chv)
-		statusCode = resp.statusCode
-		body = resp.body
-		err = resp.err
+		response.StatusCode = resp.statusCode
+		response.Body = resp.body
+		response.Error = resp.err
+		response.Header = resp.header
+		response.Cookie = resp.cookie
 	case <-tc.C:
-		body = dst
-		err = errTimeout
+		response.Body = dst
+		response.Error = errTimeout
 	}
 	timer.ReleaseTimer(tc)
 
-	return statusCode, body, err
+	return
 }
 
-func PostURL(ctx context.Context, dst []byte, url string, postArgs *protocol.Args, c Doer, requestOptions ...config.RequestOption) (statusCode int, body []byte, err error) {
+func PostURL(ctx context.Context, dst []byte, url string, postArgs *protocol.Args, c Doer, requestOptions ...config.RequestOption) (response Response) {
 	req := protocol.AcquireRequest()
 	req.Header.SetMethodBytes(bytestr.StrPost)
 	req.Header.SetContentTypeBytes(bytestr.StrPostArgsContentType)
@@ -200,31 +218,43 @@ func PostURL(ctx context.Context, dst []byte, url string, postArgs *protocol.Arg
 
 	if postArgs != nil {
 		if _, err := postArgs.WriteTo(req.BodyWriter()); err != nil {
-			return 0, nil, err
+			response.Error = err
+			return
 		}
 	}
 
-	statusCode, body, err = doRequestFollowRedirectsBuffer(ctx, req, dst, url, c)
+	response = doRequestFollowRedirectsBuffer(ctx, req, dst, url, c)
 
 	protocol.ReleaseRequest(req)
-	return statusCode, body, err
+	return
 }
 
-func doRequestFollowRedirectsBuffer(ctx context.Context, req *protocol.Request, dst []byte, url string, c Doer) (statusCode int, body []byte, err error) {
+func doRequestFollowRedirectsBuffer(ctx context.Context, req *protocol.Request, dst []byte, url string, c Doer) (response Response) {
 	resp := protocol.AcquireResponse()
 	bodyBuf := resp.BodyBuffer()
 	oldBody := bodyBuf.B
 	bodyBuf.B = dst
 
-	statusCode, _, err = DoRequestFollowRedirects(ctx, req, resp, url, defaultMaxRedirectsCount, c)
-
+	statusCode, _, err := DoRequestFollowRedirects(ctx, req, resp, url, defaultMaxRedirectsCount, c)
+	response.StatusCode = statusCode
+	response.Error = err
 	// In HTTP2 scenario, client use stream mode to create a request and its body is in body stream.
 	// In HTTP1, only client recv body exceed max body size and client is in stream mode can trig it.
-	body = resp.Body()
+	response.Body = resp.Body()
 	bodyBuf.B = oldBody
+	header := make(map[string][]byte)
+	cookie := make(map[string][]byte)
+	resp.Header.VisitAll(func(key, value []byte) {
+		header[utils.ToString(key)] = value
+	})
+	resp.Header.VisitAllCookie(func(key, value []byte) {
+		cookie[utils.ToString(key)] = value
+	})
+	response.Header = header
+	response.Cookie = cookie
 	protocol.ReleaseResponse(resp)
 
-	return statusCode, body, err
+	return response
 }
 
 func DoRequestFollowRedirects(ctx context.Context, req *protocol.Request, resp *protocol.Response, url string, maxRedirectsCount int, c Doer) (statusCode int, body []byte, err error) {

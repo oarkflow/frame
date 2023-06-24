@@ -168,7 +168,7 @@ func (c *HostClient) LastUseTime() time.Time {
 // is too small a new slice will be allocated.
 //
 // The function follows redirects. Use Do* for manually handling redirects.
-func (c *HostClient) Get(ctx context.Context, dst []byte, url string) (statusCode int, body []byte, err error) {
+func (c *HostClient) Get(ctx context.Context, dst []byte, url string) client.Response {
 	return client.GetURL(ctx, dst, url, c)
 }
 
@@ -207,7 +207,7 @@ func (c *HostClient) ConnPoolState() config.ConnPoolState {
 //
 // errTimeout error is returned if url contents couldn't be fetched
 // during the given timeout.
-func (c *HostClient) GetTimeout(ctx context.Context, dst []byte, url string, timeout time.Duration) (statusCode int, body []byte, err error) {
+func (c *HostClient) GetTimeout(ctx context.Context, dst []byte, url string, timeout time.Duration) client.Response {
 	return client.GetURLTimeout(ctx, dst, url, timeout, c)
 }
 
@@ -220,7 +220,7 @@ func (c *HostClient) GetTimeout(ctx context.Context, dst []byte, url string, tim
 //
 // errTimeout error is returned if url contents couldn't be fetched
 // until the given deadline.
-func (c *HostClient) GetDeadline(ctx context.Context, dst []byte, url string, deadline time.Time) (statusCode int, body []byte, err error) {
+func (c *HostClient) GetDeadline(ctx context.Context, dst []byte, url string, deadline time.Time) client.Response {
 	return client.GetURLDeadline(ctx, dst, url, deadline, c)
 }
 
@@ -232,7 +232,7 @@ func (c *HostClient) GetDeadline(ctx context.Context, dst []byte, url string, de
 // The function follows redirects. Use Do* for manually handling redirects.
 //
 // Empty POST body is sent if postArgs is nil.
-func (c *HostClient) Post(ctx context.Context, dst []byte, url string, postArgs *protocol.Args) (statusCode int, body []byte, err error) {
+func (c *HostClient) Post(ctx context.Context, dst []byte, url string, postArgs *protocol.Args) client.Response {
 	return client.PostURL(ctx, dst, url, postArgs, c)
 }
 

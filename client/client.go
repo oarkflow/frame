@@ -191,7 +191,7 @@ func DoRedirects(ctx context.Context, req *protocol.Request, resp *protocol.Resp
 // is too small a new slice will be allocated.
 //
 // The function follows redirects. Use Do* for manually handling redirects.
-func Get(ctx context.Context, dst []byte, url string, requestOptions ...config.RequestOption) (statusCode int, body []byte, err error) {
+func Get(ctx context.Context, dst []byte, url string, requestOptions ...config.RequestOption) client.Response {
 	return defaultClient.Get(ctx, dst, url, requestOptions...)
 }
 
@@ -210,7 +210,7 @@ func Get(ctx context.Context, dst []byte, url string, requestOptions ...config.R
 // If requests take too long and the connection pool gets filled up please
 // try using a customized Client instance with a ReadTimeout config or set the request level read timeout like:
 // `GetTimeout(context, dst, url, timeout, config.WithReadTimeout(1 * time.Second))`
-func GetTimeout(ctx context.Context, dst []byte, url string, timeout time.Duration, requestOptions ...config.RequestOption) (statusCode int, body []byte, err error) {
+func GetTimeout(ctx context.Context, dst []byte, url string, timeout time.Duration, requestOptions ...config.RequestOption) client.Response {
 	return defaultClient.GetTimeout(ctx, dst, url, timeout, requestOptions...)
 }
 
@@ -229,7 +229,7 @@ func GetTimeout(ctx context.Context, dst []byte, url string, timeout time.Durati
 // If requests take too long and the connection pool gets filled up please
 // try using a customized Client instance with a ReadTimeout config or set the request level read timeout like:
 // `GetDeadline(context, dst, url, timeout, config.WithReadTimeout(1 * time.Second))`
-func GetDeadline(ctx context.Context, dst []byte, url string, deadline time.Time, requestOptions ...config.RequestOption) (statusCode int, body []byte, err error) {
+func GetDeadline(ctx context.Context, dst []byte, url string, deadline time.Time, requestOptions ...config.RequestOption) client.Response {
 	return defaultClient.GetDeadline(ctx, dst, url, deadline, requestOptions...)
 }
 
@@ -241,7 +241,7 @@ func GetDeadline(ctx context.Context, dst []byte, url string, deadline time.Time
 // The function follows redirects. Use Do* for manually handling redirects.
 //
 // Empty POST body is sent if postArgs is nil.
-func Post(ctx context.Context, dst []byte, url string, postArgs *protocol.Args, requestOptions ...config.RequestOption) (statusCode int, body []byte, err error) {
+func Post(ctx context.Context, dst []byte, url string, postArgs *protocol.Args, requestOptions ...config.RequestOption) client.Response {
 	return defaultClient.Post(ctx, dst, url, postArgs, requestOptions...)
 }
 
@@ -310,7 +310,7 @@ func (c *Client) SetProxy(p protocol.Proxy) {
 // is too small a new slice will be allocated.
 //
 // The function follows redirects. Use Do* for manually handling redirects.
-func (c *Client) Get(ctx context.Context, dst []byte, url string, requestOptions ...config.RequestOption) (statusCode int, body []byte, err error) {
+func (c *Client) Get(ctx context.Context, dst []byte, url string, requestOptions ...config.RequestOption) client.Response {
 	return client.GetURL(ctx, dst, url, c, requestOptions...)
 }
 
@@ -323,7 +323,7 @@ func (c *Client) Get(ctx context.Context, dst []byte, url string, requestOptions
 //
 // errTimeout error is returned if url contents couldn't be fetched
 // during the given timeout.
-func (c *Client) GetTimeout(ctx context.Context, dst []byte, url string, timeout time.Duration, requestOptions ...config.RequestOption) (statusCode int, body []byte, err error) {
+func (c *Client) GetTimeout(ctx context.Context, dst []byte, url string, timeout time.Duration, requestOptions ...config.RequestOption) client.Response {
 	return client.GetURLTimeout(ctx, dst, url, timeout, c, requestOptions...)
 }
 
@@ -336,7 +336,7 @@ func (c *Client) GetTimeout(ctx context.Context, dst []byte, url string, timeout
 //
 // errTimeout error is returned if url contents couldn't be fetched
 // until the given deadline.
-func (c *Client) GetDeadline(ctx context.Context, dst []byte, url string, deadline time.Time, requestOptions ...config.RequestOption) (statusCode int, body []byte, err error) {
+func (c *Client) GetDeadline(ctx context.Context, dst []byte, url string, deadline time.Time, requestOptions ...config.RequestOption) client.Response {
 	return client.GetURLDeadline(ctx, dst, url, deadline, c, requestOptions...)
 }
 
@@ -348,7 +348,7 @@ func (c *Client) GetDeadline(ctx context.Context, dst []byte, url string, deadli
 // The function follows redirects. Use Do* for manually handling redirects.
 //
 // Empty POST body is sent if postArgs is nil.
-func (c *Client) Post(ctx context.Context, dst []byte, url string, postArgs *protocol.Args, requestOptions ...config.RequestOption) (statusCode int, body []byte, err error) {
+func (c *Client) Post(ctx context.Context, dst []byte, url string, postArgs *protocol.Args, requestOptions ...config.RequestOption) client.Response {
 	return client.PostURL(ctx, dst, url, postArgs, c, requestOptions...)
 }
 
