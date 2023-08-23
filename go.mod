@@ -1,15 +1,17 @@
 module github.com/oarkflow/frame
 
-go 1.20
+go 1.21
+
+toolchain go1.21.0
 
 require (
 	github.com/bytedance/go-tagexpr/v2 v2.9.8
 	github.com/bytedance/gopkg v0.0.0-20230728082804-614d0af6619b
-	github.com/bytedance/sonic v1.10.0-rc3
+	github.com/bytedance/sonic v1.10.0
 	github.com/c9s/goprocinfo v0.0.0-20210130143923-c95fcf8c64a8
 	github.com/cloudwego/netpoll v0.4.1
 	github.com/golang-jwt/jwt/v4 v4.5.0
-	github.com/oarkflow/log v1.0.73
+	github.com/oarkflow/log v1.0.74
 	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee
 	github.com/shirou/gopsutil/v3 v3.23.6
 	github.com/tinylib/msgp v1.1.8
@@ -27,7 +29,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
-	github.com/nyaruka/phonenumbers v1.1.7 // indirect
+	github.com/nyaruka/phonenumbers v1.1.8 // indirect
 	github.com/philhofer/fwd v1.1.2 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
@@ -39,6 +41,6 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	golang.org/x/arch v0.4.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 )

@@ -2,4 +2,4 @@
 .vscode
 pkg/app/fs.go.frame.gz
 coverage.out
-examples
+/examples/tmp/

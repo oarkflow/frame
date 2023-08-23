@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -12,6 +13,7 @@ import (
 type Session struct {
 	ID         string
 	Request    *frame.Context
+	Channels   []string
 	Keys       map[string]interface{}
 	conn       *Conn
 	output     chan *envelope
@@ -26,6 +28,7 @@ func NewSession(id string, ctx *frame.Context, conn *Conn, keys map[string]any, 
 		ID:         id,
 		Request:    ctx,
 		Keys:       keys,
+		Channels:   []string{},
 		conn:       conn,
 		output:     make(chan *envelope, messageBufferSize),
 		outputDone: make(chan struct{}),
@@ -95,7 +98,11 @@ loop:
 		select {
 		case msg := <-s.output:
 			err := s.writeRaw(msg)
-
+			if s.hub.config.Handlers.ErrorHandler == nil {
+				s.hub.config.Handlers.ErrorHandler = func(session *Session, err error) {
+					fmt.Println("Caught error on", session.ID, err.Error())
+				}
+			}
 			if err != nil {
 				s.hub.config.Handlers.ErrorHandler(s, err)
 				break loop

@@ -223,6 +223,11 @@ func (m *Hub) Sessions() ([]*Session, error) {
 	return m.hub.all(), nil
 }
 
+// DeleteSession delete session
+func (m *Hub) DeleteSession(sess *Session) {
+	delete(m.hub.sessions, sess)
+}
+
 // SessionByID returns all sessions. An error is returned if the hub session is closed.
 func (m *Hub) SessionByID(sessionID string) *Session {
 	for _, session := range m.hub.all() {
