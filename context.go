@@ -43,6 +43,7 @@ package frame
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -56,8 +57,6 @@ import (
 	"time"
 
 	"github.com/oarkflow/frame/pkg/common/storage/memory"
-
-	json "github.com/bytedance/sonic"
 
 	"github.com/oarkflow/frame/internal/bytesconv"
 	"github.com/oarkflow/frame/internal/bytestr"

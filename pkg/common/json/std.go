@@ -13,9 +13,6 @@
 // limitations under the License.
 //
 
-//go:build stdjson || !(amd64 && (linux || windows || darwin))
-// +build stdjson !amd64 !linux,!windows,!darwin
-
 package json
 
 import "encoding/json"
