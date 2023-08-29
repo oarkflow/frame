@@ -27,6 +27,7 @@ import (
 	"github.com/cloudwego/netpoll"
 	"github.com/oarkflow/log"
 
+	"github.com/oarkflow/frame/internal/utils"
 	"github.com/oarkflow/frame/pkg/common/config"
 	"github.com/oarkflow/frame/pkg/network"
 )
@@ -117,7 +118,7 @@ func (t *transporter) ListenAndServe(onReq network.OnData) (err error) {
 
 	// Start Server
 	log.Info().Str("log_service", "HTTP Server").
-		Str("address", t.listener.Addr().String()).
+		Str("address", utils.GetURLFromAddr(t.listener.Addr().String())).
 		Str("status", "listening").
 		Msg("Server started")
 	t.RLock()

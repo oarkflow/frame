@@ -25,6 +25,7 @@ import (
 
 	"github.com/oarkflow/log"
 
+	"github.com/oarkflow/frame/internal/utils"
 	"github.com/oarkflow/frame/pkg/common/config"
 	"github.com/oarkflow/frame/pkg/network"
 )
@@ -74,7 +75,7 @@ func (t *transport) serve() (err error) {
 		return err
 	}
 	log.Info().Str("log_service", "HTTP Server").
-		Str("address", t.ln.Addr().String()).
+		Str("address", utils.GetURLFromAddr(t.ln.Addr().String())).
 		Str("status", "listening").
 		Msg("Server started")
 	for {

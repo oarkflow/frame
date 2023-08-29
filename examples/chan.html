@@ -11,15 +11,31 @@
         min-height: 300px;
         padding: 20px;
     }
+    .status-online{
+        width: 5px;
+        height: 5px;
+        border-radius: 25px;
+        background-color: limegreen;
+        display: inline-block;
+        vertical-align: top;
+    }
+    .status-offline{
+        width: 5px;
+        height: 5px;
+        border-radius: 25px;
+        background-color: red;
+        display: inline-block;
+        vertical-align: top;
+    }
 </style>
 
 <body>
-<center>
-    <h3 id="name"></h3>
+<div style="width: 400px;margin-left: auto;margin-right: auto;text-align: center;">
+    <h3> <span id="name"></span> <span id="status"></span></h3>
     <pre id="chat"></pre>
     <input id="text" placeholder="say something" type="text">
     <input id="channel" type="hidden" value="{{.channel}}">
-</center>
+</div>
 
 <script>
     var url = "ws://" + window.location.host + "/ws/{{.channel}}";
@@ -36,19 +52,26 @@
         var iso = new Date().toISOString();
         return iso.split("T")[1].split(".")[0];
     };
-
+    ws.onopen = function (e) {
+        document.getElementById("status").innerHTML = "<span class=\"status-online\"></span>"
+    }
     ws.onmessage = function (msg) {
         var line = now() + " " + msg.data + "\n";
         chat.innerHTML += line;
     };
 
     text.onkeydown = function (e) {
-        if (e.keyCode === 13 && text.value !== "") {
-            ws.send("<" + name + "> " + text.value);
+        if (e.key === "Enter" && text.value !== "") {
+            ws.send("(" + name + ") " + text.value);
             text.value = "";
         }
     };
-
+    ws.onclose = function (e) {
+        document.getElementById("status").innerHTML = "<span class=\"status-offline\"></span>"
+    }
+    ws.onerror = function (e) {
+        document.getElementById("status").innerHTML = "<span class=\"status-offline\"></span>"
+    }
 </script>
 </body>
 </html>

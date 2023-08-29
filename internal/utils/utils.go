@@ -1,13 +1,16 @@
 package utils
 
 import (
+	"fmt"
 	"io"
 	"mime/multipart"
+	"net"
 	"net/http"
 	"os"
 	pathpkg "path"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -172,4 +175,26 @@ func copyZeroAlloc(w io.Writer, r io.Reader) (int64, error) {
 	n, err := io.CopyBuffer(w, r, buf)
 	copyBufPool.Put(vbuf)
 	return n, err
+}
+
+func LocalIP() (net.IP, error) {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	localAddress := conn.LocalAddr().(*net.UDPAddr)
+	return localAddress.IP, nil
+}
+
+func GetURLFromAddr(addr string) string {
+	if strings.Contains(addr, "[::]") {
+		ip, err := LocalIP()
+		if err != nil {
+			return addr
+		}
+		return strings.ReplaceAll(addr, "[::]", fmt.Sprintf("http://%s", ip))
+	}
+	return addr
 }
