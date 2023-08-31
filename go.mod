@@ -3,7 +3,7 @@ module github.com/oarkflow/frame
 go 1.21
 
 require (
-	github.com/bytedance/go-tagexpr/v2 v2.9.8
+	github.com/bytedance/go-tagexpr/v2 v2.9.9
 	github.com/bytedance/gopkg v0.0.0-20230728082804-614d0af6619b
 	github.com/c9s/goprocinfo v0.0.0-20210130143923-c95fcf8c64a8
 	github.com/cloudwego/netpoll v0.4.1

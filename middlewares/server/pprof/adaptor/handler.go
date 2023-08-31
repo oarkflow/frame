@@ -70,7 +70,7 @@ func NewFrameHTTPHandler(h http.Handler) frame.HandlerFunc {
 			return
 		}
 		req.RequestURI = b2s(c.Request.RequestURI())
-		rw := adaptor.GetCompatResponseWriter(&c.Response)
+		rw := adaptor.GetCompatResponseWriter(c)
 		c.ForEachKey(func(k string, v interface{}) {
 			ctx = context.WithValue(ctx, k, v)
 		})

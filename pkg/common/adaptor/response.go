@@ -17,37 +17,36 @@
 package adaptor
 
 import (
+	"bufio"
+	"io"
+	"net"
 	"net/http"
 
+	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/pkg/protocol"
 	"github.com/oarkflow/frame/pkg/protocol/consts"
 )
 
 type compatResponse struct {
-	h           *protocol.Response
-	header      http.Header
+	h           http.Header
+	w           io.Writer
+	r           io.Reader
+	conn        net.Conn
+	resp        *protocol.Response
 	writeHeader bool
 }
 
-func (c *compatResponse) Header() http.Header {
-	if c.header != nil {
-		return c.header
+func (w *compatResponse) Header() http.Header {
+	if w.h != nil {
+		return w.h
 	}
-	c.header = make(map[string][]string)
-	return c.header
+	w.h = make(map[string][]string)
+	return w.h
 }
 
-func (c *compatResponse) Write(b []byte) (int, error) {
-	if !c.writeHeader {
-		c.WriteHeader(consts.StatusOK)
-	}
-
-	return c.h.BodyWriter().Write(b)
-}
-
-func (c *compatResponse) WriteHeader(statusCode int) {
-	if !c.writeHeader {
-		for k, v := range c.header {
+func (w *compatResponse) WriteHeader(statusCode int) {
+	if !w.writeHeader {
+		for k, v := range w.h {
 			for _, vv := range v {
 				if k == consts.HeaderContentLength {
 					continue
@@ -55,36 +54,33 @@ func (c *compatResponse) WriteHeader(statusCode int) {
 				if k == consts.HeaderSetCookie {
 					cookie := protocol.AcquireCookie()
 					cookie.Parse(vv)
-					c.h.Header.SetCookie(cookie)
+					w.resp.Header.SetCookie(cookie)
 					continue
 				}
-				c.h.Header.Add(k, vv)
+				w.resp.Header.Add(k, vv)
 			}
 		}
-		c.writeHeader = true
+		w.writeHeader = true
 	}
 
-	c.h.Header.SetStatusCode(statusCode)
+	w.resp.Header.SetStatusCode(statusCode)
 }
 
 // GetCompatResponseWriter only support basic function of ResponseWriter, not for all.
-func GetCompatResponseWriter(resp *protocol.Response) http.ResponseWriter {
-	c := &compatResponse{
-		h: resp,
-	}
-	c.h.Header.SetNoDefaultContentType(true)
+func GetCompatResponseWriter(ctx *frame.Context) http.ResponseWriter {
+	return &compatResponse{w: ctx.Response.BodyWriter(), r: ctx.RequestBodyStream(), conn: ctx.GetConn(), resp: ctx.GetResponse()}
+}
 
-	h := make(map[string][]string)
-	tmpKey := make([][]byte, 0, c.h.Header.Len())
-	c.h.Header.VisitAll(func(k, v []byte) {
-		h[string(k)] = append(h[string(k)], string(v))
-		tmpKey = append(tmpKey, k)
-	})
-
-	for _, k := range tmpKey {
-		c.h.Header.DelBytes(k)
+func (w *compatResponse) Write(p []byte) (int, error) {
+	if !w.writeHeader {
+		w.WriteHeader(consts.StatusOK)
 	}
 
-	c.header = h
-	return c
+	return w.resp.BodyWriter().Write(p)
+}
+
+func (w *compatResponse) Flush() {}
+
+func (w *compatResponse) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	return w.conn, &bufio.ReadWriter{Reader: bufio.NewReader(w.r), Writer: bufio.NewWriter(w.w)}, nil
 }
