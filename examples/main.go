@@ -1,68 +1,67 @@
 package main
 
-import (
-	"context"
-	"fmt"
-	"net/http"
-	"slices"
-	"time"
-
-	"github.com/oarkflow/frame"
-	"github.com/oarkflow/frame/pkg/common/utils"
-	"github.com/oarkflow/frame/pkg/websocket"
-	"github.com/oarkflow/frame/server"
-)
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
-
-var addr = ":8080"
-
-func serveHome(_ context.Context, c *frame.Context) {
-	c.HTML(http.StatusOK, "index", nil)
-}
-func serveChan(_ context.Context, c *frame.Context) {
-	channel := c.Param("id")
-	c.HTML(http.StatusOK, "chan", utils.H{
-		"channel": channel,
+/*func main() {
+	secret := "OdR4DlWhZk6osDd0qXLdVT88lHOvj14K"
+	v4 := paseto.NewPV4Local()
+	key, err := paseto.NewSymmetricKey([]byte(secret), paseto.Version4)
+	if err != nil {
+		panic(err)
+	}
+	encrypted, err := v4.Encrypt(key, &paseto.RegisteredClaims{
+		Issuer:     "oarkflow.com",
+		Subject:    "test",
+		Audience:   "auth.oarkflow.com",
+		Expiration: paseto.TimePtr(time.Now().Add(time.Minute)),
+		NotBefore:  paseto.TimePtr(time.Now()),
+		IssuedAt:   paseto.TimePtr(time.Now()),
 	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(encrypted)
+	decrypted := v4.Decrypt(encrypted, key)
+	if decrypted.Err() != nil {
+		panic(decrypted.Err())
+	}
+	var claim paseto.RegisteredClaims
+	err = decrypted.ScanClaims(&claim)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(claim, claim.TokenID)
 }
 
 func main() {
-	hub := websocket.NewHub()
-
-	h := server.Default(server.WithHostPorts(addr))
-	h.SetHTMLTemplate("./", ".html")
-	h.GET("/", serveHome)
-	h.GET("/channel/:id", serveChan)
-	h.GET("/ws/:channel", func(c context.Context, ctx *frame.Context) {
-		channel := ctx.Param("channel")
-		sessionID, err := hub.OnRequest(ctx)
-		if err != nil {
-			ctx.JSON(500, err.Error())
-		} else {
-			go func() {
-				time.Sleep(1 * time.Second)
-				session := hub.SessionByID(sessionID)
-				if session != nil {
-					session.Channels = append(session.Channels, channel)
+	srv := server.Default(server.WithHostPorts(":8081"))
+	srv.Use(keyauth.New(
+		keyauth.WithKeyLookUp("query:token", ""),
+		keyauth.WithValidator(func(ctx context.Context, c *frame.Context, token string) (bool, error) {
+			if opts, exists := c.Get("keyauth_options"); exists {
+				options := opts.(*keyauth.Options)
+				secret := "OdR4DlWhZk6osDd0qXLdVT88lHOvj14K"
+				v4 := paseto.NewPV4Local()
+				key, err := paseto.NewSymmetricKey([]byte(secret), paseto.Version4)
+				if err != nil {
+					return false, err
 				}
-				hub.Notify([]byte(fmt.Sprintf("Welcome to <strong>%s</strong> channel", channel)), sessionID)
-			}()
-		}
+				decrypted := v4.Decrypt(token, key)
+				if decrypted.Err() != nil {
+					return false, decrypted.Err()
+				}
+				if options.HasExpiration() {
+					var claim paseto.RegisteredClaims
+					err = decrypted.ScanClaims(&claim)
+					if err != nil {
+						return false, err
+					}
+				}
+			}
+			return true, nil
+		}),
+	))
+	srv.GET("/restricted", func(c context.Context, ctx *frame.Context) {
+		ctx.JSON(200, "Got access")
 	})
-	hub.OnConnect(func(s *websocket.Session) {
-		fmt.Println("Connected")
-	})
-	hub.OnError(func(session *websocket.Session, err error) {
-	})
-	hub.OnMessage(func(currentSession *websocket.Session, msg []byte) {
-		hub.BroadcastFilter(msg, func(activeSession *websocket.Session) bool {
-			channel := activeSession.Request.Param("channel")
-			return slices.Contains(currentSession.Channels, channel)
-		})
-	})
-	h.Spin()
+	srv.Spin()
 }
+*/
