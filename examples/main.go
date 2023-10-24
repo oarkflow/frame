@@ -1,5 +1,26 @@
 package main
 
+import (
+	"context"
+
+	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/server"
+)
+
+func main() {
+	srv := server.New()
+	srv.GET("/", func(c context.Context, ctx *frame.Context) {
+		ctx.JSON(200, "Hello world")
+	})
+	srv.GET("/update", func(c context.Context, ctx *frame.Context) {
+		srv.GET("/", func(c context.Context, ctx *frame.Context) {
+			ctx.JSON(200, "Bye World")
+		})
+	})
+
+	srv.Spin()
+}
+
 /*func main() {
 	secret := "OdR4DlWhZk6osDd0qXLdVT88lHOvj14K"
 	v4 := paseto.NewPV4Local()

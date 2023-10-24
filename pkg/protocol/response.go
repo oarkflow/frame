@@ -64,6 +64,9 @@ var responsePool sync.Pool
 type Response struct {
 	noCopy nocopy.NoCopy //lint:ignore U1000 until noCopy is used
 
+	// isCopy shows that whether it is a copy through ctx.Copy().
+	// Other APIs such as CopyTo do not need to handle this.
+	isCopy bool
 	// Response header
 	//
 	// Copying Header by value is forbidden. Use pointer to Header instead.
@@ -239,6 +242,31 @@ func (resp *Response) BodyWriteTo(w io.Writer) error {
 // CopyTo copies resp contents to dst except of body stream.
 func (resp *Response) CopyTo(dst *Response) {
 	resp.CopyToSkipBody(dst)
+	if resp.bodyRaw != nil {
+		dst.bodyRaw = append(dst.bodyRaw[:0], resp.bodyRaw...)
+		if dst.body != nil {
+			dst.body.Reset()
+		}
+	} else if resp.body != nil {
+		dst.BodyBuffer().Set(resp.body.B)
+	} else if dst.body != nil {
+		dst.body.Reset()
+	}
+	resp.isCopy = false
+}
+
+// CopyToAndMark copies req contents to dst except of body stream and mark the dst resp as a copy.
+func (resp *Response) CopyToAndMark(dst *Response) {
+	dst.isCopy = true
+
+	// Same with resp.CopyTo(dst), but use the .CopyToAndMark instead of .CopyTo
+	dst.Reset()
+	resp.Header.CopyToAndMark(&dst.Header)
+	dst.SkipBody = resp.SkipBody
+	dst.raddr = resp.raddr
+	dst.laddr = resp.laddr
+
+	// copy body
 	if resp.bodyRaw != nil {
 		dst.bodyRaw = append(dst.bodyRaw[:0], resp.bodyRaw...)
 		if dst.body != nil {

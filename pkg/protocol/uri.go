@@ -77,6 +77,12 @@ var uriPool = &sync.Pool{
 type URI struct {
 	noCopy nocopy.NoCopy //lint:ignore U1000 until noCopy is used
 
+	// isCopy shows that whether it is a copy through ctx.Copy().
+	// Other APIs such as CopyTo do not need to handle this.
+	isCopy bool
+	// readLock is used to protect lazy load read APIs
+	readLock sync.Mutex
+
 	pathOriginal []byte
 	scheme       []byte
 	path         []byte
@@ -110,6 +116,12 @@ func (kv *argsKV) GetValue() []byte {
 	return kv.value
 }
 
+// CopyToAndMark copies uri contents to dst and mark the dst uri as a copy.
+func (u *URI) CopyToAndMark(dst *URI) {
+	dst.isCopy = true
+	u.CopyTo(dst)
+}
+
 // CopyTo copies uri contents to dst.
 func (u *URI) CopyTo(dst *URI) {
 	dst.Reset()
@@ -132,6 +144,11 @@ func (u *URI) CopyTo(dst *URI) {
 
 // QueryArgs returns query args.
 func (u *URI) QueryArgs() *Args {
+	if u.isCopy {
+		// use lock to prevent concurrent parse.
+		u.readLock.Lock()
+		defer u.readLock.Unlock()
+	}
 	u.parseQueryArgs()
 	return &u.queryArgs
 }
@@ -283,7 +300,7 @@ func (u *URI) Reset() {
 	u.hash = u.hash[:0]
 	u.username = u.username[:0]
 	u.password = u.password[:0]
-
+	u.isCopy = false
 	u.host = u.host[:0]
 	u.queryArgs.Reset()
 	u.parsedQueryArgs = false
@@ -641,10 +658,14 @@ func (u *URI) AppendBytes(dst []byte) []byte {
 // RequestURI returns RequestURI - i.e. URI without Scheme and Host.
 func (u *URI) RequestURI() []byte {
 	var dst []byte
+	buf := u.requestURI[:0]
+	if u.isCopy {
+		buf = nil
+	}
 	if u.DisablePathNormalizing {
-		dst = append(u.requestURI[:0], u.PathOriginal()...)
+		dst = append(buf, u.PathOriginal()...)
 	} else {
-		dst = bytesconv.AppendQuotedPath(u.requestURI[:0], u.Path())
+		dst = bytesconv.AppendQuotedPath(buf, u.Path())
 	}
 	if u.queryArgs.Len() > 0 {
 		dst = append(dst, '?')
@@ -652,6 +673,9 @@ func (u *URI) RequestURI() []byte {
 	} else if len(u.queryString) > 0 {
 		dst = append(dst, '?')
 		dst = append(dst, u.queryString...)
+	}
+	if u.isCopy {
+		return dst
 	}
 	u.requestURI = dst
 	return u.requestURI
@@ -665,6 +689,9 @@ func (u *URI) appendSchemeHost(dst []byte) []byte {
 
 // FullURI returns full uri in the form {Scheme}://{Host}{RequestURI}#{Hash}.
 func (u *URI) FullURI() []byte {
+	if u.isCopy {
+		return u.AppendBytes(nil)
+	}
 	u.fullURI = u.AppendBytes(u.fullURI[:0])
 	return u.fullURI
 }

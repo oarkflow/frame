@@ -48,6 +48,8 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/oarkflow/log"
+
 	"github.com/oarkflow/frame"
 
 	"github.com/oarkflow/frame/internal/bytesconv"
@@ -206,11 +208,11 @@ func (r *router) insert(path string, h frame.HandlersChain, t kind, ppath string
 		prefixLen := len(currentNode.prefix)
 		lcpLen := 0
 
-		max := prefixLen
-		if searchLen < max {
-			max = searchLen
+		max1 := prefixLen
+		if searchLen < max1 {
+			max1 = searchLen
 		}
-		for ; lcpLen < max && search[lcpLen] == currentNode.prefix[lcpLen]; lcpLen++ {
+		for ; lcpLen < max1 && search[lcpLen] == currentNode.prefix[lcpLen]; lcpLen++ {
 		}
 
 		if lcpLen == 0 {
@@ -298,7 +300,8 @@ func (r *router) insert(path string, h frame.HandlersChain, t kind, ppath string
 		} else {
 			// Node already exists
 			if currentNode.handlers != nil && h != nil {
-				panic("handlers are already registered for path '" + ppath + "'")
+				log.Warn().Str("handler_path", ppath).Msg("handlers are already registered for path '" + ppath + "'")
+				// panic("handlers are already registered for path '" + ppath + "'")
 			}
 
 			if h != nil {
@@ -313,7 +316,7 @@ func (r *router) insert(path string, h frame.HandlersChain, t kind, ppath string
 	}
 }
 
-// find finds registered handler by method and path, parses URL params and puts params to context
+// find registered handler by method and path, parses URL params and puts params to context
 func (r *router) find(path string, paramsPointer *param.Params, unescape bool) (res nodeValue) {
 	var (
 		cn          = r.root // current node
@@ -348,7 +351,7 @@ func (r *router) find(path string, paramsPointer *param.Params, unescape bool) (
 			// for param/any node.prefix value is always `:` so we can not deduce searchIndex from that and must use pValue
 			// for that index as it would also contain part of path we cut off before moving into node we are backtracking from
 			searchIndex -= len((*paramsPointer)[paramIndex].Value)
-			(*paramsPointer) = (*paramsPointer)[:paramIndex]
+			*paramsPointer = (*paramsPointer)[:paramIndex]
 		}
 		search = path[searchIndex:]
 		return
@@ -410,7 +413,7 @@ func (r *router) find(path string, paramsPointer *param.Params, unescape bool) (
 			if i == -1 {
 				i = len(search)
 			}
-			(*paramsPointer) = (*paramsPointer)[:(paramIndex + 1)]
+			*paramsPointer = (*paramsPointer)[:(paramIndex + 1)]
 			val := search[:i]
 			if unescape {
 				if v, err := url.QueryUnescape(search[:i]); err == nil {
@@ -433,7 +436,7 @@ func (r *router) find(path string, paramsPointer *param.Params, unescape bool) (
 		if child := cn.anyChild; child != nil {
 			// If any node is found, use remaining path for paramValues
 			cn = child
-			(*paramsPointer) = (*paramsPointer)[:(paramIndex + 1)]
+			*paramsPointer = (*paramsPointer)[:(paramIndex + 1)]
 			index := len(cn.pnames) - 1
 			val := search
 			if unescape {

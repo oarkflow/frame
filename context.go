@@ -191,6 +191,8 @@ var defaultFormValue = func(ctx *Context, key string) []byte {
 }
 
 type Context struct {
+	// isCopy shows that whether it is a copy through ctx.Copy().
+	isCopy   bool
 	conn     network.Conn
 	Request  protocol.Request
 	Response protocol.Response
@@ -775,8 +777,8 @@ func (ctx *Context) Copy() *Context {
 		conn:   ctx.conn,
 		Params: ctx.Params,
 	}
-	ctx.Request.CopyTo(&cp.Request)
-	ctx.Response.CopyTo(&cp.Response)
+	ctx.Request.CopyToAndMark(&cp.Request)
+	ctx.Response.CopyToAndMark(&cp.Response)
 	cp.index = rConsts.AbortIndex
 	cp.handlers = nil
 	cp.Keys = map[string]interface{}{}
@@ -829,7 +831,7 @@ func (ctx *Context) ResetWithoutConn() {
 	ctx.index = -1
 	ctx.fullPath = ""
 	ctx.Keys = nil
-
+	ctx.isCopy = false
 	if ctx.finished != nil {
 		close(ctx.finished)
 		ctx.finished = nil
