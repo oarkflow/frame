@@ -407,7 +407,7 @@ func (r *router) find(path string, paramsPointer *param.Params, unescape bool) (
 
 	Param:
 		// Param node
-		if child := cn.paramChild; search != nilString && child != nil {
+		if child := cn.paramChild; search != nilString && child != nil && paramsPointer != nil {
 			cn = child
 			i := strings.Index(search, slash)
 			if i == -1 {
@@ -470,6 +470,7 @@ func (r *router) find(path string, paramsPointer *param.Params, unescape bool) (
 
 	if cn != nil {
 		res.fullPath = cn.ppath
+		res.currentNode = cn
 		for i, name := range cn.pnames {
 			(*paramsPointer)[i].Key = name
 		}
@@ -520,9 +521,10 @@ func newNode(t kind, pre string, p *node, child children, mh frame.HandlersChain
 
 // nodeValue holds return values of (*Node).getValue method
 type nodeValue struct {
-	handlers frame.HandlersChain
-	tsr      bool
-	fullPath string
+	handlers    frame.HandlersChain
+	tsr         bool
+	fullPath    string
+	currentNode *node
 }
 
 // Makes a case-insensitive lookup of the given path and tries to find a handler.

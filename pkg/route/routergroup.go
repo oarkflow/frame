@@ -42,12 +42,15 @@ package route
 
 import (
 	"context"
+	"fmt"
 	"path"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/internal/utils"
+	"github.com/oarkflow/frame/pkg/route/param"
 
 	"github.com/oarkflow/frame/pkg/protocol/consts"
 	rConsts "github.com/oarkflow/frame/pkg/route/consts"
@@ -74,6 +77,7 @@ type IRoutes interface {
 	StaticFile(string, string) IRoutes
 	Static(string, string, ...frame.StaticConfig) IRoutes
 	StaticFS(string, *frame.FS) IRoutes
+	RemoveRoute(string, string) (bool, error)
 }
 
 // RouterGroup is used internally to configure router, a RouterGroup is associated with
@@ -375,4 +379,63 @@ func lastChar(str string) uint8 {
 		panic("The length of the string can't be 0")
 	}
 	return str[len(str)-1]
+}
+
+var framePathParamRandomValue = fmt.Sprintf("frame_random_%d", time.Now().UnixNano())
+
+// RemoveRoute Delete a route
+func (group *RouterGroup) RemoveRoute(httpMethod string, path string) (bool, error) {
+	// Check if the path is valid
+	path = joinPaths(group.basePath, path)
+	fullPath := path
+	checkPathValid(path)
+
+	if httpMethod != "" {
+		httpMethod = strings.ToUpper(httpMethod)
+	}
+
+	// 自动匹配路由删除
+	var paramsPointer *param.Params = nil
+
+	var params param.Params = make(param.Params, 0)
+	// Add the front static route part of a non-static route
+	for i, lcpIndex := 0, len(path); i < lcpIndex; i++ {
+		// param route
+		if path[i] == paramLabel {
+			j := i + 1
+			for ; i < lcpIndex && path[i] != '/'; i++ {
+			}
+			params = append(params, param.Param{Key: path[j:i], Value: framePathParamRandomValue})
+			path = path[:j] + path[i:]
+			i, lcpIndex = j, len(path)
+		} else if path[i] == anyLabel {
+			params = append(params, param.Param{Key: path[i+1:], Value: framePathParamRandomValue})
+		}
+	}
+	if len(params) > 0 {
+		paramsPointer = &params
+	}
+
+	unescape := false
+	if group.engine.options.UseRawPath {
+		unescape = group.engine.options.UnescapePathValues
+	}
+	t := group.engine.trees
+	for i := 0; i < len(t); i++ {
+		if httpMethod != "" && t[i].method != httpMethod {
+			continue
+		}
+		// Find route in tree
+		value := t[i].find(fullPath, paramsPointer, unescape)
+		if value.currentNode != nil {
+			// Delete route
+			*value.currentNode = node{}
+			// not Any
+			if httpMethod != "" {
+				return true, nil
+			}
+		}
+	}
+
+	return true, nil
 }

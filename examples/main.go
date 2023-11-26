@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/server"
@@ -16,6 +17,16 @@ func main() {
 		srv.GET("/", func(c context.Context, ctx *frame.Context) {
 			ctx.JSON(200, "Bye World")
 		})
+	})
+	srv.GET("/to-remove", func(c context.Context, ctx *frame.Context) {
+		ctx.JSON(200, "Remove Route")
+	})
+	srv.GET("/remove", func(c context.Context, ctx *frame.Context) {
+		route, err := srv.RemoveRoute("GET", "/to-remove")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(route)
 	})
 
 	srv.Spin()
