@@ -238,6 +238,12 @@ func (ctx *Context) SetClientIPFunc(f ClientIP) {
 	ctx.clientIPFunc = f
 }
 
+// SetIndex reset the handler's execution index
+// Disclaimer: You can loop yourself to deal with this, use wisely.
+func (ctx *Context) SetIndex(index int8) {
+	ctx.index = index
+}
+
 func (ctx *Context) SetFormValueFunc(f FormValueFunc) {
 	ctx.formValueFunc = f
 }
@@ -295,7 +301,7 @@ func (ctx *Context) Flash(data utils.H, config FlashConfig) *Context {
 	}
 	bt, _ := json.Marshal(data)
 	memory.Default.Set(config.Name, bt, time.Duration(config.MaxAge)*time.Second)
-	ctx.SetCookie(config.Name, "", config.MaxAge, config.Path, config.Domain, sameSite, config.Secure, config.HTTPOnly)
+	ctx.SetCookie(config.Name, "", config.MaxAge, config.Path, config.Domain, sameSite, config.Secure, config.HTTPOnly, false)
 	return ctx
 }
 
@@ -321,7 +327,7 @@ func (ctx *Context) FlashData(config FlashConfig) (data utils.H) {
 	if err != nil {
 		return
 	}
-	ctx.SetCookie(config.Name, "", -1, config.Path, config.Domain, sameSite, config.Secure, config.HTTPOnly)
+	ctx.SetCookie(config.Name, "", -1, config.Path, config.Domain, sameSite, config.Secure, config.HTTPOnly, false)
 	return
 }
 
@@ -354,14 +360,60 @@ type HandlerFunc func(c context.Context, ctx *Context)
 // HandlersChain defines a HandlerFunc array.
 type HandlersChain []HandlerFunc
 
-var handlerNames = make(map[uintptr]string)
+type HandlerNameOperator interface {
+	SetHandlerName(handler HandlerFunc, name string)
+	GetHandlerName(handler HandlerFunc) string
+}
+
+func SetHandlerNameOperator(o HandlerNameOperator) {
+	inbuiltHandlerNameOperator = o
+}
+
+type inbuiltHandlerNameOperatorStruct struct {
+	handlerNames map[uintptr]string
+}
+
+func (o *inbuiltHandlerNameOperatorStruct) SetHandlerName(handler HandlerFunc, name string) {
+	o.handlerNames[getFuncAddr(handler)] = name
+}
+
+func (o *inbuiltHandlerNameOperatorStruct) GetHandlerName(handler HandlerFunc) string {
+	return o.handlerNames[getFuncAddr(handler)]
+}
+
+type concurrentHandlerNameOperatorStruct struct {
+	handlerNames map[uintptr]string
+	lock         sync.RWMutex
+}
+
+func (o *concurrentHandlerNameOperatorStruct) SetHandlerName(handler HandlerFunc, name string) {
+	o.lock.Lock()
+	defer o.lock.Unlock()
+	o.handlerNames[getFuncAddr(handler)] = name
+}
+
+func (o *concurrentHandlerNameOperatorStruct) GetHandlerName(handler HandlerFunc) string {
+	o.lock.RLock()
+	defer o.lock.RUnlock()
+	return o.handlerNames[getFuncAddr(handler)]
+}
+
+func SetConcurrentHandlerNameOperator() {
+	SetHandlerNameOperator(&concurrentHandlerNameOperatorStruct{handlerNames: map[uintptr]string{}})
+}
+
+func init() {
+	inbuiltHandlerNameOperator = &inbuiltHandlerNameOperatorStruct{handlerNames: map[uintptr]string{}}
+}
+
+var inbuiltHandlerNameOperator HandlerNameOperator
 
 func SetHandlerName(handler HandlerFunc, name string) {
-	handlerNames[getFuncAddr(handler)] = name
+	inbuiltHandlerNameOperator.SetHandlerName(handler, name)
 }
 
 func GetHandlerName(handler HandlerFunc) string {
-	return handlerNames[getFuncAddr(handler)]
+	return inbuiltHandlerNameOperator.GetHandlerName(handler)
 }
 
 func getFuncAddr(v interface{}) uintptr {
@@ -629,7 +681,7 @@ func (ctx *Context) Download(filepath, filename string) {
 
 // SetBodyString sets response body to the given value.
 func (ctx *Context) SetBodyString(body string) {
-	ctx.Response.SetBodyString(body)
+	ctx.Response.SetBodyString(body, string(ctx.URI().RequestURI()))
 }
 
 // SetContentTypeBytes sets response Content-Type.
@@ -1215,15 +1267,17 @@ func (ctx *Context) Cookie(key string) []byte {
 //	sameSite let servers specify whether/when cookies are sent with cross-site requests; eg. Set-Cookie: name=value;HttpOnly; secure; SameSite=Lax;
 //
 //	For example:
-//	1. context.SetCookie("user", "frame", 1, "/", "localhost",protocol.CookieSameSiteLaxMode, true, true)
-//	add response header --->  Set-Cookie: user=frame; max-age=1; domain=localhost; path=/; HttpOnly; secure; SameSite=Lax;
-//	2. context.SetCookie("user", "frame", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
-//	add response header --->  Set-Cookie: user=frame; max-age=10; domain=localhost; path=/; SameSite=Lax;
-//	3. context.SetCookie("", "frame", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
-//	add response header --->  Set-Cookie: frame; max-age=10; domain=localhost; path=/; SameSite=Lax;
-//	4. context.SetCookie("user", "", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false)
+//	1. ctx.SetCookie("user", "hertz", 1, "/", "localhost",protocol.CookieSameSiteLaxMode, true, true, false)
+//	add response header --->  Set-Cookie: user=hertz; max-age=1; domain=localhost; path=/; HttpOnly; secure; SameSite=Lax;
+//	2. ctx.SetCookie("user", "hertz", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false, false)
+//	add response header --->  Set-Cookie: user=hertz; max-age=10; domain=localhost; path=/; SameSite=Lax;
+//	3. ctx.SetCookie("", "hertz", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false, false)
+//	add response header --->  Set-Cookie: hertz; max-age=10; domain=localhost; path=/; SameSite=Lax;
+//	4. ctx.SetCookie("user", "", 10, "/", "localhost",protocol.CookieSameSiteLaxMode, false, false, false)
 //	add response header --->  Set-Cookie: user=; max-age=10; domain=localhost; path=/; SameSite=Lax;
-func (ctx *Context) SetCookie(name, value string, maxAge int, path, domain string, sameSite protocol.CookieSameSite, secure, httpOnly bool) {
+//	5. ctx.SetCookie("user", "name", 10, "/", "localhost",protocol.CookieSameSiteNoneMode, true, true, true) add
+//	response header Set-Cookie: user=name; max-age=10; domain=localhost; path=/; HttpOnly; secure; SameSite=None; Partitioned
+func (ctx *Context) SetCookie(name, value string, maxAge int, path, domain string, sameSite protocol.CookieSameSite, secure, httpOnly, partitioned bool) {
 	if path == "" {
 		path = "/"
 	}
@@ -1237,6 +1291,7 @@ func (ctx *Context) SetCookie(name, value string, maxAge int, path, domain strin
 	cookie.SetSecure(secure)
 	cookie.SetHTTPOnly(httpOnly)
 	cookie.SetSameSite(sameSite)
+	cookie.SetPartitioned(partitioned)
 	ctx.Response.Header.SetCookie(cookie)
 }
 

@@ -66,6 +66,8 @@ const (
 	CookieSameSiteStrictMode
 	// CookieSameSiteNoneMode sets the SameSite flag with the "None" parameter
 	// see https://tools.ietf.org/html/draft-west-cookie-incrementalism-00
+	// third-party cookies are phasing out, use Partitioned cookies instead
+	// see https://developers.google.com/privacy-sandbox/3pcd
 	CookieSameSiteNoneMode
 )
 
@@ -102,7 +104,10 @@ type Cookie struct {
 
 	httpOnly bool
 	secure   bool
-	sameSite CookieSameSite
+	// A partitioned third-party cookie is tied to the top-level site
+	// where it's initially set and cannot be accessed from elsewhere.
+	partitioned bool
+	sameSite    CookieSameSite
 
 	bufKV argsKV
 	buf   []byte
@@ -223,6 +228,10 @@ func (c *Cookie) AppendBytes(dst []byte) []byte {
 	case CookieSameSiteNoneMode:
 		dst = appendCookiePart(dst, bytestr.StrCookieSameSite, bytestr.StrCookieSameSiteNone)
 	}
+	if c.partitioned {
+		dst = append(dst, ';', ' ')
+		dst = append(dst, bytestr.StrCookiePartitioned...)
+	}
 	return dst
 }
 
@@ -338,6 +347,7 @@ func (c *Cookie) Reset() {
 	c.httpOnly = false
 	c.secure = false
 	c.sameSite = CookieSameSiteDisabled
+	c.partitioned = false
 }
 
 // Value returns cookie value.
@@ -422,6 +432,10 @@ func (c *Cookie) ParseBytes(src []byte) error {
 						if utils.CaseInsensitiveCompare(bytestr.StrCookieSameSiteNone, kv.value) {
 							c.sameSite = CookieSameSiteNoneMode
 						}
+					case 'p': // "partitioned
+						if utils.CaseInsensitiveCompare(bytestr.StrCookiePartitioned, kv.value) {
+							c.partitioned = true
+						}
 					}
 				}
 			}
@@ -445,6 +459,11 @@ func (c *Cookie) ParseBytes(src []byte) error {
 	return nil
 }
 
+// Partitioned returns if cookie is partitioned.
+func (c *Cookie) Partitioned() bool {
+	return c.partitioned
+}
+
 // MaxAge returns the seconds until the cookie is meant to expire or 0
 // if no max age.
 func (c *Cookie) MaxAge() int {
@@ -457,6 +476,14 @@ func (c *Cookie) MaxAge() int {
 // Set max age to 0 to unset
 func (c *Cookie) SetMaxAge(seconds int) {
 	c.maxAge = seconds
+}
+
+// SetPartitioned sets cookie as partitioned. Setting Partitioned to true will also set Secure.
+func (c *Cookie) SetPartitioned(partitioned bool) {
+	c.partitioned = partitioned
+	if partitioned {
+		c.SetSecure(true)
+	}
 }
 
 // Expire returns cookie expiration time.

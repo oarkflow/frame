@@ -361,3 +361,15 @@ func WithOnConnect(fn func(ctx context.Context, conn network.Conn) context.Conte
 		o.OnConnect = fn
 	}}
 }
+
+func WithDisableDefaultDate(disable bool) config.Option {
+	return config.Option{F: func(o *config.Options) {
+		o.NoDefaultDate = disable
+	}}
+}
+
+func WithDisableDefaultContentType(disable bool) config.Option {
+	return config.Option{F: func(o *config.Options) {
+		o.NoDefaultContentType = disable
+	}}
+}

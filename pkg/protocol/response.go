@@ -123,9 +123,11 @@ func (resp *Response) SetConnectionClose() {
 }
 
 // SetBodyString sets response body.
-func (resp *Response) SetBodyString(body string) {
-	resp.CloseBodyStream()            //nolint:errcheck
-	resp.BodyBuffer().SetString(body) //nolint:errcheck
+func (resp *Response) SetBodyString(body, url string) {
+	resp.CloseBodyStream() //nolint:errcheck
+	// resp.BodyBuffer().SetString(body) //nolint:errcheck
+	// resp.BodyBuffer(url).SetString(body) //nolint:errcheck
+	resp.BodyBufferWithSize(len(body), url).SetString(body) //nolint:errcheck
 }
 
 func (resp *Response) ConstructBodyStream(body *bytebufferpool.ByteBuffer, bodyStream io.Reader) {
@@ -308,7 +310,8 @@ func (resp *Response) ResetBody() {
 			resp.body.Reset()
 			return
 		}
-		responseBodyPool.Put(resp.body)
+		// responseBodyPool.Put(resp.body)
+		responseBodyPool.PutWithByte(resp.body.B)
 		resp.body = nil
 	}
 }
@@ -369,7 +372,15 @@ func (resp *Response) CloseBodyStream() error {
 	return err
 }
 
-func (resp *Response) BodyBuffer() *bytebufferpool.ByteBuffer {
+func (resp *Response) BodyBufferWithSize(size int, uri string) *bytebufferpool.ByteBuffer {
+	if resp.body == nil {
+		resp.body = responseBodyPool.GetWithSize(size)
+	}
+	resp.bodyRaw = nil
+	return resp.body
+}
+
+func (resp *Response) BodyBuffer(url ...string) *bytebufferpool.ByteBuffer {
 	if resp.body == nil {
 		resp.body = responseBodyPool.Get()
 	}

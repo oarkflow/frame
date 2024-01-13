@@ -56,6 +56,8 @@ var (
 type Option struct {
 	StreamRequestBody            bool
 	GetOnly                      bool
+	NoDefaultDate                bool
+	NoDefaultContentType         bool
 	DisablePreParseMultipartForm bool
 	DisableKeepalive             bool
 	NoDefaultServerHeader        bool
@@ -113,9 +115,6 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 
 	defer func() {
 		if s.EnableTrace {
-			if err != nil && !errors.Is(err, errs.ErrIdleTimeout) && !errors.Is(err, errs.ErrHijacked) {
-				ctx.GetTraceInfo().Stats().SetError(err)
-			}
 			// in case of error, we need to trigger all events
 			if eventsToTrigger != nil {
 				for last := eventsToTrigger.pop(); last != nil; last = eventsToTrigger.pop() {
@@ -123,8 +122,12 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 				}
 				s.eventStackPool.Put(eventsToTrigger)
 			}
-
-			traceCtl.DoFinish(cc, ctx, err)
+			if shouldRecordInTraceError(err) {
+				ctx.GetTraceInfo().Stats().SetError(err)
+				traceCtl.DoFinish(cc, ctx, err)
+			} else {
+				traceCtl.DoFinish(cc, ctx, nil)
+			}
 		}
 
 		// Hijack may release and close the connection already
@@ -186,6 +189,10 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 				internalStats.Record(ti, stats.ReadHeaderFinish, err)
 			})
 		}
+
+		ctx.Response.Header.SetNoDefaultDate(s.NoDefaultDate)
+		ctx.Response.Header.SetNoDefaultContentType(s.NoDefaultContentType)
+
 		// Read Headers
 		if err = req.ReadHeader(&ctx.Request.Header, zr); err == nil {
 			if s.EnableTrace {
@@ -374,11 +381,6 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 			return
 		}
 
-		// general case
-		if s.EnableTrace {
-			traceCtl.DoFinish(cc, ctx, err)
-		}
-
 		if connectionClose {
 			return errShortConnection
 		}
@@ -386,6 +388,15 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 		// For now, only netpoll network mode has this feature.
 		if s.IdleTimeout == 0 {
 			return
+		}
+
+		// general case
+		if s.EnableTrace {
+			if shouldRecordInTraceError(err) {
+				traceCtl.DoFinish(cc, ctx, err)
+			} else {
+				traceCtl.DoFinish(cc, ctx, nil)
+			}
 		}
 
 		ctx.ResetWithoutConn()
@@ -455,4 +466,24 @@ func (e *eventStack) pop() func(ti traceinfo.TraceInfo, err error) {
 	last := (*e)[len(*e)-1]
 	*e = (*e)[:len(*e)-1]
 	return last
+}
+
+func shouldRecordInTraceError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if errors.Is(err, errs.ErrIdleTimeout) {
+		return false
+	}
+
+	if errors.Is(err, errs.ErrHijacked) {
+		return false
+	}
+
+	if errors.Is(err, errs.ErrShortConnection) {
+		return false
+	}
+
+	return true
 }

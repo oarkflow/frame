@@ -307,9 +307,7 @@ func (r *router) insert(path string, h frame.HandlersChain, t kind, ppath string
 			if h != nil {
 				currentNode.handlers = h
 				currentNode.ppath = ppath
-				if len(currentNode.pnames) == 0 {
-					currentNode.pnames = pnames
-				}
+				currentNode.pnames = pnames
 			}
 		}
 		return

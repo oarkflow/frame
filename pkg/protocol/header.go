@@ -1029,6 +1029,11 @@ func (h *ResponseHeader) del(key []byte) {
 	h.h = delAllArgsBytes(h.h, key)
 }
 
+// SetNoDefaultDate set noDefaultDate value of ResponseHeader.
+func (h *ResponseHeader) SetNoDefaultDate(b bool) {
+	h.noDefaultDate = b
+}
+
 // SetBytesV sets the given 'key: value' header.
 //
 // Use AddBytesV for setting multiple header values under the same key.
@@ -1051,6 +1056,12 @@ func (h *RequestHeader) Len() int {
 	n := 0
 	h.VisitAll(func(k, v []byte) { n++ })
 	return n
+}
+
+// Del deletes header with the given key.
+func (h *RequestHeader) Del(key string) {
+	k := getHeaderKeyBytes(&h.bufKV, key, h.disableNormalizing)
+	h.del(k)
 }
 
 // Reset clears request header.
