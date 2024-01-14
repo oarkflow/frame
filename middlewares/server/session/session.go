@@ -199,7 +199,7 @@ func (s *Session) setSession() {
 	default:
 		sameSite = protocol.CookieSameSiteLaxMode
 	}
-	s.ctx.SetCookie(s.store.sessionName, s.id, int(s.exp.Seconds()), s.store.CookiePath, s.store.CookieDomain, sameSite, s.store.CookieSecure, s.store.CookieHTTPOnly)
+	s.ctx.SetCookie(s.store.sessionName, s.id, int(s.exp.Seconds()), s.store.CookiePath, s.store.CookieDomain, sameSite, s.store.CookieSecure, s.store.CookieHTTPOnly, false)
 }
 
 func (s *Session) delSession() {
@@ -218,5 +218,5 @@ func (s *Session) delSession() {
 	default:
 		sameSite = protocol.CookieSameSiteLaxMode
 	}
-	s.ctx.SetCookie(s.store.sessionName, "", -1, s.store.CookiePath, s.store.CookieDomain, sameSite, s.store.CookieSecure, s.store.CookieHTTPOnly)
+	s.ctx.SetCookie(s.store.sessionName, "", -1, s.store.CookiePath, s.store.CookieDomain, sameSite, s.store.CookieSecure, s.store.CookieHTTPOnly, false)
 }
