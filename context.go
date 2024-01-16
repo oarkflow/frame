@@ -842,6 +842,9 @@ func (ctx *Context) Copy() *Context {
 	paramCopy := make([]param.Param, len(cp.Params))
 	copy(paramCopy, cp.Params)
 	cp.Params = paramCopy
+	cp.fullPath = ctx.fullPath
+	cp.clientIPFunc = ctx.clientIPFunc
+	cp.formValueFunc = ctx.formValueFunc
 	return cp
 }
 
