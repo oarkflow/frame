@@ -64,6 +64,7 @@ type Options struct {
 	StreamRequestBody            bool
 	NoDefaultServerHeader        bool
 	DisablePrintRoute            bool
+	SenseClientDisconnection     bool
 	Network                      string
 	Addr                         string
 	BasePath                     string
@@ -186,6 +187,8 @@ func NewOptions(opts []Option) *Options {
 		// Disabled when set to True
 		DisablePrintRoute: false,
 
+		// The ability to sense client disconnection is disabled by default
+		SenseClientDisconnection: false,
 		// "tcp", "udp", "unix"(unix domain socket)
 		Network: defaultNetwork,
 
