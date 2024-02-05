@@ -3,12 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
+
+	"github.com/oarkflow/pkg/paseto"
 
 	"github.com/oarkflow/frame"
+	"github.com/oarkflow/frame/middlewares/server/keyauth"
+	"github.com/oarkflow/frame/pkg/common/utils"
 	"github.com/oarkflow/frame/server"
 )
 
-func main() {
+func routeUpdate() {
 	srv := server.New()
 	srv.GET("/", func(c context.Context, ctx *frame.Context) {
 		ctx.JSON(200, "Hello world")
@@ -32,7 +37,7 @@ func main() {
 	srv.Spin()
 }
 
-/*func main() {
+func pasetoEncDec() {
 	secret := "OdR4DlWhZk6osDd0qXLdVT88lHOvj14K"
 	v4 := paseto.NewPV4Local()
 	key, err := paseto.NewSymmetricKey([]byte(secret), paseto.Version4)
@@ -65,8 +70,9 @@ func main() {
 
 func main() {
 	srv := server.Default(server.WithHostPorts(":8081"))
-	srv.Use(keyauth.New(
+	auth := keyauth.New(
 		keyauth.WithKeyLookUp("query:token", ""),
+		keyauth.WithExpiration(true),
 		keyauth.WithValidator(func(ctx context.Context, c *frame.Context, token string) (bool, error) {
 			if opts, exists := c.Get("keyauth_options"); exists {
 				options := opts.(*keyauth.Options)
@@ -77,8 +83,8 @@ func main() {
 					return false, err
 				}
 				decrypted := v4.Decrypt(token, key)
-				if decrypted.Err() != nil {
-					return false, decrypted.Err()
+				if err := decrypted.Err(); err != nil {
+					return false, err
 				}
 				if options.HasExpiration() {
 					var claim paseto.RegisteredClaims
@@ -90,10 +96,34 @@ func main() {
 			}
 			return true, nil
 		}),
-	))
-	srv.GET("/restricted", func(c context.Context, ctx *frame.Context) {
+	)
+	srv.GET("/generate-key", func(c context.Context, ctx *frame.Context) {
+		secret := "OdR4DlWhZk6osDd0qXLdVT88lHOvj14K"
+		v4 := paseto.NewPV4Local()
+		key, err := paseto.NewSymmetricKey([]byte(secret), paseto.Version4)
+		if err != nil {
+			panic(err)
+		}
+		now := time.Now()
+		expiresAt := now.Add(time.Minute)
+		encrypted, err := v4.Encrypt(key, &paseto.RegisteredClaims{
+			Issuer:     "oarkflow.com",
+			Subject:    "test",
+			Audience:   "auth.oarkflow.com",
+			Expiration: paseto.TimePtr(expiresAt),
+			NotBefore:  paseto.TimePtr(now),
+			IssuedAt:   paseto.TimePtr(now),
+		})
+		if err != nil {
+			panic(err)
+		}
+		ctx.JSON(200, utils.H{
+			"token": encrypted,
+		})
+		fmt.Println(encrypted)
+	})
+	srv.GET("/restricted", auth, func(c context.Context, ctx *frame.Context) {
 		ctx.JSON(200, "Got access")
 	})
 	srv.Spin()
 }
-*/

@@ -69,6 +69,8 @@ type Options struct {
 	// - "cookie:<name>"
 	keyLookup string
 
+	keyLookAuthSchemeMap map[string]string
+
 	// authScheme to be used in the Authorization header.
 	// Optional. Default value "Bearer".
 	authScheme string
@@ -80,6 +82,8 @@ type Options struct {
 	// context key to store the bearertoken from the token into context.
 	// Optional. Default: "token".
 	contextKey string
+
+	hasExpirationKey bool
 }
 
 func (o *Options) Apply(opts []Option) {
@@ -88,7 +92,13 @@ func (o *Options) Apply(opts []Option) {
 	}
 }
 
+func (o *Options) HasExpiration() bool {
+	return o.hasExpirationKey
+}
+
 func NewOptions(opts ...Option) *Options {
+	keySchemeMap := make(map[string]string, 1)
+	keySchemeMap["header:"+consts.HeaderAuthorization] = "Bearer"
 	options := &Options{
 		successHandler: func(c context.Context, ctx *frame.Context) {
 			ctx.Next(c)
@@ -103,9 +113,8 @@ func NewOptions(opts ...Option) *Options {
 		validator: func(ctx context.Context, requestContext *frame.Context, s string) (bool, error) {
 			return true, nil
 		},
-		authScheme: "Bearer",
-		contextKey: "token",
-		keyLookup:  "header:" + consts.HeaderAuthorization,
+		keyLookAuthSchemeMap: keySchemeMap,
+		contextKey:           "token",
 	}
 	options.Apply(opts)
 	return options
@@ -137,8 +146,10 @@ func WithErrorHandler(f KeyAuthErrorHandler) Option {
 
 func WithKeyLookUp(lookup, authScheme string) Option {
 	return Option{func(o *Options) {
-		o.keyLookup = lookup
-		o.authScheme = authScheme
+		if o.keyLookAuthSchemeMap == nil {
+			o.keyLookAuthSchemeMap = make(map[string]string, 1)
+		}
+		o.keyLookAuthSchemeMap[lookup] = authScheme
 	}}
 }
 
@@ -151,5 +162,11 @@ func WithValidator(f KeyAuthValidatorHandler) Option {
 func WithContextKey(key string) Option {
 	return Option{F: func(o *Options) {
 		o.contextKey = key
+	}}
+}
+
+func WithExpiration(key bool) Option {
+	return Option{F: func(o *Options) {
+		o.hasExpirationKey = key
 	}}
 }
