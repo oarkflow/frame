@@ -5,16 +5,34 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/oarkflow/log"
 	"github.com/oarkflow/pkg/paseto"
 
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/middlewares/server/keyauth"
+	logMiddleware "github.com/oarkflow/frame/middlewares/server/log"
 	"github.com/oarkflow/frame/pkg/common/utils"
 	"github.com/oarkflow/frame/server"
 )
 
-func routeUpdate() {
+func main() {
+	log.DefaultLogger = log.Logger{
+		TimeField:     "timestamp",
+		TimeFormat:    "2006-01-02 15:04:05",
+		EnableTracing: true,
+		Writer: &log.ConsoleWriter{
+			ColorOutput:    true,
+			QuoteString:    true,
+			EndWithMessage: true,
+		},
+	}
 	srv := server.New()
+	srv.Use(logMiddleware.New(logMiddleware.Config{
+		EnableTracing: true,
+		UserIdentity: func(c *frame.Context) any {
+			return 1
+		},
+	}))
 	srv.GET("/", func(c context.Context, ctx *frame.Context) {
 		ctx.JSON(200, "Hello world")
 	})
@@ -68,7 +86,7 @@ func pasetoEncDec() {
 	fmt.Println(claim, claim.TokenID)
 }
 
-func main() {
+func ma1in() {
 	srv := server.Default(server.WithHostPorts(":8081"))
 	auth := keyauth.New(
 		keyauth.WithKeyLookUp("query:token", ""),

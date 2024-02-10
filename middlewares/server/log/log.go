@@ -12,10 +12,12 @@ import (
 )
 
 type Config struct {
-	Logger    *log.Logger
-	LogWriter log.Writer
-	RequestID func() string
-	Skip      func(c *frame.Context) bool
+	Logger        *log.Logger
+	LogWriter     log.Writer
+	RequestID     func() string
+	Skip          func(c *frame.Context) bool
+	UserIdentity  func(c *frame.Context) any
+	EnableTracing bool
 }
 
 func New(config Config) frame.HandlerFunc {
@@ -41,8 +43,14 @@ func New(config Config) frame.HandlerFunc {
 
 		if config.Logger == nil {
 			config.Logger = &log.Logger{
-				TimeField:  "timestamp",
-				TimeFormat: "2006-01-02 15:04:05",
+				TimeField:     "timestamp",
+				TimeFormat:    "2006-01-02 15:04:05",
+				EnableTracing: config.EnableTracing,
+				Writer: &log.ConsoleWriter{
+					ColorOutput:    true,
+					QuoteString:    true,
+					EndWithMessage: true,
+				},
 			}
 		}
 		ip := c.ClientIP()
@@ -74,10 +82,16 @@ func New(config Config) frame.HandlerFunc {
 			e = config.Logger.Info()
 			msg = "Unknown"
 		}
-		if !log.DefaultLogger.EnableTracing {
+		if rid != "" {
 			e = e.Str("request_id", rid)
 		}
-		e.WithContext(ctx).Str("log_service", "HTTP Server").
+		if config.UserIdentity != nil {
+			userID := config.UserIdentity(c)
+			if userID != nil {
+				e = e.Any("user_id", userID)
+			}
+		}
+		e.WithContext(ctx).Str("log_service", "HTTP Access").
 			Int("status", status).
 			Str("remote_ip", ip).
 			Str("method", string(c.Method())).
