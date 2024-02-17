@@ -3,51 +3,121 @@ package main
 import (
 	"context"
 	"fmt"
-	"reflect"
+	"log"
+	"time"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
-// TraceDecorator is a higher-order function that adds tracing to a function with any signature.
-func TraceDecorator(fn interface{}) interface{} {
-	tracer := otel.Tracer("function-tracing")
+func initTracing() *otlptrace.Exporter {
 
-	return reflect.MakeFunc(reflect.TypeOf(fn), func(args []reflect.Value) (results []reflect.Value) {
-		// Start a span for the function
-		ctx := context.Background() // Assuming no context is passed to the function
-		ctx, span := tracer.Start(ctx, "function-execution")
-		defer span.End()
+	exporter, err := otlptrace.New(
+		context.Background(),
+		otlptracehttp.NewClient(
+			otlptracehttp.WithInsecure(),
+			otlptracehttp.WithEndpoint("localhost:8081"),
+			otlptracehttp.WithURLPath("/otlp/v1/traces"),
+		),
+	)
 
-		// Prepare the arguments for calling the original function
-		in := make([]reflect.Value, len(args))
-		for i, arg := range args {
-			in[i] = arg
-		}
+	if err != nil {
+		log.Fatalf("Failed to create exporter: %v", err)
+	}
 
-		// Call the original function
-		return reflect.ValueOf(fn).Call(in)
-	}).Interface()
-}
+	resources, err := resource.New(
+		context.Background(),
+		resource.WithAttributes(
+			attribute.String("service.name", "Test Service"),
+			attribute.String("library.language", "go"),
+		),
+	)
 
-// Example functions to be traced
-func myFunction1(ctx context.Context, param1 string) int {
-	fmt.Printf("Executing myFunction1 with param1: %s\n", param1)
-	return 0
-}
+	if err != nil {
+		log.Fatalf("Could not set resources: %v", err)
+	}
 
-func myFunction2(ctx context.Context, param1 int, param2 bool) (int, error) {
-	fmt.Printf("Executing myFunction2 with param1: %d and param2: %t\n", param1, param2)
-	return param1, nil
+	otel.SetTracerProvider(
+		sdktrace.NewTracerProvider(
+			sdktrace.WithSampler(sdktrace.AlwaysSample()),
+			sdktrace.WithBatcher(exporter),
+			sdktrace.WithResource(resources),
+		),
+	)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+	return exporter
 }
 
 func main() {
-	// Wrap myFunction1 with tracing
-	tracedFunction1 := TraceDecorator(myFunction1).(func(context.Context, string) int)
+	exporter := initTracing()
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := exporter.Shutdown(ctx); err != nil {
+			log.Fatalf("failed to shutdown exporter: %v", err)
+		}
+	}()
 
-	// Wrap myFunction2 with tracing
-	tracedFunction2 := TraceDecorator(myFunction2).(func(context.Context, int, bool))
+	// Example function calls
+	ctx := context.Background()
+	_, err := MyFunction1(ctx, "abc")
+	if err != nil {
+		panic(err)
+	}
+	_, err = MyFunction2(ctx, 123, true)
+	if err != nil {
+		panic(err)
+	}
+	<-time.After(10 * time.Second)
+}
 
-	// Call the traced functions
-	tracedFunction1(context.Background(), "abc")
-	tracedFunction2(context.Background(), 123, true)
+// TraceFunction is a higher-order function that adds tracing to a function with any signature.
+func TraceFunction(ctx context.Context, name string, fn func(ctx context.Context, args ...interface{}) (interface{}, error), args ...interface{}) (interface{}, error) {
+	tr := otel.Tracer(name)
+	ctx, span := tr.Start(ctx, name)
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.KeyValue{
+			Key:   "sujit_args",
+			Value: attribute.StringValue(fmt.Sprintf("%v", args)),
+		},
+	)
+
+	return fn(ctx, args...)
+}
+
+// Example functions to be traced
+func MyFunction1(ctx context.Context, param1 string) (string, error) {
+	fn := func(ctx context.Context, args ...interface{}) (interface{}, error) {
+		param1 := args[0].(string)
+		fmt.Printf("Executing MyFunction1 with param1: %s\n", param1)
+		return "result from MyFunction1", nil
+	}
+
+	result, err := TraceFunction(ctx, "MyFunction1", fn, param1)
+	if err != nil {
+		return "", err
+	}
+	return result.(string), nil
+}
+
+func MyFunction2(ctx context.Context, param1 int, param2 bool) (int, error) {
+	fn := func(ctx context.Context, args ...interface{}) (interface{}, error) {
+		param1 := args[0].(int)
+		param2 := args[1].(bool)
+		fmt.Printf("Executing MyFunction2 with param1: %d and param2: %t\n", param1, param2)
+		return param1 * 2, nil
+	}
+
+	result, err := TraceFunction(ctx, "MyFunction2", fn, param1, param2)
+	if err != nil {
+		return 0, err
+	}
+	return result.(int), nil
 }
