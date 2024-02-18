@@ -81,14 +81,9 @@ func TraceFunction(ctx context.Context, name string, fn func(ctx context.Context
 	tr := otel.Tracer(name)
 	ctx, span := tr.Start(ctx, name)
 	defer span.End()
-
 	span.SetAttributes(
-		attribute.KeyValue{
-			Key:   "sujit_args",
-			Value: attribute.StringValue(fmt.Sprintf("%v", args)),
-		},
+		attribute.String("my_file", "test.txt"),
 	)
-
 	return fn(ctx, args...)
 }
 
