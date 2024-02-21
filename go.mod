@@ -5,7 +5,7 @@ go 1.22.0
 replace github.com/bytedance/go-tagexpr/v2 => github.com/sujit-baniya/go-tagexpr/v2 v2.9.14
 
 require (
-	github.com/bytedance/go-tagexpr/v2 v2.0.0-00010101000000-000000000000
+	github.com/bytedance/go-tagexpr/v2 v2.9.11
 	github.com/bytedance/gopkg v0.0.0-20240202110943-5e26950c5e57
 	github.com/c9s/goprocinfo v0.0.0-20210130143923-c95fcf8c64a8
 	github.com/cloudwego/netpoll v0.5.2-0.20240206071512-faa52638971c
