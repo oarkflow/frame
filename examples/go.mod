@@ -26,9 +26,11 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.0 // indirect
 	github.com/nyaruka/phonenumbers v1.0.55 // indirect
+	github.com/philhofer/fwd v1.1.2 // indirect
 	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
+	github.com/tinylib/msgp v1.1.9 // indirect
 	go.opentelemetry.io/otel/metric v1.23.1 // indirect
 	go.opentelemetry.io/otel/trace v1.23.1 // indirect
 	go.opentelemetry.io/proto/otlp v1.1.0 // indirect

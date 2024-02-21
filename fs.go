@@ -1267,3 +1267,17 @@ func NewPathSlashesStripper(slashesCount int) PathRewriteFunc {
 		return stripLeadingSlashes(ctx.Path(), slashesCount)
 	}
 }
+
+// IsMethodSafe reports whether the HTTP method is considered safe.
+// See https://datatracker.ietf.org/doc/html/rfc9110#section-9.2.1
+func IsMethodSafe(m string) bool {
+	switch m {
+	case consts.MethodGet,
+		consts.MethodHead,
+		consts.MethodOptions,
+		consts.MethodTrace:
+		return true
+	default:
+		return false
+	}
+}
