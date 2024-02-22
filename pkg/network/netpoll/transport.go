@@ -32,6 +32,14 @@ import (
 	"github.com/oarkflow/frame/pkg/network"
 )
 
+const ctxCancelKey = "ctxCancelKey"
+
+func cancelContext(ctx context.Context) context.Context {
+	ctx, cancel := context.WithCancel(ctx)
+	ctx = context.WithValue(ctx, ctxCancelKey, cancel)
+	return ctx
+}
+
 type transporter struct {
 	sync.RWMutex
 	senseClientDisconnection bool
@@ -98,10 +106,14 @@ func (t *transporter) ListenAndServe(onReq network.OnData) (err error) {
 			if t.writeTimeout > 0 {
 				conn.SetWriteTimeout(t.writeTimeout)
 			}
+			ctx := context.Background()
 			if t.OnAccept != nil {
-				return t.OnAccept(newConn(conn))
+				ctx = t.OnAccept(newConn(conn))
 			}
-			return context.Background()
+			if t.senseClientDisconnection {
+				ctx = cancelContext(ctx)
+			}
+			return ctx
 		}),
 	}
 	if t.OnConnect != nil {

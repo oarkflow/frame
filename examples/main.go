@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/oarkflow/log"
 	"github.com/oarkflow/pkg/paseto"
 
 	"github.com/oarkflow/frame"
@@ -16,7 +15,7 @@ import (
 )
 
 func main() {
-	log.DefaultLogger = log.Logger{
+	/*log.DefaultLogger = log.Logger{
 		TimeField:     "timestamp",
 		TimeFormat:    "2006-01-02 15:04:05",
 		EnableTracing: true,
@@ -26,6 +25,7 @@ func main() {
 			EndWithMessage: true,
 		},
 	}
+	*/
 	srv := server.New()
 	srv.Use(logMiddleware.New(logMiddleware.Config{
 		EnableTracing: true,
@@ -33,6 +33,10 @@ func main() {
 			return 1
 		},
 	}))
+	/*
+		hndlr := func(c context.Context, ctx *frame.Context) {
+			ctx.AbortWithJSON(200, utils.H{"error": "This is error"})
+		}*/
 	srv.GET("/", func(c context.Context, ctx *frame.Context) {
 		ctx.JSON(200, "Hello world")
 	})
