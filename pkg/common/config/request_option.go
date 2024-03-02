@@ -21,16 +21,13 @@ import "time"
 var preDefinedOpts []RequestOption
 
 type RequestOptions struct {
-	tags map[string]string
-	isSD bool
-
-	dialTimeout  time.Duration
-	readTimeout  time.Duration
-	writeTimeout time.Duration
-	// Request timeout. Usually set by DoDeadline or DoTimeout
-	// if <= 0, means not set
-	requestTimeout time.Duration
 	start          time.Time
+	tags           map[string]string
+	dialTimeout    time.Duration
+	readTimeout    time.Duration
+	writeTimeout   time.Duration
+	requestTimeout time.Duration
+	isSD           bool
 }
 
 // RequestOption is the only struct to set request-level options.

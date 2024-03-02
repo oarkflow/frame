@@ -44,65 +44,48 @@ const (
 )
 
 type Options struct {
-	KeepAliveTimeout             time.Duration
-	ReadTimeout                  time.Duration
-	WriteTimeout                 time.Duration
-	IdleTimeout                  time.Duration
-	RedirectTrailingSlash        bool
-	MaxRequestBodySize           int
-	MaxKeepBodySize              int
-	GetOnly                      bool
-	DisableKeepalive             bool
-	RedirectFixedPath            bool
-	HandleMethodNotAllowed       bool
-	UseRawPath                   bool
-	RemoveExtraSlash             bool
-	UnescapePathValues           bool
-	DisablePreParseMultipartForm bool
-	NoDefaultDate                bool
-	NoDefaultContentType         bool
-	StreamRequestBody            bool
-	NoDefaultServerHeader        bool
-	DisablePrintRoute            bool
-	SenseClientDisconnection     bool
+	TraceLevel                   interface{}
+	Registry                     registry.Registry
+	OnConnect                    func(ctx context.Context, conn network.Conn) context.Context
+	ListenConfig                 *net.ListenConfig
+	TransporterNewer             func(opt *Options) network.Transporter
+	AltTransporterNewer          func(opt *Options) network.Transporter
+	TLS                          *tls.Config
+	OnAccept                     func(conn net.Conn) context.Context
+	RegistryInfo                 *registry.Info
 	Network                      string
-	Addr                         string
-	BasePath                     string
 	Layout                       string
 	AuthUserKey                  string
-	ExitWaitTimeout              time.Duration
-	TLS                          *tls.Config
-	H2C                          bool
-	ReadBufferSize               int
-	ALPN                         bool
+	Addr                         string
+	BasePath                     string
 	Tracers                      []interface{}
-	TraceLevel                   interface{}
-	ListenConfig                 *net.ListenConfig
-
-	// TransporterNewer is the function to create a transporter.
-	TransporterNewer    func(opt *Options) network.Transporter
-	AltTransporterNewer func(opt *Options) network.Transporter
-
-	// In netpoll library, OnAccept is called after connection accepted
-	// but before adding it to epoll. OnConnect is called after adding it to epoll.
-	// The difference is that onConnect can get data but OnAccept cannot.
-	// If you'd like to check whether the peer IP is in the blacklist, you can use OnAccept.
-	// In go net, OnAccept is executed after connection accepted but before establishing
-	// tls connection. OnConnect is executed after establishing tls connection.
-	OnAccept  func(conn net.Conn) context.Context
-	OnConnect func(ctx context.Context, conn network.Conn) context.Context
-
-	// Registry is used for service registry.
-	Registry registry.Registry
-	// RegistryInfo is base info used for service registry.
-	RegistryInfo *registry.Info
-	// Enable automatically HTML template reloading mechanism.
-
-	AutoReloadRender bool
-	// If AutoReloadInterval is set to 0(default).
-	// The HTML template will reload according to files' changing event
-	// otherwise it will reload after AutoReloadInterval.
-	AutoReloadInterval time.Duration
+	MaxKeepBodySize              int
+	ReadBufferSize               int
+	MaxRequestBodySize           int
+	ExitWaitTimeout              time.Duration
+	AutoReloadInterval           time.Duration
+	KeepAliveTimeout             time.Duration
+	IdleTimeout                  time.Duration
+	WriteTimeout                 time.Duration
+	ReadTimeout                  time.Duration
+	SenseClientDisconnection     bool
+	DisablePrintRoute            bool
+	NoDefaultServerHeader        bool
+	StreamRequestBody            bool
+	H2C                          bool
+	NoDefaultContentType         bool
+	ALPN                         bool
+	NoDefaultDate                bool
+	DisablePreParseMultipartForm bool
+	UnescapePathValues           bool
+	RemoveExtraSlash             bool
+	UseRawPath                   bool
+	HandleMethodNotAllowed       bool
+	RedirectFixedPath            bool
+	DisableKeepalive             bool
+	GetOnly                      bool
+	AutoReloadRender             bool
+	RedirectTrailingSlash        bool
 }
 
 func (o *Options) Apply(opts []Option) {

@@ -58,9 +58,9 @@ import (
 )
 
 type router struct {
-	method        string
 	root          *node
 	hasTsrHandler map[string]bool
+	method        string
 }
 
 type MethodTrees []*router
@@ -84,20 +84,17 @@ func countParams(path string) uint16 {
 
 type (
 	node struct {
-		kind     kind
-		label    byte
-		prefix   string
-		parent   *node
-		children children
-		// original path
-		ppath string
-		// param names
-		pnames     []string
-		handlers   frame.HandlersChain
+		parent     *node
 		paramChild *node
 		anyChild   *node
-		// isLeaf indicates that node does not have child routes
-		isLeaf bool
+		prefix     string
+		ppath      string
+		children   children
+		pnames     []string
+		handlers   frame.HandlersChain
+		kind       kind
+		label      byte
+		isLeaf     bool
 	}
 	kind     uint8
 	children []*node
@@ -519,10 +516,10 @@ func newNode(t kind, pre string, p *node, child children, mh frame.HandlersChain
 
 // nodeValue holds return values of (*Node).getValue method
 type nodeValue struct {
+	currentNode *node
+	fullPath    string
 	handlers    frame.HandlersChain
 	tsr         bool
-	fullPath    string
-	currentNode *node
 }
 
 // Makes a case-insensitive lookup of the given path and tries to find a handler.

@@ -87,43 +87,25 @@ var errTimeout = errs.New(errs.ErrTimeout, errs.ErrorTypePublic, "host client")
 //
 // It is safe calling HostClient methods from concurrently running goroutines.
 type HostClient struct {
-	noCopy nocopy.NoCopy //lint:ignore U1000 until noCopy is used
-
-	*ClientOptions
-
-	// Comma-separated list of upstream HTTP server host addresses,
-	// which are passed to Dialer in a round-robin manner.
-	//
-	// Each address may contain port if default dialer is used.
-	// For example,
-	//
-	//    - foobar.com:80
-	//    - foobar.com:443
-	//    - foobar.com:8080
-	Addr     string
-	IsTLS    bool
-	ProxyURI *protocol.URI
-
-	clientName  atomic.Value
-	lastUseTime uint32
-
-	connsLock  sync.Mutex
-	connsCount int
-	conns      []*clientConn
+	noCopy     nocopy.NoCopy
+	clientName atomic.Value
 	connsWait  *wantConnQueue
-
-	addrsLock sync.Mutex
-	addrs     []string
-	addrIdx   uint32
-
+	*ClientOptions
+	closed           chan struct{}
+	ProxyURI         *protocol.URI
 	tlsConfigMap     map[string]*tls.Config
+	Addr             string
+	addrs            []string
+	conns            []*clientConn
+	connsCount       int
+	addrsLock        sync.Mutex
+	connsLock        sync.Mutex
 	tlsConfigMapLock sync.Mutex
-
-	pendingRequests int32
-
-	connsCleanerRun bool
-
-	closed chan struct{}
+	addrIdx          uint32
+	lastUseTime      uint32
+	pendingRequests  int32
+	connsCleanerRun  bool
+	IsTLS            bool
 }
 
 func (c *HostClient) SetDynamicConfig(dc *client.DynamicConfig) {
@@ -240,19 +222,9 @@ func (c *HostClient) Post(ctx context.Context, dst []byte, url string, postArgs 
 //
 // inspired by net/http/transport.go
 type wantConnQueue struct {
-	// This is a queue, not a deque.
-	// It is split into two stages - head[headPos:] and tail.
-	// popFront is trivial (headPos++) on the first stage, and
-	// pushBack is trivial (append) on the second stage.
-	// If the first stage is empty, popFront can swap the
-	// first and second stages to remedy the situation.
-	//
-	// This two-stage split is analogous to the use of two lists
-	// in Okasaki's purely functional queue but without the
-	// overhead of reversing the list when swapping stages.
 	head    []*wantConn
-	headPos int
 	tail    []*wantConn
+	headPos int
 }
 
 // A wantConn records state about a wanted connection
@@ -264,10 +236,10 @@ type wantConnQueue struct {
 //
 // inspired by net/http/transport.go
 type wantConn struct {
-	ready chan struct{}
-	mu    sync.Mutex // protects conn, err, close(ready)
-	conn  *clientConn
 	err   error
+	ready chan struct{}
+	conn  *clientConn
+	mu    sync.Mutex
 }
 
 // DoTimeout performs the given request and waits for response during
@@ -1207,116 +1179,24 @@ func NewHostClient(c *ClientOptions) client.HostClient {
 }
 
 type ClientOptions struct {
-	// Client name. Used in User-Agent request header.
-	Name string
-
-	// NoDefaultUserAgentHeader when set to true, causes the default
-	// User-Agent header to be excluded from the Request.
-	NoDefaultUserAgentHeader bool
-
-	// Callback for establishing new connection to the host.
-	//
-	// Default Dialer is used if not set.
-	Dialer network.Dialer
-
-	// Timeout for establishing new connections to hosts.
-	//
-	// Default DialTimeout is used if not set.
-	DialTimeout time.Duration
-
-	// Attempt to connect to both ipv4 and ipv6 host addresses
-	// if set to true.
-	//
-	// This option is used only if default TCP dialer is used,
-	// i.e. if Dialer is blank.
-	//
-	// By default client connects only to ipv4 addresses,
-	// since unfortunately ipv6 remains broken in many networks worldwide :)
-	DialDualStack bool
-
-	// Whether to use TLS (aka SSL or HTTPS) for host connections.
-	// Optional TLS config.
-	TLSConfig *tls.Config
-
-	// Maximum number of connections which may be established to all hosts
-	// listed in Addr.
-	//
-	// You can change this value while the HostClient is being used
-	// using HostClient.SetMaxConns(value)
-	//
-	// DefaultMaxConnsPerHost is used if not set.
-	MaxConns int
-
-	// Keep-alive connections are closed after this duration.
-	//
-	// By default connection duration is unlimited.
-	MaxConnDuration time.Duration
-
-	// Idle keep-alive connections are closed after this duration.
-	//
-	// By default idle connections are closed
-	// after DefaultMaxIdleConnDuration.
-	MaxIdleConnDuration time.Duration
-
-	// Maximum duration for full response reading (including body).
-	//
-	// By default response read timeout is unlimited.
-	ReadTimeout time.Duration
-
-	// Maximum duration for full request writing (including body).
-	//
-	// By default request write timeout is unlimited.
-	WriteTimeout time.Duration
-
-	// Maximum response body size.
-	//
-	// The client returns errBodyTooLarge if this limit is greater than 0
-	// and response body is greater than the limit.
-	//
-	// By default response body size is unlimited.
-	MaxResponseBodySize int
-
-	// Header names are passed as-is without normalization
-	// if this option is set.
-	//
-	// Disabled header names' normalization may be useful only for proxying
-	// responses to other clients expecting case-sensitive header names.
-	//
-	// By default request and response header names are normalized, i.e.
-	// The first letter and the first letters following dashes
-	// are uppercased, while all the other letters are lowercased.
-	// Examples:
-	//
-	//     * HOST -> Host
-	//     * content-type -> Content-Type
-	//     * cONTENT-lenGTH -> Content-Length
+	Dialer                        network.Dialer
+	StateObserve                  config.HostClientStateFunc
+	RetryIfFunc                   client.RetryIfFunc
+	RetryConfig                   *retry.Config
+	TLSConfig                     *tls.Config
+	Name                          string
+	WriteTimeout                  time.Duration
+	DialTimeout                   time.Duration
+	MaxIdleConnDuration           time.Duration
+	ReadTimeout                   time.Duration
+	MaxConns                      int
+	MaxResponseBodySize           int
+	ObservationInterval           time.Duration
+	MaxConnDuration               time.Duration
+	MaxConnWaitTimeout            time.Duration
+	DisablePathNormalizing        bool
+	DialDualStack                 bool
+	ResponseBodyStream            bool
+	NoDefaultUserAgentHeader      bool
 	DisableHeaderNamesNormalizing bool
-
-	// Path values are sent as-is without normalization
-	//
-	// Disabled path normalization may be useful for proxying incoming requests
-	// to servers that are expecting paths to be forwarded as-is.
-	//
-	// By default path values are normalized, i.e.
-	// extra slashes are removed, special characters are encoded.
-	DisablePathNormalizing bool
-
-	// Maximum duration for waiting for a free connection.
-	//
-	// By default will not wait, return ErrNoFreeConns immediately
-	MaxConnWaitTimeout time.Duration
-
-	// ResponseBodyStream enables response body streaming
-	ResponseBodyStream bool
-
-	// All configurations related to retry
-	RetryConfig *retry.Config
-
-	RetryIfFunc client.RetryIfFunc
-
-	// Observe hostclient state
-	StateObserve config.HostClientStateFunc
-
-	// StateObserve execution interval
-	ObservationInterval time.Duration
 }

@@ -76,11 +76,11 @@ type HostClient interface {
 }
 
 type Response struct {
-	Body       []byte
+	Error      error
 	Header     map[string][]byte
 	Cookie     map[string][]byte
+	Body       []byte
 	StatusCode int
-	Error      error
 }
 
 type Doer interface {
@@ -123,8 +123,8 @@ func isIdempotent(req *protocol.Request, resp *protocol.Response, err error) boo
 
 // DynamicConfig is config set which will be confirmed when starts a request.
 type DynamicConfig struct {
-	Addr     string
 	ProxyURI *protocol.URI
+	Addr     string
 	IsTLS    bool
 }
 
@@ -133,11 +133,11 @@ type DynamicConfig struct {
 type RetryIfFunc func(req *protocol.Request, resp *protocol.Response, err error) bool
 
 type clientURLResponse struct {
-	statusCode int
-	body       []byte
 	err        error
 	header     map[string][]byte
 	cookie     map[string][]byte
+	body       []byte
+	statusCode int
 }
 
 func GetURL(ctx context.Context, dst []byte, url string, c Doer, requestOptions ...config.RequestOption) (response Response) {

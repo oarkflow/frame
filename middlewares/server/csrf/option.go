@@ -66,43 +66,12 @@ type CsrfExtractorHandler func(ctx context.Context, c *frame.Context) (string, e
 
 // Options defines the config for middleware.
 type Options struct {
-	// Secret used to generate token.
-	//
-	// Default: csrfSecret
-	Secret string
-
-	// Ignored methods will be considered no protection required.
-	//
-	// Optional. Default: "GET", "HEAD", "OPTIONS", "TRACE"
+	Next          CsrfNextHandler
+	ErrorFunc     frame.HandlerFunc
+	Extractor     CsrfExtractorHandler
+	Secret        string
+	KeyLookup     string
 	IgnoreMethods []string
-
-	// Next defines a function to skip this middleware when returned true.
-	//
-	// Optional. Default: nil
-	Next CsrfNextHandler
-
-	// KeyLookup is a string in the form of "<source>:<key>" that is used
-	// to create an Extractor that extracts the token from the request.
-	// Possible values:
-	// - "header:<name>"
-	// - "query:<name>"
-	// - "param:<name>"
-	// - "form:<name>"
-	//
-	// Optional. Default: "header:X-CSRF-TOKEN"
-	KeyLookup string
-
-	// ErrorFunc is executed when an error is returned from frame.HandlerFunc.
-	//
-	// Optional. Default: func(context context.Context, c *frame.Context) { panic(c.Errors.Last()) }
-	ErrorFunc frame.HandlerFunc
-
-	// Extractor returns the csrf token.
-	//
-	// If set this will be used in place of an Extractor based on KeyLookup.
-	//
-	// Optional. Default will create an Extractor based on KeyLookup.
-	Extractor CsrfExtractorHandler
 }
 
 func (o *Options) Apply(opts []Option) {

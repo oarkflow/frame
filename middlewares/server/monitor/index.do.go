@@ -8,10 +8,10 @@ import (
 
 type viewBag struct {
 	title      string
-	refresh    time.Duration
 	fontURL    string
 	chartJSURL string
 	customHead string
+	refresh    time.Duration
 }
 
 // returns index with new title/refresh

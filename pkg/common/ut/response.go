@@ -25,26 +25,11 @@ import (
 
 // ResponseRecorder records handler's response for later test
 type ResponseRecorder struct {
-	// Code is the HTTP response code set by WriteHeader.
-	//
-	// Note that if a Handler never calls WriteHeader or Write,
-	// this might end up being 0, rather than the implicit
-	// http.StatusOK. To get the implicit value, use the Result
-	// method.
-	Code int
-
-	// header contains the headers explicitly set by the Handler.
-	// It is an internal detail.
-	header *protocol.ResponseHeader
-
-	// Body is the buffer to which the Handler's Write calls are sent.
-	// If nil, the Writes are silently discarded.
-	Body *bytes.Buffer
-
-	// Flushed is whether the Handler called Flush.
-	Flushed bool
-
-	result      *protocol.Response // cache of Result's return value
+	header      *protocol.ResponseHeader
+	Body        *bytes.Buffer
+	result      *protocol.Response
+	Code        int
+	Flushed     bool
 	wroteHeader bool
 }
 

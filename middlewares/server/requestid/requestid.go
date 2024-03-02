@@ -88,13 +88,9 @@ func WithHandler(handler Handler) Option {
 
 // config defines the config for RequestID middleware
 type config struct {
-	// Generator defines a function to generate an ID.
-	// Optional. Default: func() string {
-	//   return uuid.New().String()
-	// }
 	generator Generator
-	headerKey HeaderStrKey
 	handler   Handler
+	headerKey HeaderStrKey
 }
 
 // Get returns the request identifier

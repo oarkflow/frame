@@ -80,15 +80,14 @@ func init() {
 // A Node struct holds the basic information needed for a snowflake generator
 // node
 type Node struct {
-	mu    sync.Mutex
-	epoch time.Time
-	time  int64
-	node  int64
-	step  int64
-
+	epoch     time.Time
+	time      int64
+	node      int64
+	step      int64
 	nodeMax   int64
 	nodeMask  int64
 	stepMask  int64
+	mu        sync.Mutex
 	timeShift uint8
 	nodeShift uint8
 }

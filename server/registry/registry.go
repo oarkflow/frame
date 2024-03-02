@@ -31,14 +31,10 @@ type Registry interface {
 // Info is used for registry.
 // The fields are just suggested, which is used depends on design.
 type Info struct {
-	// ServiceName will be set in frame by default
+	Addr        net.Addr
+	Tags        map[string]string
 	ServiceName string
-	// Addr will be set in frame by default
-	Addr net.Addr
-	// Weight will be set in frame by default
-	Weight int
-	// extend other infos with Tags.
-	Tags map[string]string
+	Weight      int
 }
 
 // NoopRegistry is an empty implement of Registry

@@ -47,9 +47,9 @@ var (
 type (
 	Options struct {
 		ExcludedExtensions  ExcludedExtensions
+		DecompressFn        frame.HandlerFunc
 		ExcludedPaths       ExcludedPaths
 		ExcludedPathRegexes ExcludedPathRegexes
-		DecompressFn        frame.HandlerFunc
 	}
 	Option              func(*Options)
 	ExcludedExtensions  map[string]bool

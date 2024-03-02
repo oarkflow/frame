@@ -4,20 +4,8 @@ import "github.com/oarkflow/frame"
 
 // Config defines the config for middleware.
 type Config struct {
-	// Weak indicates that a weak validator is used. Weak etags are easy
-	// to generate, but are far less useful for comparisons. Strong
-	// validators are ideal for comparisons but can be very difficult
-	// to generate efficiently. Weak ETag values of two representations
-	// of the same resources might be semantically equivalent, but not
-	// byte-for-byte identical. This means weak etags prevent caching
-	// when byte range requests are used, but strong etags mean range
-	// requests can still be cached.
-	Weak bool
-
-	// Next defines a function to skip this middleware when returned true.
-	//
-	// Optional. Default: nil
 	Next func(c *frame.Context) bool
+	Weak bool
 }
 
 // ConfigDefault is the default config

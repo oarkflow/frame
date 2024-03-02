@@ -73,8 +73,8 @@ type ServerMap map[string]protocol.Server
 type StreamServerMap map[string]protocol.StreamServer
 
 type altServerConfig struct {
-	targetProtocol   string
 	setAltHeaderFunc func(ctx context.Context, reqCtx *frame.Context)
+	targetProtocol   string
 }
 
 type coreWrapper struct {

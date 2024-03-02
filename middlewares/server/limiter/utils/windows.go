@@ -24,12 +24,12 @@ import (
 type (
 	RollingWindowOption func(rollingWindow *RollingWindow)
 	RollingWindow       struct {
-		lock          sync.RWMutex
-		size          int
+		lastTime      time.Time
 		win           *window
+		size          int
 		interval      time.Duration
 		offset        int
-		lastTime      time.Time
+		lock          sync.RWMutex
 		ignoreCurrent bool
 	}
 )

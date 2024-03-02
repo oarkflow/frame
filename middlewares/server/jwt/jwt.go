@@ -37,7 +37,7 @@ import (
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/pkg/protocol"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // MapClaims type that uses the map[string]interface{} for JSON decoding
@@ -50,138 +50,43 @@ type MapClaims map[string]interface{}
 // Users can get a token by posting a json request to LoginHandler. The token then needs to be passed in
 // the Authentication header. Example: Authorization:Bearer XXX_TOKEN_XXX
 type FrameJWTMiddleware struct {
-	// Realm name to display to the user. Required.
-	Realm string
-
-	// signing algorithm - possible values are HS256, HS384, HS512, RS256, RS384 or RS512
-	// Optional, default is HS256.
-	SigningAlgorithm string
-
-	// Secret key used for signing. Required.
-	Key []byte
-
-	// Callback to retrieve key used for signing. Setting KeyFunc will bypass
-	// all other key settings
-	KeyFunc func(token *jwt.Token) (interface{}, error)
-
-	// Duration that a jwt token is valid. Optional, defaults to one hour.
-	Timeout time.Duration
-
-	// This field allows clients to refresh their token until MaxRefresh has passed.
-	// Note that clients can refresh their token in the last moment of MaxRefresh.
-	// This means that the maximum validity timespan for a token is TokenTime + MaxRefresh.
-	// Optional, defaults to 0 meaning not refreshable.
-	MaxRefresh time.Duration
-
-	// Callback function that should perform the authentication of the user based on login info.
-	// Must return user data as user identifier, it will be stored in Claim Array. Required.
-	// Check error (e) to determine the appropriate error message.
-	Authenticator func(ctx context.Context, c *frame.Context) (interface{}, error)
-
-	// Callback function that should perform the authorization of the authenticated user. Called
-	// only after an authentication success. Must return true on success, false on failure.
-	// Optional, default to success.
-	Authorizator func(data interface{}, ctx context.Context, c *frame.Context) bool
-
-	// Callback function that will be called during login.
-	// Using this function it is possible to add additional payload data to the webtoken.
-	// The data is then made available during requests via c.Get("JWT_PAYLOAD").
-	// Note that the payload is not encrypted.
-	// The attributes mentioned on jwt.io can't be used as keys for the map.
-	// Optional, by default no additional data will be set.
-	PayloadFunc func(data interface{}) MapClaims
-
-	// User can define own Unauthorized func.
-	Unauthorized func(ctx context.Context, c *frame.Context, code int, message string)
-
-	// User can define own LoginResponse func.
-	LoginResponse func(ctx context.Context, c *frame.Context, code int, message string, time time.Time)
-
-	// User can define own LogoutResponse func.
-	LogoutResponse func(ctx context.Context, c *frame.Context, code int)
-
-	// User can define own RefreshResponse func.
-	RefreshResponse func(ctx context.Context, c *frame.Context, code int, message string, time time.Time)
-
-	// Set the identity handler function
-	IdentityHandler func(ctx context.Context, c *frame.Context) interface{}
-
-	// Set the identity key
-	IdentityKey string
-
-	// TokenLookup is a string in the form of "<source>:<name>" that is used
-	// to extract token from the request.
-	// Optional. Default value "header:Authorization".
-	// Possible values:
-	// - "header:<name>"
-	// - "query:<name>"
-	// - "cookie:<name>"
-	TokenLookup string
-
-	// TokenHeadName is a string in the header. Default value is "Bearer"
-	TokenHeadName string
-
-	// WithoutDefaultTokenHeadName allow set empty TokenHeadName
+	TimeFunc                    func() time.Time
+	IdentityHandler             func(ctx context.Context, c *frame.Context) interface{}
+	privKey                     *rsa.PrivateKey
+	KeyFunc                     func(token *jwt.Token) (interface{}, error)
+	HTTPStatusMessageFunc       func(e error, ctx context.Context, c *frame.Context) string
+	pubKey                      *rsa.PublicKey
+	Authenticator               func(ctx context.Context, c *frame.Context) (interface{}, error)
+	Authorizator                func(data interface{}, ctx context.Context, c *frame.Context) bool
+	PayloadFunc                 func(data interface{}) MapClaims
+	Unauthorized                func(ctx context.Context, c *frame.Context, code int, message string)
+	LoginResponse               func(ctx context.Context, c *frame.Context, code int, message string, time time.Time)
+	LogoutResponse              func(ctx context.Context, c *frame.Context, code int)
+	RefreshResponse             func(ctx context.Context, c *frame.Context, code int, message string, time time.Time)
+	SigningAlgorithm            string
+	IdentityKey                 string
+	TokenLookup                 string
+	TokenHeadName               string
+	CookieDomain                string
+	Realm                       string
+	CookieName                  string
+	PrivKeyFile                 string
+	PubKeyFile                  string
+	PrivateKeyPassphrase        string
+	PrivKeyBytes                []byte
+	PubKeyBytes                 []byte
+	Key                         []byte
+	CookieSameSite              protocol.CookieSameSite
+	CookieMaxAge                time.Duration
+	MaxRefresh                  time.Duration
+	Timeout                     time.Duration
+	SendCookie                  bool
+	SecureCookie                bool
+	CookieHTTPOnly              bool
 	WithoutDefaultTokenHeadName bool
-
-	// TimeFunc provides the current time. You can override it to use another time value. This is useful for testing or if your server uses a different time zone than your tokens.
-	TimeFunc func() time.Time
-
-	// HTTP Status messages for when something in the JWT middleware fails.
-	// Check error (e) to determine the appropriate error message.
-	HTTPStatusMessageFunc func(e error, ctx context.Context, c *frame.Context) string
-
-	// Private key file for asymmetric algorithms
-	PrivKeyFile string
-
-	// Private Key bytes for asymmetric algorithms
-	//
-	// Note: PrivKeyFile takes precedence over PrivKeyBytes if both are set
-	PrivKeyBytes []byte
-
-	// Public key file for asymmetric algorithms
-	PubKeyFile string
-
-	// Private key passphrase
-	PrivateKeyPassphrase string
-
-	// Public key bytes for asymmetric algorithms.
-	//
-	// Note: PubKeyFile takes precedence over PubKeyBytes if both are set
-	PubKeyBytes []byte
-
-	// Private key
-	privKey *rsa.PrivateKey
-
-	// Public key
-	pubKey *rsa.PublicKey
-
-	// Optionally return the token as a cookie
-	SendCookie bool
-
-	// Duration that a cookie is valid. Optional, by default equals to Timeout value.
-	CookieMaxAge time.Duration
-
-	// Allow insecure cookies for development over http
-	SecureCookie bool
-
-	// Allow cookies to be accessed client side for development
-	CookieHTTPOnly bool
-
-	// Allow cookie domain change for development
-	CookieDomain string
-
-	// SendAuthorization allow return authorization header for every request
-	SendAuthorization bool
-
-	// Disable abort() of context.
-	DisabledAbort bool
-
-	// CookieName allow cookie name change for development
-	CookieName string
-
-	// CookieSameSite allow use protocol.CookieSameSite cookie param
-	CookieSameSite protocol.CookieSameSite
+	SendAuthorization           bool
+	DisabledAbort               bool
+	PartialCookie               bool
 }
 
 var (
@@ -537,7 +442,7 @@ func (mw *FrameJWTMiddleware) LoginHandler(ctx context.Context, c *frame.Context
 	if mw.SendCookie {
 		expireCookie := mw.TimeFunc().Add(mw.CookieMaxAge)
 		maxage := int(expireCookie.Unix() - mw.TimeFunc().Unix())
-		c.SetCookie(mw.CookieName, tokenString, maxage, "/", mw.CookieDomain, mw.CookieSameSite, mw.SecureCookie, mw.CookieHTTPOnly)
+		c.SetCookie(mw.CookieName, tokenString, maxage, "/", mw.CookieDomain, mw.CookieSameSite, mw.SecureCookie, mw.CookieHTTPOnly, mw.PartialCookie)
 	}
 
 	mw.LoginResponse(ctx, c, http.StatusOK, tokenString, expire)
@@ -547,7 +452,7 @@ func (mw *FrameJWTMiddleware) LoginHandler(ctx context.Context, c *frame.Context
 func (mw *FrameJWTMiddleware) LogoutHandler(ctx context.Context, c *frame.Context) {
 	// delete auth cookie
 	if mw.SendCookie {
-		c.SetCookie(mw.CookieName, "", -1, "/", mw.CookieDomain, mw.CookieSameSite, mw.SecureCookie, mw.CookieHTTPOnly)
+		c.SetCookie(mw.CookieName, "", -1, "/", mw.CookieDomain, mw.CookieSameSite, mw.SecureCookie, mw.CookieHTTPOnly, mw.PartialCookie)
 	}
 
 	mw.LogoutResponse(ctx, c, http.StatusOK)
@@ -604,7 +509,7 @@ func (mw *FrameJWTMiddleware) RefreshToken(ctx context.Context, c *frame.Context
 	if mw.SendCookie {
 		expireCookie := mw.TimeFunc().Add(mw.CookieMaxAge)
 		maxage := int(expireCookie.Unix() - time.Now().Unix())
-		c.SetCookie(mw.CookieName, tokenString, maxage, "/", mw.CookieDomain, mw.CookieSameSite, mw.SecureCookie, mw.CookieHTTPOnly)
+		c.SetCookie(mw.CookieName, tokenString, maxage, "/", mw.CookieDomain, mw.CookieSameSite, mw.SecureCookie, mw.CookieHTTPOnly, mw.PartialCookie)
 	}
 
 	return tokenString, expire, nil
@@ -614,10 +519,7 @@ func (mw *FrameJWTMiddleware) RefreshToken(ctx context.Context, c *frame.Context
 func (mw *FrameJWTMiddleware) CheckIfTokenExpire(ctx context.Context, c *frame.Context) (jwt.MapClaims, error) {
 	token, err := mw.ParseToken(ctx, c)
 	if err != nil {
-		validationErr, ok := err.(*jwt.ValidationError)
-		if !ok || validationErr.Errors != jwt.ValidationErrorExpired {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	claims := token.Claims.(jwt.MapClaims)

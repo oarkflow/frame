@@ -26,8 +26,8 @@ import (
 )
 
 type TargetInfo struct {
-	Host string
 	Tags map[string]string
+	Host string
 }
 
 type Resolver interface {
@@ -76,8 +76,8 @@ type Instance interface {
 
 type instance struct {
 	addr   net.Addr
-	weight int
 	tags   map[string]string
+	weight int
 }
 
 func (i *instance) Address() net.Addr {

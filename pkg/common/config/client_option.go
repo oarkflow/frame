@@ -27,14 +27,10 @@ import (
 )
 
 type ConnPoolState struct {
-	// The conn num of conn pool. These conns are idle connections.
-	PoolConnNum int
-	// Total conn num.
+	Addr         string
+	PoolConnNum  int
 	TotalConnNum int
-	// Number of pending connections
-	WaitConnNum int
-	// HostClient Addr
-	Addr string
+	WaitConnNum  int
 }
 
 type HostClientState interface {
@@ -49,86 +45,26 @@ type ClientOption struct {
 }
 
 type ClientOptions struct {
-	// Timeout for establishing a connection to server
-	DialTimeout time.Duration
-	// The max connection nums for each host
-	MaxConnsPerHost int
-
-	MaxIdleConnDuration time.Duration
-	MaxConnDuration     time.Duration
-	MaxConnWaitTimeout  time.Duration
-	KeepAlive           bool
-	ReadTimeout         time.Duration
-	TLSConfig           *tls.Config
-	ResponseBodyStream  bool
-
-	// Client name. Used in User-Agent request header.
-	//
-	// Default client name is used if not set.
-	Name string
-
-	// NoDefaultUserAgentHeader when set to true, causes the default
-	// User-Agent header to be excluded from the Request.
-	NoDefaultUserAgentHeader bool
-
-	// Dialer is the custom dialer used to establish connection.
-	// Default Dialer is used if not set.
-	Dialer network.Dialer
-
-	// Attempt to connect to both ipv4 and ipv6 addresses if set to true.
-	//
-	// This option is used only if default TCP dialer is used,
-	// i.e. if Dialer is blank.
-	//
-	// By default client connects only to ipv4 addresses,
-	// since unfortunately ipv6 remains broken in many networks worldwide :)
-	DialDualStack bool
-
-	// Maximum duration for full request writing (including body).
-	//
-	// By default request write timeout is unlimited.
-	WriteTimeout time.Duration
-
-	// Maximum response body size.
-	//
-	// The client returns ErrBodyTooLarge if this limit is greater than 0
-	// and response body is greater than the limit.
-	//
-	// By default response body size is unlimited.
-	MaxResponseBodySize int
-
-	// Header names are passed as-is without normalization
-	// if this option is set.
-	//
-	// Disabled header names' normalization may be useful only for proxying
-	// responses to other clients expecting case-sensitive header names.
-	//
-	// By default request and response header names are normalized, i.e.
-	// The first letter and the first letters following dashes
-	// are uppercased, while all the other letters are lowercased.
-	// Examples:
-	//
-	//     * HOST -> Host
-	//     * content-type -> Content-Type
-	//     * cONTENT-lenGTH -> Content-Length
+	Dialer                        network.Dialer
+	TLSConfig                     *tls.Config
+	RetryConfig                   *retry.Config
+	HostClientStateObserve        HostClientStateFunc
+	Name                          string
+	MaxConnDuration               time.Duration
+	ReadTimeout                   time.Duration
+	ObservationInterval           time.Duration
+	MaxConnWaitTimeout            time.Duration
+	MaxResponseBodySize           int
+	DialTimeout                   time.Duration
+	MaxIdleConnDuration           time.Duration
+	MaxConnsPerHost               int
+	WriteTimeout                  time.Duration
+	NoDefaultUserAgentHeader      bool
 	DisableHeaderNamesNormalizing bool
-
-	// Path values are sent as-is without normalization
-	//
-	// Disabled path normalization may be useful for proxying incoming requests
-	// to servers that are expecting paths to be forwarded as-is.
-	//
-	// By default path values are normalized, i.e.
-	// extra slashes are removed, special characters are encoded.
-	DisablePathNormalizing bool
-
-	// all configurations related to retry
-	RetryConfig *retry.Config
-
-	HostClientStateObserve HostClientStateFunc
-
-	// StateObserve execution interval
-	ObservationInterval time.Duration
+	DisablePathNormalizing        bool
+	DialDualStack                 bool
+	ResponseBodyStream            bool
+	KeepAlive                     bool
 }
 
 func NewClientOptions(opts []ClientOption) *ClientOptions {

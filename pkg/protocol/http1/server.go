@@ -54,31 +54,30 @@ var (
 )
 
 type Option struct {
-	StreamRequestBody            bool
-	GetOnly                      bool
-	NoDefaultDate                bool
-	NoDefaultContentType         bool
-	DisablePreParseMultipartForm bool
-	DisableKeepalive             bool
-	NoDefaultServerHeader        bool
-	MaxRequestBodySize           int
+	HijackConnHandle             func(c network.Conn, h frame.HijackHandler)
+	ContinueHandler              func(header *protocol.RequestHeader) bool
+	HTMLRender                   *render.HtmlEngine
+	TLS                          *tls.Config
 	Layout                       string
 	AuthUserKey                  string
+	ServerName                   []byte
+	MaxRequestBodySize           int
 	IdleTimeout                  time.Duration
 	ReadTimeout                  time.Duration
-	ServerName                   []byte
-	TLS                          *tls.Config
-	HTMLRender                   *render.HtmlEngine
+	NoDefaultServerHeader        bool
+	DisableKeepalive             bool
+	StreamRequestBody            bool
+	DisablePreParseMultipartForm bool
+	NoDefaultContentType         bool
 	EnableTrace                  bool
-	ContinueHandler              func(header *protocol.RequestHeader) bool
-	HijackConnHandle             func(c network.Conn, h frame.HijackHandler)
+	NoDefaultDate                bool
+	GetOnly                      bool
 }
 
 type Server struct {
-	Option
-	Core suite.Core
-
+	Core           suite.Core
 	eventStackPool *sync.Pool
+	Option
 }
 
 func (s Server) Serve(c context.Context, conn network.Conn) (err error) {

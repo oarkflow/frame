@@ -11,14 +11,13 @@ import (
 )
 
 type Storage struct {
+	data map[string]item
 	sync.RWMutex
-	data map[string]item // data
 }
 
 type item struct {
-	// max value is 4294967295 -> Sun Feb 07 2106 06:28:15 GMT+0000
-	e uint32      // exp
-	v interface{} // val
+	v interface{}
+	e uint32
 }
 
 func New() *Storage {

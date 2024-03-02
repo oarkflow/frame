@@ -34,62 +34,26 @@ type (
 
 	// options is a struct for specifying configuration options for the secure.
 	options struct {
-		// AllowedHosts is a list of fully qualified domain names that are allowed.
-		// Default is empty list, which allows any and all host names.
-		allowedHosts []string
-		// If SSLRedirect is set to true, then only allow https requests.
-		// Default is false.
-		sslRedirect bool
-		// If SSLTemporaryRedirect is true, the a 302 will be used while redirecting.
-		// Default is false (301).
-		sslTemporaryRedirect bool
-		// SSLHost is the host name that is used to redirect http requests to https.
-		// Default is "", which indicates to use the same host.
-		sslHost string
-		// STSSeconds is the max-age of the Strict-Transport-Security header.
-		// Default is 0, which would NOT include the header.
-		stsSeconds int64
-		// If STSIncludeSubdomains is set to true, the `includeSubdomains` will
-		// be appended to the Strict-Transport-Security header. Default is false.
-		stsIncludeSubdomains bool
-		// If FrameDeny is set to true, adds the X-Frame-Options header with
-		// the value of `DENY`. Default is false.
-		frameDeny bool
-		// CustomFrameOptionsValue allows the X-Frame-Options header value
-		// to be set with a custom value. This overrides the FrameDeny option.
-		customFrameOptionsValue string
-		// If ContentTypeNosniff is true, adds the X-Content-Type-Options header
-		// with the value `nosniff`. Default is false.
-		contentTypeNosniff bool
-		// If BrowserXssFilter is true, adds the X-XSS-Protection header with
-		// the value `1; mode=block`. Default is false.
-		browserXssFilter bool
-		// ContentSecurityPolicy allows the Content-Security-Policy header value
-		// to be set with a custom value. Default is "".
-		contentSecurityPolicy string
-
+		badHostHandler              frame.HandlerFunc
+		sslProxyHeaders             map[string]string
+		contentSecurityPolicy       string
+		featurePolicy               string
+		permissionPolicy            string
+		customFrameOptionsValue     string
+		referrerPolicy              string
+		sslHost                     string
+		allowedHosts                []string
+		stsSeconds                  int64
 		contentSecurityPolicyReport bool
-		// HTTP header "Referrer-Policy" governs which referrer information, sent in the Referrer header, should be included with requests made.
-		referrerPolicy string
-
-		permissionPolicy string
-
-		// When true, the whole security policy applied by the middleware is disabled completely.
-		isDevelopment bool
-		// Handlers for when an error occurs (ie bad host).
-		badHostHandler frame.HandlerFunc
-		// Prevent Internet Explorer from executing downloads in your site’s context
-		ieNoOpen bool
-		// Feature Policy is a new header that allows a site to control which features and APIs can be used in the browser.
-		featurePolicy string
-		// If DontRedirectIPV4Hostnames is true, requests to hostnames that are IPV4
-		// addresses aren't redirected. This is to allow load balancer health checks
-		// to succeed.
-		dontRedirectIPV4Hostnames bool
-
-		// If the request is insecure, treat it as secure if any of the headers in this dict are set to their corresponding value
-		// This is useful when your app is running behind a secure proxy that forwards requests to your app over http (such as on Heroku).
-		sslProxyHeaders map[string]string
+		browserXssFilter            bool
+		contentTypeNosniff          bool
+		frameDeny                   bool
+		isDevelopment               bool
+		sslTemporaryRedirect        bool
+		ieNoOpen                    bool
+		stsIncludeSubdomains        bool
+		dontRedirectIPV4Hostnames   bool
+		sslRedirect                 bool
 	}
 )
 

@@ -12,56 +12,20 @@ import (
 
 // Config defines the store for middleware.
 type Config struct {
-	// Allowed session duration
-	// Optional. Default value 24 * time.Hour
-	Expiration time.Duration
-
-	// Storage interface to store the session data
-	// Optional. Default value memory.New()
-	Storage storage.Storage
-
-	// KeyLookup is a string in the form of "<source>:<name>" that is used
-	// to extract session id from the request.
-	// Possible values: "header:<name>", "query:<name>" or "cookie:<name>"
-	// Optional. Default value "cookie:session_id".
-	KeyLookup string
-
-	// Domain of the CSRF cookie.
-	// Optional. Default value "".
-	CookieDomain string
-
-	// Path of the CSRF cookie.
-	// Optional. Default value "".
-	CookiePath string
-
-	// Indicates if CSRF cookie is secure.
-	// Optional. Default value false.
-	CookieSecure bool
-
-	// Indicates if CSRF cookie is HTTP only.
-	// Optional. Default value false.
-	CookieHTTPOnly bool
-
-	// Value of SameSite cookie.
-	// Optional. Default value "Lax".
-	CookieSameSite string
-
-	ErrorHandler func(ctx *frame.Context, err error)
-
-	// KeyGenerator generates the session key.
-	// Optional. Default value utils.UUIDv4
-	KeyGenerator func() string
-
+	Storage           storage.Storage
+	ErrorHandler      func(ctx *frame.Context, err error)
+	KeyGenerator      func() string
+	CookieDomain      string
+	CookiePath        string
+	CookieSameSite    string
+	KeyLookup         string
+	CookieName        string
+	source            Source
+	sessionName       string
 	RegisteredObjects []any
-
-	// Deprecated: Please use KeyLookup
-	CookieName string
-
-	// Source defines where to obtain the session id
-	source Source
-
-	// The session name
-	sessionName string
+	Expiration        time.Duration
+	CookieSecure      bool
+	CookieHTTPOnly    bool
 }
 
 type Source string

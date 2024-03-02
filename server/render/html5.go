@@ -23,29 +23,18 @@ type Delims struct {
 
 // HtmlEngine struct
 type HtmlEngine struct {
-	// delimiters
-	left  string
-	right string
-	// views folder
-	directory string
-	// http.FileSystem supports embedded files
 	fileSystem http.FileSystem
-	// views extension
-	extension string
-	// layout variable name that incapsulates the template
-	layout string
-	// determines if the engine parsed all templates
-	loaded bool
-	// reload on each render
-	reload bool
-	// debug prints the parsed templates
-	debug bool
-	// lock for funcmap and templates
-	mutex sync.RWMutex
-	// template funcmap
-	funcmap map[string]interface{}
-	// templates
-	Templates *template.Template
+	funcmap    map[string]interface{}
+	Templates  *template.Template
+	left       string
+	right      string
+	directory  string
+	extension  string
+	layout     string
+	mutex      sync.RWMutex
+	loaded     bool
+	reload     bool
+	debug      bool
 }
 
 type HtmlConfig struct {

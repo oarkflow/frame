@@ -6,7 +6,6 @@ replace github.com/oarkflow/frame => ../
 
 require (
 	github.com/oarkflow/frame v0.0.60
-	github.com/oarkflow/log v1.0.74
 	github.com/oarkflow/pkg v0.1.22
 	go.opentelemetry.io/otel v1.23.1
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.23.1
@@ -20,12 +19,13 @@ require (
 	github.com/bytedance/go-tagexpr/v2 v2.9.11 // indirect
 	github.com/bytedance/gopkg v0.0.0-20240202110943-5e26950c5e57 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
-	github.com/cloudwego/netpoll v0.5.2-0.20240206071512-faa52638971c // indirect
+	github.com/cloudwego/netpoll v0.5.2-0.20240220090456-7ba622bf763b // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.0 // indirect
-	github.com/nyaruka/phonenumbers v1.0.55 // indirect
+	github.com/nyaruka/phonenumbers v1.3.2 // indirect
+	github.com/oarkflow/log v1.0.74 // indirect
 	github.com/philhofer/fwd v1.1.2 // indirect
 	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect
 	github.com/tidwall/match v1.1.1 // indirect

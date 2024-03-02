@@ -70,8 +70,8 @@ type ErrorType uint64
 
 type Error struct {
 	Err  error
-	Type ErrorType
 	Meta interface{}
+	Type ErrorType
 }
 
 const (
