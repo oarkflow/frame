@@ -5,8 +5,8 @@ go 1.22.0
 replace github.com/bytedance/go-tagexpr/v2 => github.com/sujit-baniya/go-tagexpr/v2 v2.9.14
 
 require (
-	github.com/bytedance/go-tagexpr/v2 v2.0.0-00010101000000-000000000000
-	github.com/bytedance/gopkg v0.0.0-20240202110943-5e26950c5e57
+	github.com/bytedance/go-tagexpr/v2 v2.9.11
+	github.com/bytedance/gopkg v0.0.0-20240315062850-21fc7a1671a8
 	github.com/c9s/goprocinfo v0.0.0-20210130143923-c95fcf8c64a8
 	github.com/cloudwego/netpoll v0.6.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
@@ -23,9 +23,8 @@ require (
 	github.com/andeya/ameda v1.5.3 // indirect
 	github.com/andeya/goutil v1.0.1 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
-	github.com/golang/protobuf v1.5.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
-	github.com/nyaruka/phonenumbers v1.0.55 // indirect
+	github.com/nyaruka/phonenumbers v1.3.4 // indirect
 	github.com/philhofer/fwd v1.1.2 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
