@@ -55,11 +55,11 @@ var ConfigDefault = Config{
 	APIOnly:    false,
 	Next:       nil,
 	index: newIndex(viewBag{
-		defaultTitle,
-		defaultRefresh,
-		defaultFontURL,
-		defaultChartJSURL,
-		defaultCustomHead,
+		title:      defaultTitle,
+		refresh:    defaultRefresh,
+		fontURL:    defaultFontURL,
+		chartJSURL: defaultChartJSURL,
+		customHead: defaultCustomHead,
 	}),
 }
 
@@ -76,11 +76,11 @@ func configDefault(config ...Config) Config {
 		}
 		// update default index with new default title/refresh
 		ConfigDefault.index = newIndex(viewBag{
-			ConfigDefault.Title,
-			ConfigDefault.Refresh,
-			ConfigDefault.FontURL,
-			ConfigDefault.ChartJsURL,
-			ConfigDefault.CustomHead,
+			title:      ConfigDefault.Title,
+			chartJSURL: ConfigDefault.FontURL,
+			fontURL:    ConfigDefault.ChartJsURL,
+			customHead: ConfigDefault.CustomHead,
+			refresh:    ConfigDefault.Refresh,
 		})
 	}
 
