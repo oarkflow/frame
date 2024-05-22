@@ -6,17 +6,18 @@ replace github.com/bytedance/go-tagexpr/v2 => github.com/sujit-baniya/go-tagexpr
 
 require (
 	github.com/bytedance/go-tagexpr/v2 v2.9.11
-	github.com/bytedance/gopkg v0.0.0-20240315062850-21fc7a1671a8
+	github.com/bytedance/gopkg v0.0.0-20240514070511-01b2cbcf35e1
 	github.com/c9s/goprocinfo v0.0.0-20210130143923-c95fcf8c64a8
 	github.com/cloudwego/netpoll v0.6.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
-	github.com/oarkflow/log v1.0.74
+	github.com/oarkflow/log v1.0.79
+	github.com/oarkflow/xid v1.2.5
 	github.com/savsgio/gotils v0.0.0-20240303185622-093b76447511
 	github.com/shirou/gopsutil/v3 v3.24.2
 	github.com/tinylib/msgp v1.1.9
 	golang.org/x/crypto v0.21.0
 	golang.org/x/sync v0.6.0
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.34.1
 )
 
 require (
@@ -24,7 +25,7 @@ require (
 	github.com/andeya/goutil v1.0.1 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
-	github.com/nyaruka/phonenumbers v1.3.4 // indirect
+	github.com/nyaruka/phonenumbers v1.3.5 // indirect
 	github.com/philhofer/fwd v1.1.2 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
@@ -35,5 +36,5 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 )

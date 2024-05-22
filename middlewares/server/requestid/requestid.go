@@ -19,8 +19,9 @@ package requestid
 import (
 	"context"
 
+	"github.com/oarkflow/xid"
+
 	"github.com/oarkflow/frame"
-	"github.com/oarkflow/frame/pkg/common/xid"
 )
 
 var headerXRequestID string

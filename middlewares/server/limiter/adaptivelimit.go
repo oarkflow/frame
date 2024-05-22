@@ -23,8 +23,8 @@ import (
 	"github.com/oarkflow/frame/pkg/protocol/consts"
 )
 
-// AdaptiveLimit CPU sampling algorithm using BBR
-func AdaptiveLimit(opts ...Option) frame.HandlerFunc {
+// New CPU sampling algorithm using BBR
+func New(opts ...Option) frame.HandlerFunc {
 	limiter := NewLimiter(opts...)
 	return func(c context.Context, ctx *frame.Context) {
 		done, err := limiter.Allow()

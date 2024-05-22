@@ -4,97 +4,98 @@ import (
 	"bytes"
 	"context"
 	"hash/crc32"
+	"unsafe"
 
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/pkg/common/bytebufferpool"
 	"github.com/oarkflow/frame/pkg/protocol/consts"
 )
 
-var (
-	normalizedHeaderETag = []byte("Etag")
-	weakPrefix           = []byte("W/")
-)
+const HeaderIfNoneMatch = "If-None-Match"
 
-// New creates a new middleware handler
-func New(config ...Config) frame.HandlerFunc {
-	// Set default config
-	cfg := configDefault(config...)
+// New will create an etag middleware
+func New(opts ...Option) frame.HandlerFunc {
+	options := newOptions(opts...)
 
-	crc32q := crc32.MakeTable(0xD5828281)
+	var (
+		headerETag = []byte("Etag")
+		weakPrefix = []byte("W/")
+	)
 
-	// Return new handler
 	return func(ctx context.Context, c *frame.Context) {
-		// Don't execute middleware if Next returns true
-		if cfg.Next != nil && cfg.Next(c) {
-			c.Next(ctx)
-		}
-
-		// Return err if next handler returns one
 		c.Next(ctx)
 
-		// Don't generate ETags for invalid responses
+		// skip etag if next returns true
+		if options.next != nil && options.next(ctx, c) {
+			c.Next(ctx)
+			return
+		}
 		if c.Response.StatusCode() != consts.StatusOK {
 			return
 		}
-		body := c.Response.Body()
-		// Skips ETag if no response body is present
-		if len(body) == 0 {
+		respBody := c.Response.Body()
+		if len(respBody) == 0 {
 			return
 		}
-		// Skip ETag if header is already present
-		if c.Response.Header.Get(string(normalizedHeaderETag)) != "" {
+		if c.Response.Header.Peek(b2s(headerETag)) != nil {
 			return
 		}
 
-		// Generate ETag for response
+		// build etag
+		var etag []byte
 		bb := bytebufferpool.Get()
 		defer bytebufferpool.Put(bb)
-
-		// Enable weak tag
-		if cfg.Weak {
-			_, _ = bb.Write(weakPrefix)
+		if options.generator != nil {
+			// custom generation
+			// e.g. W/your-custom-etag
+			if options.weak {
+				_, _ = bb.Write(weakPrefix)
+			}
+			_, _ = bb.Write(options.generator(ctx, c))
+			etag = bb.Bytes()
+		} else {
+			// default generation
+			// e.g. W/"11-222957957"
+			if options.weak {
+				_, _ = bb.Write(weakPrefix)
+			}
+			_ = bb.WriteByte('"')
+			bb.B = appendUint(bb.Bytes(), uint32(len(respBody)))
+			_ = bb.WriteByte('-')
+			bb.B = appendUint(bb.Bytes(), crc32.ChecksumIEEE(respBody))
+			_ = bb.WriteByte('"')
+			etag = bb.Bytes()
 		}
 
-		_ = bb.WriteByte('"')
-		bb.B = appendUint(bb.Bytes(), uint32(len(body)))
-		_ = bb.WriteByte('-')
-		bb.B = appendUint(bb.Bytes(), crc32.Checksum(body, crc32q))
-		_ = bb.WriteByte('"')
-
-		etag := bb.Bytes()
-
-		// Get ETag header from request
-		clientEtag := c.Request.Header.Peek(consts.HeaderIfNoneMatch)
-
-		// Check if client's ETag is weak
-		if bytes.HasPrefix(clientEtag, weakPrefix) {
-			// Check if server's ETag is weak
-			if bytes.Equal(clientEtag[2:], etag) || bytes.Equal(clientEtag[2:], etag[2:]) {
-				// W/1 == 1 || W/1 == W/1
-				c.Reset()
-				c.Status(consts.StatusNotModified)
+		// verify etag
+		clientETag := c.Request.Header.Peek(HeaderIfNoneMatch)
+		if bytes.HasPrefix(clientETag, weakPrefix) {
+			// client - server
+			// W/0 == 0 || W/0 == W/0
+			if bytes.Equal(clientETag[2:], etag) || bytes.Equal(clientETag[2:], etag[2:]) {
+				c.NotModified()
 				return
 			}
-			// W/1 != W/2 || W/1 != 2
-			c.Response.Header.SetCanonical(normalizedHeaderETag, etag)
-
+			// W/0 != W/1 || W/0 != 1
+			c.Response.Header.SetCanonical(headerETag, etag)
 			return
 		}
-
-		if bytes.Contains(clientEtag, etag) {
-			// 1 == 1
-			c.Reset()
-			c.Status(consts.StatusNotModified)
+		if bytes.Contains(clientETag, etag) {
+			// 0 == 0
+			c.NotModified()
 			return
 		}
-		// 1 != 2
-		c.Response.Header.SetCanonical(normalizedHeaderETag, etag)
-
-		return
+		// 0 != 1
+		c.Response.Header.SetCanonical(headerETag, etag)
 	}
 }
 
-// appendUint appends n to dst and returns the extended dst.
+// b2s converts byte slice to a string without memory allocation
+func b2s(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+// appendUint appends n to dst and returns the extended dst
 func appendUint(dst []byte, n uint32) []byte {
 	var b [20]byte
 	buf := b[:]
@@ -108,7 +109,6 @@ func appendUint(dst []byte, n uint32) []byte {
 	}
 	i--
 	buf[i] = '0' + byte(n)
-
 	dst = append(dst, buf[i:]...)
 	return dst
 }

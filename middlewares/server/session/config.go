@@ -5,9 +5,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/oarkflow/xid"
+
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/pkg/common/storage"
-	"github.com/oarkflow/frame/pkg/common/xid"
 )
 
 // Config defines the store for middleware.

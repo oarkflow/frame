@@ -7,8 +7,9 @@ import (
 
 	"github.com/oarkflow/log"
 
+	"github.com/oarkflow/xid"
+
 	"github.com/oarkflow/frame"
-	"github.com/oarkflow/frame/pkg/common/xid"
 )
 
 type Config struct {
@@ -98,7 +99,6 @@ func New(config Config) frame.HandlerFunc {
 			Str("host", string(c.Host())).
 			Str("path", string(c.Path())).
 			Str("protocol", string(c.Request.Scheme())).
-			Int("status", c.Response.StatusCode()).
 			Str("latency", fmt.Sprintf("%s", latency)).
 			Str("ua", string(c.GetHeader("User-Agent"))).
 			Msg(msg)

@@ -52,7 +52,6 @@ func New(opts ...config.Option) *Frame {
 func Default(opts ...config.Option) *Frame {
 	h := New(opts...)
 	h.Use(recovery.New())
-
 	return h
 }
 

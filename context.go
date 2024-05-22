@@ -42,6 +42,7 @@
 package frame
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -1169,6 +1170,43 @@ func (ctx *Context) JSON(code int, obj interface{}) {
 	ctx.Render(code, render.JSONRender{Data: obj})
 }
 
+func (ctx *Context) StreamJSON(obj any, batchSize int) {
+	rw := newChunkReader()
+	ctx.SetBodyStream(rw, -1)
+	go func() {
+		rt := reflect.TypeOf(obj)
+		switch rt.Kind() {
+		case reflect.Slice, reflect.Array:
+			var da []any
+			s := reflect.ValueOf(obj)
+			for i := 0; i < s.Len(); i++ {
+				if i%batchSize == 0 && len(da) > 0 {
+					bt, _ := json.Marshal(da)
+					if bt != nil {
+						rw.Write(bt)
+					}
+					da = da[:0]
+				} else {
+					it := s.Index(i).Interface()
+					if it != nil {
+						da = append(da, s.Index(i).Interface())
+					}
+				}
+			}
+		default:
+			bt, _ := json.Marshal(obj)
+			if bt != nil {
+				rw.Write(bt)
+			}
+		}
+		rw.Close()
+	}()
+
+	go func() {
+		<-ctx.Finished()
+	}()
+}
+
 // PureJSON serializes the given struct as JSON into the response body.
 // PureJSON, unlike JSON, does not replace special html characters with their unicode entities.
 func (ctx *Context) PureJSON(code int, obj interface{}) {
@@ -1484,4 +1522,53 @@ func (ctx *Context) VisitAllHeaders(f func(key, value []byte)) {
 // f must not retain references to key and/or value after returning.
 func (ctx *Context) VisitAllCookie(f func(key, value []byte)) {
 	ctx.Request.Header.VisitAllCookie(f)
+}
+
+type ChunkReader struct {
+	rw  bytes.Buffer
+	w2r chan struct{}
+	r2w chan struct{}
+}
+
+func newChunkReader() *ChunkReader {
+	var rw bytes.Buffer
+	w2r := make(chan struct{})
+	r2w := make(chan struct{})
+	cr := &ChunkReader{rw: rw, w2r: w2r, r2w: r2w}
+	return cr
+}
+
+var closeOnce = new(sync.Once)
+
+func (cr *ChunkReader) Read(p []byte) (n int, err error) {
+	for {
+		_, ok := <-cr.w2r
+		if !ok {
+			closeOnce.Do(func() {
+				close(cr.r2w)
+			})
+			n, err = cr.rw.Read(p)
+			return
+		}
+
+		n, err = cr.rw.Read(p)
+
+		cr.r2w <- struct{}{}
+
+		if n == 0 {
+			continue
+		}
+		return
+	}
+}
+
+func (cr *ChunkReader) Write(p []byte) (n int, err error) {
+	n, err = cr.rw.Write(p)
+	cr.w2r <- struct{}{}
+	<-cr.r2w
+	return
+}
+
+func (cr *ChunkReader) Close() {
+	close(cr.w2r)
 }
