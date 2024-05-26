@@ -7,7 +7,7 @@ replace github.com/oarkflow/frame => ../
 require (
 	github.com/oarkflow/frame v0.0.60
 	github.com/oarkflow/log v1.0.79
-	github.com/oarkflow/pkg v0.1.22
+	github.com/oarkflow/paseto v0.0.0-20231006103046-f6852c552c83
 	go.opentelemetry.io/otel v1.23.1
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.23.1
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.23.1

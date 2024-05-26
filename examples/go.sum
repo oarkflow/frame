@@ -33,8 +33,8 @@ github.com/nyaruka/phonenumbers v1.3.5 h1:WZLbQn61j2E1OFnvpUTYbK/6hViUgl6tppJ55/
 github.com/nyaruka/phonenumbers v1.3.5/go.mod h1:Ut+eFwikULbmCenH6InMKL9csUNLyxHuBLyfkpum11s=
 github.com/oarkflow/log v1.0.79 h1:DxhtkBGG+pUu6cudSVw5g75FbKEQJkij5w7n5AEN00M=
 github.com/oarkflow/log v1.0.79/go.mod h1:U/4chr1DyOiQvS6JiQpjYTCJhK7RGR8xrXPsGlouLzM=
-github.com/oarkflow/pkg v0.1.22 h1:jlpBm4b1fuQkgDJEoozk28HkLZpx6qeTPCcU1AApRaQ=
-github.com/oarkflow/pkg v0.1.22/go.mod h1:nVXPmSHyXzizWnA+auR7yOrg+Sw3z4Qbx9GQTtzEbww=
+github.com/oarkflow/paseto v0.0.0-20231006103046-f6852c552c83 h1:3VAVJCmtUoMemvgshkQl2HP80+6M4o8kLq6NtAXJcTw=
+github.com/oarkflow/paseto v0.0.0-20231006103046-f6852c552c83/go.mod h1:OSQERpM5KAg55QSZGGcehgMVqeJQ23GvV4oVRtN6aCA=
 github.com/oarkflow/xid v1.2.5 h1:6RcNJm9+oZ/B647gkME9trCzhpxGQaSdNoD56Vmkeho=
 github.com/oarkflow/xid v1.2.5/go.mod h1:jG4YBh+swbjlWApGWDBYnsJEa7hi3CCpmuqhB3RAxVo=
 github.com/philhofer/fwd v1.1.2 h1:bnDivRJ1EWPjUIRXV5KfORO897HTbpFAQddBdE8t7Gw=

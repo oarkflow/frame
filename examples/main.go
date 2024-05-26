@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/oarkflow/pkg/paseto"
+	"github.com/oarkflow/paseto"
 
 	"github.com/oarkflow/frame"
 	"github.com/oarkflow/frame/middlewares/server/keyauth"
