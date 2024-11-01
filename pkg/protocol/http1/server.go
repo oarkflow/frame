@@ -80,6 +80,21 @@ type Server struct {
 	Option
 }
 
+func (s Server) getRequestContext() *frame.Context {
+	if frame.DisabaleContextPool {
+		return &frame.Context{}
+	}
+	return s.Core.GetCtxPool().Get().(*frame.Context)
+}
+
+func (s Server) putRequestContext(ctx *frame.Context) {
+	if frame.DisabaleContextPool {
+		return
+	}
+	ctx.Reset()
+	s.Core.GetCtxPool().Put(ctx)
+}
+
 func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 	var (
 		zr network.Reader
@@ -98,7 +113,7 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 		// 2. Prepare it
 		// 3. Process it
 		// 4. Reset and recycle
-		ctx = s.Core.GetCtxPool().Get().(*frame.Context)
+		ctx = s.getRequestContext()
 
 		traceCtl        = s.Core.GetTracer()
 		eventsToTrigger *eventStack
@@ -135,7 +150,7 @@ func (s Server) Serve(c context.Context, conn network.Conn) (err error) {
 			zr = nil
 		}
 		ctx.Reset()
-		s.Core.GetCtxPool().Put(ctx)
+		s.putRequestContext(ctx)
 	}()
 
 	ctx.HTMLRender = s.HTMLRender

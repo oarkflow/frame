@@ -90,6 +90,10 @@ var zeroTCPAddr = &net.TCPAddr{
 	IP: net.IPv4zero,
 }
 
+var (
+	DisabaleContextPool = false
+)
+
 var cookieKeyValueParser = regexp.MustCompile("\x00([^:]*):([^\x00]*)\x00")
 
 type Handler interface {
